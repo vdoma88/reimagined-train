@@ -28,9 +28,10 @@ android {
         if (releaseKeystore != null) {
             create("release") {
                 storeFile = releaseKeystore
-                storePassword = System.getenv("ANIMATE_KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("ANIMATE_KEY_ALIAS")
-                keyPassword = System.getenv("ANIMATE_KEY_PASSWORD")
+                // Trim: values pasted into CI secrets often carry a trailing newline.
+                storePassword = System.getenv("ANIMATE_KEYSTORE_PASSWORD")?.trim()
+                keyAlias = System.getenv("ANIMATE_KEY_ALIAS")?.trim()
+                keyPassword = System.getenv("ANIMATE_KEY_PASSWORD")?.trim()
             }
         }
     }
