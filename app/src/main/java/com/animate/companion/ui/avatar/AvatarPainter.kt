@@ -583,15 +583,33 @@ private class Ctx(
         mouth()
     }
 
-    private data class EyeShape(val w: Float, val h: Float, val tilt: Float, val lidDrop: Float, val slit: Boolean, val sparkle: Boolean)
+    private enum class Pupil { ROUND, SLIT, STAR, HEART, NONE, RING }
+
+    private data class EyeShape(
+        val w: Float,
+        val h: Float,
+        val tilt: Float,
+        val lidDrop: Float,
+        val pupil: Pupil,
+        val sparkle: Boolean,
+        val shine: Boolean = true,
+        val lashes: Boolean = false,
+    )
 
     private fun eyeShape(): EyeShape = when (a.eyeStyle) {
-        1 -> EyeShape(11.5f, 9.5f, 2.2f, 0f, false, false)
-        2 -> EyeShape(11f, 11f, -1.8f, 0.05f, false, false)
-        3 -> EyeShape(10f, 12f, 0f, 0f, false, true)
-        4 -> EyeShape(11.5f, 11f, 1.6f, 0f, true, false)
-        5 -> EyeShape(11f, 10.5f, 0.3f, 0.33f, false, false)
-        else -> EyeShape(11f, 13f, 0.4f, 0f, false, true)
+        1 -> EyeShape(11.5f, 9.5f, 2.2f, 0f, Pupil.ROUND, false)
+        2 -> EyeShape(11f, 11f, -1.8f, 0.05f, Pupil.ROUND, false)
+        3 -> EyeShape(10f, 12f, 0f, 0f, Pupil.ROUND, true)
+        4 -> EyeShape(11.5f, 11f, 1.6f, 0f, Pupil.SLIT, false)
+        5 -> EyeShape(11f, 10.5f, 0.3f, 0.33f, Pupil.ROUND, false)
+        6 -> EyeShape(11f, 12.5f, 0.4f, 0f, Pupil.STAR, false)
+        7 -> EyeShape(11f, 12.5f, 0.2f, 0f, Pupil.HEART, false)
+        8 -> EyeShape(11f, 11f, 0.2f, 0.12f, Pupil.NONE, false, shine = false)
+        9 -> EyeShape(12.5f, 7f, 2.6f, 0f, Pupil.ROUND, false)
+        10 -> EyeShape(12.5f, 15f, 0f, 0f, Pupil.ROUND, true)
+        11 -> EyeShape(11.5f, 12f, 1f, 0f, Pupil.ROUND, true, lashes = true)
+        12 -> EyeShape(11f, 12f, 0.5f, 0f, Pupil.RING, false)
+        else -> EyeShape(11f, 13f, 0.4f, 0f, Pupil.ROUND, true)
     }
 
     private fun eyes() {
@@ -645,26 +663,41 @@ private class Ctx(
                 val irisCenter = Offset(cx + side * 0.2f, cy + h * 0.06f)
                 val rx = w * 0.37f
                 val ry = h * 0.47f
+                val irisColors = if (s.shine) listOf(iris.darker(0.55f), iris, iris.lighter(0.45f)) else listOf(iris.darker(0.7f), iris.darker(0.35f), iris.darker(0.15f))
                 drawOval(
-                    Brush.verticalGradient(listOf(iris.darker(0.55f), iris, iris.lighter(0.45f)), irisCenter.y - ry, irisCenter.y + ry),
+                    Brush.verticalGradient(irisColors, irisCenter.y - ry, irisCenter.y + ry),
                     Offset(irisCenter.x - rx, irisCenter.y - ry), Size(rx * 2, ry * 2),
                 )
                 drawOval(iris.darker(0.6f), Offset(irisCenter.x - rx, irisCenter.y - ry), Size(rx * 2, ry * 2), style = Stroke(0.5f))
                 // Pupil
                 val pupilScale = if (e == Emotion.SURPRISED) 0.55f else 1f
-                if (e == Emotion.LOVE) {
-                    heart(irisCenter.copy(y = irisCenter.y + 0.5f), 3.2f, Color(0xFFFF4F8B))
-                } else if (s.slit) {
-                    drawOval(iris.darker(0.75f), Offset(irisCenter.x - 0.9f, irisCenter.y - ry * 0.8f), Size(1.8f, ry * 1.6f))
-                } else {
-                    val pr = rx * 0.45f * pupilScale
-                    drawOval(iris.darker(0.75f), Offset(irisCenter.x - pr, irisCenter.y - pr * 1.3f), Size(pr * 2, pr * 2.6f))
+                val pupilKind = if (e == Emotion.LOVE) Pupil.HEART else s.pupil
+                val pr = rx * 0.45f * pupilScale
+                when (pupilKind) {
+                    Pupil.HEART -> heart(
+                        irisCenter.copy(y = irisCenter.y + 0.5f), 3.2f * pupilScale.coerceAtLeast(0.8f),
+                        if (e == Emotion.LOVE) Color(0xFFFF4F8B) else lerp(iris, Color(0xFFFF4F8B), 0.65f),
+                    )
+                    Pupil.SLIT -> drawOval(iris.darker(0.75f), Offset(irisCenter.x - 0.9f, irisCenter.y - ry * 0.8f), Size(1.8f, ry * 1.6f))
+                    Pupil.STAR -> {
+                        drawOval(iris.darker(0.6f), Offset(irisCenter.x - pr, irisCenter.y - pr * 1.3f), Size(pr * 2, pr * 2.6f))
+                        star(irisCenter.copy(y = irisCenter.y + 0.3f), rx * 0.62f, Color(0xFFFFF3B0))
+                    }
+                    Pupil.NONE -> drawOval(iris.darker(0.6f), Offset(irisCenter.x - pr, irisCenter.y - pr * 1.3f), Size(pr * 2, pr * 2.6f))
+                    Pupil.RING -> {
+                        drawOval(iris.lighter(0.6f), Offset(irisCenter.x - rx * 0.75f, irisCenter.y - ry * 0.75f), Size(rx * 1.5f, ry * 1.5f), style = Stroke(0.45f))
+                        drawOval(iris.lighter(0.6f), Offset(irisCenter.x - rx * 0.48f, irisCenter.y - ry * 0.48f), Size(rx * 0.96f, ry * 0.96f), style = Stroke(0.45f))
+                        drawCircle(iris.darker(0.8f), pr * 0.6f, irisCenter)
+                    }
+                    Pupil.ROUND -> drawOval(iris.darker(0.75f), Offset(irisCenter.x - pr, irisCenter.y - pr * 1.3f), Size(pr * 2, pr * 2.6f))
                 }
                 // Upper-lid shadow inside the eye
                 drawRect(Brush.verticalGradient(listOf(line.copy(alpha = 0.35f), Color.Transparent), cy - h * 0.6f, cy - h * 0.15f), Offset(cx - w, cy - h), Size(w * 2, h * 0.85f))
                 // Highlights
-                drawCircle(Color.White, rx * 0.42f, Offset(irisCenter.x - side * rx * 0.25f - rx * 0.15f, irisCenter.y - ry * 0.45f))
-                drawCircle(Color.White.copy(alpha = 0.85f), rx * 0.18f, Offset(irisCenter.x + rx * 0.35f, irisCenter.y + ry * 0.45f))
+                if (s.shine) {
+                    drawCircle(Color.White, rx * 0.42f, Offset(irisCenter.x - side * rx * 0.25f - rx * 0.15f, irisCenter.y - ry * 0.45f))
+                    drawCircle(Color.White.copy(alpha = 0.85f), rx * 0.18f, Offset(irisCenter.x + rx * 0.35f, irisCenter.y + ry * 0.45f))
+                }
                 if (s.sparkle) sparkle(Offset(irisCenter.x + rx * 0.3f, irisCenter.y - ry * 0.1f), 1.3f, Color.White)
                 if (e == Emotion.SAD) {
                     drawOval(Color.White.copy(alpha = 0.35f), Offset(cx - w / 2f, cy + h * 0.15f), Size(w, h * 0.35f))
@@ -692,6 +725,13 @@ private class Ctx(
             if (g != Gender.MALE) {
                 d.drawLine(line, Offset(xo - side * 0.5f, outerY - 0.2f), Offset(xo + side * 1.4f, outerY + 1.4f), 0.8f, cap = StrokeCap.Round)
             }
+            if (s.lashes) {
+                for (k in 0..2) {
+                    val bx = xo - side * (k * 2.2f + 0.8f)
+                    val by = outerY - 1.2f - k * 0.9f
+                    d.drawLine(line, Offset(bx, by), Offset(bx + side * 1.6f, by - 2.2f + k * 0.3f), 0.7f, cap = StrokeCap.Round)
+                }
+            }
             // Lower lash hint
             d.drawLine(line.copy(alpha = 0.7f), Offset(cx + side * w * 0.05f, cy + h * 0.47f), Offset(xo - side * w * 0.05f, cy + h * 0.3f), 0.5f, cap = StrokeCap.Round)
 
@@ -703,6 +743,20 @@ private class Ctx(
                 d.drawPath(tear, Color(0xFF8FD3FF))
             }
         }
+    }
+
+    private fun DrawScope.star(c: Offset, r: Float, color: Color) {
+        val p = path {
+            for (i in 0 until 10) {
+                val ang = Math.toRadians(i * 36.0 - 90).toFloat()
+                val rad = if (i % 2 == 0) r else r * 0.45f
+                val x = c.x + kotlin.math.cos(ang) * rad
+                val y = c.y + kotlin.math.sin(ang) * rad
+                if (i == 0) moveTo(x, y) else lineTo(x, y)
+            }
+            close()
+        }
+        drawPath(p, color)
     }
 
     private fun DrawScope.heart(c: Offset, r: Float, color: Color) {
@@ -1051,6 +1105,85 @@ private class Ctx(
                 }
                 fillOutlined(t, Color(0xFFFFD983))
                 d.drawCircle(Color(0xFF9CCBFF), 1.4f, Offset(50f, 13.5f))
+            }
+            8 -> { // choker with a bell
+                d.drawRoundRect(Color(0xFF1E1E26), Offset(44f, 72.5f), Size(12f, 2.4f), androidx.compose.ui.geometry.CornerRadius(1f))
+                d.drawCircle(Color(0xFFFFD34D), 2f, Offset(50f, 76.5f))
+                d.drawCircle(line, 2f, Offset(50f, 76.5f), style = Stroke(0.4f))
+                d.drawLine(line, Offset(48.8f, 77.3f), Offset(51.2f, 77.3f), 0.4f)
+                d.drawCircle(Color.White, 0.5f, Offset(49.2f, 75.8f))
+            }
+            9 -> { // chuuni eyepatch over the right eye
+                d.drawLine(Color(0xFF1E1E26), Offset(26f, 40f), Offset(74f, 46f), 0.9f)
+                val patch = path { addOval(androidx.compose.ui.geometry.Rect(54.5f, 46f, 66.5f, 58f)) }
+                fillOutlined(patch, Color(0xFF1E1E26))
+                d.drawLine(Color(0xFFD8334A), Offset(57f, 49f), Offset(64f, 55f), 0.8f, cap = StrokeCap.Round)
+                d.drawLine(Color(0xFFD8334A), Offset(64f, 49f), Offset(57f, 55f), 0.8f, cap = StrokeCap.Round)
+            }
+            10 -> { // kitsune mask worn on the side of the head
+                val mask = path {
+                    moveTo(64f, 24f); lineTo(66f, 15f); lineTo(70f, 21f); lineTo(76f, 20f); lineTo(78f, 12f); lineTo(80f, 22f)
+                    cubicTo(84f, 30f, 80f, 38f, 74f, 40f)
+                    cubicTo(68f, 38f, 62f, 32f, 64f, 24f)
+                    close()
+                }
+                fillOutlined(mask, Color.White)
+                d.drawLine(Color(0xFFD8334A), Offset(67f, 27f), Offset(71f, 29f), 0.9f, cap = StrokeCap.Round)
+                d.drawLine(Color(0xFFD8334A), Offset(75f, 29f), Offset(79f, 27f), 0.9f, cap = StrokeCap.Round)
+                d.drawLine(Color(0xFFD8334A), Offset(73f, 33f), Offset(73f, 36f), 0.8f, cap = StrokeCap.Round)
+                d.drawPath(path { moveTo(70f, 22f); lineTo(72f, 25f); lineTo(74f, 22f) }, Color(0xFFD8334A), style = Stroke(0.6f))
+            }
+            11 -> { // witch hat
+                val brim = path { addOval(androidx.compose.ui.geometry.Rect(16f, 15f, 84f, 25f)) }
+                val cone = path {
+                    moveTo(32f, 20f)
+                    cubicTo(38f, 6f, 46f, -2f, 66f, -4f)
+                    cubicTo(60f, 2f, 62f, 10f, 68f, 20f)
+                    close()
+                }
+                val hat = Color(0xFF3B2A6B)
+                fillOutlined(brim, hat)
+                fillOutlined(cone, hat)
+                d.drawPath(path { moveTo(33f, 17.5f); quadraticBezierTo(50f, 20.5f, 67.5f, 17.5f); lineTo(66.5f, 14f); quadraticBezierTo(50f, 17f, 34.5f, 14f); close() }, Color(0xFFFF8FBF))
+                with(d) { star(Offset(58f, 9f), 2.4f, Color(0xFFFFD983)) }
+            }
+            12 -> { // star hairpins
+                with(d) {
+                    star(Offset(64f, 30f), 3f, Color(0xFFFFD983))
+                    star(Offset(69f, 35f), 2.2f, Color(0xFF9CCBFF))
+                    star(Offset(34f, 32f), 2.2f, Color(0xFFFF8FBF))
+                }
+            }
+            13 -> { // beret
+                val beret = path {
+                    moveTo(30f, 21f)
+                    cubicTo(28f, 8f, 66f, 4f, 76f, 14f)
+                    cubicTo(80f, 19f, 74f, 23f, 68f, 22f)
+                    cubicTo(56f, 19f, 42f, 19f, 30f, 21f)
+                    close()
+                }
+                fillOutlined(beret, cloth.takeIf { it.luminance() < 0.8f } ?: Color(0xFFD8334A))
+                d.drawLine(line, Offset(52f, 7f), Offset(53f, 4.5f), 1f, cap = StrokeCap.Round)
+            }
+            14 -> { // hachimaki headband
+                val band = path { moveTo(25.5f, 33f); quadraticBezierTo(50f, 26f, 74.5f, 33f); lineTo(74.5f, 37f); quadraticBezierTo(50f, 30f, 25.5f, 37f); close() }
+                fillOutlined(band, Color.White)
+                d.drawCircle(Color(0xFFD8334A), 2f, Offset(50f, 31f))
+                for (k in 0..1) {
+                    val tail = path { moveTo(74f, 34f); lineTo(84f, 38f + k * 5f); lineTo(83f, 41f + k * 5f); lineTo(74f, 36f); close() }
+                    fillOutlined(tail, Color.White)
+                }
+            }
+            15 -> { // goggles on the forehead
+                val strap = Color(0xFF6B4A35)
+                d.drawPath(path { moveTo(25f, 30f); quadraticBezierTo(50f, 22f, 75f, 30f) }, strap, style = Stroke(2.2f))
+                for (side in listOf(-1f, 1f)) {
+                    val c = Offset(50f + side * 8f, 26.5f)
+                    d.drawCircle(Color(0xFFB08A4A), 5f, c)
+                    d.drawCircle(line, 5f, c, style = Stroke(0.5f))
+                    d.drawCircle(Brush.radialGradient(listOf(Color(0xFF9FE6FF), Color(0xFF3D7BFF)), c, 3.6f), 3.6f, c)
+                    d.drawCircle(Color.White.copy(alpha = 0.8f), 1f, Offset(c.x - 1.3f, c.y - 1.3f))
+                }
             }
             7 -> { // maid headband
                 val band = path { moveTo(29f, 24f); quadraticBezierTo(50f, 12f, 71f, 24f); lineTo(70f, 27f); quadraticBezierTo(50f, 16f, 30f, 27f); close() }
