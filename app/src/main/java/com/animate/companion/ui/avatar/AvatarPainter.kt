@@ -95,11 +95,12 @@ private class Ctx(
     val eye2: Color,
     val cloth: Color,
 ) {
-    val line = Color(0xFF2A1B3D)
-    val hairDark = hair.darker(0.35f)
-    val hairShadow = hair.darker(0.2f)
-    val skinShadow = lerp(skin, Color(0xFFB0607A), 0.25f)
-    val outline = 0.55f
+    // Softer manga ink: still crisp, but less harsh against pastel skin/hair.
+    val line = Color(0xFF35213F)
+    val hairDark = hair.darker(0.30f)
+    val hairShadow = hair.darker(0.16f)
+    val skinShadow = lerp(skin, Color(0xFFC87892), 0.18f)
+    val outline = 0.48f
     val e get() = pose.emotion
 
     fun fillOutlined(path: Path, color: Color, stroke: Color = line, width: Float = outline) {
@@ -455,16 +456,16 @@ private class Ctx(
         moveTo(28f, 42f)
         when (a.faceShape) {
             1 -> {
-                cubicTo(27f, 58f, 37f, 69f, 50f, 69.5f)
-                cubicTo(63f, 69f, 73f, 58f, 72f, 42f)
+                cubicTo(27f, 57f, 37f, 67.5f, 50f, 68.5f)
+                cubicTo(63f, 67.5f, 73f, 57f, 72f, 42f)
             }
             2 -> {
-                cubicTo(28f, 55f, 41f, 66f, 50f, 72f)
-                cubicTo(59f, 66f, 72f, 55f, 72f, 42f)
+                cubicTo(28f, 54.5f, 41f, 65f, 50f, 70f)
+                cubicTo(59f, 65f, 72f, 54.5f, 72f, 42f)
             }
             else -> {
-                cubicTo(28f, 57f, 39f, 67f, 50f, 70.5f)
-                cubicTo(61f, 67f, 72f, 57f, 72f, 42f)
+                cubicTo(28f, 56f, 39f, 66f, 50f, 69f)
+                cubicTo(61f, 66f, 72f, 56f, 72f, 42f)
             }
         }
         cubicTo(72f, 18f, 28f, 18f, 28f, 42f)
@@ -554,7 +555,7 @@ private class Ctx(
         }
         if (blushStrength > 0f) {
             for (side in listOf(-1f, 1f)) {
-                val c = Offset(50f + side * 13.5f, 60f)
+                val c = Offset(50f + side * 13.6f, 59.4f)
                 d.drawOval(
                     Brush.radialGradient(listOf(Color(0xFFFF7FA6).copy(alpha = blushStrength), Color.Transparent), c, 5.5f),
                     topLeft = Offset(c.x - 6f, c.y - 3f), size = Size(12f, 6f),
@@ -597,19 +598,19 @@ private class Ctx(
     )
 
     private fun eyeShape(): EyeShape = when (a.eyeStyle) {
-        1 -> EyeShape(11.5f, 9.5f, 2.2f, 0f, Pupil.ROUND, false)
-        2 -> EyeShape(11f, 11f, -1.8f, 0.05f, Pupil.ROUND, false)
-        3 -> EyeShape(10f, 12f, 0f, 0f, Pupil.ROUND, true)
-        4 -> EyeShape(11.5f, 11f, 1.6f, 0f, Pupil.SLIT, false)
-        5 -> EyeShape(11f, 10.5f, 0.3f, 0.33f, Pupil.ROUND, false)
-        6 -> EyeShape(11f, 12.5f, 0.4f, 0f, Pupil.STAR, false)
-        7 -> EyeShape(11f, 12.5f, 0.2f, 0f, Pupil.HEART, false)
-        8 -> EyeShape(11f, 11f, 0.2f, 0.12f, Pupil.NONE, false, shine = false)
-        9 -> EyeShape(12.5f, 7f, 2.6f, 0f, Pupil.ROUND, false)
-        10 -> EyeShape(12.5f, 15f, 0f, 0f, Pupil.ROUND, true)
-        11 -> EyeShape(11.5f, 12f, 1f, 0f, Pupil.ROUND, true, lashes = true)
-        12 -> EyeShape(11f, 12f, 0.5f, 0f, Pupil.RING, false)
-        else -> EyeShape(11f, 13f, 0.4f, 0f, Pupil.ROUND, true)
+        1 -> EyeShape(12.2f, 10.2f, 2.2f, 0f, Pupil.ROUND, false)
+        2 -> EyeShape(11.8f, 12f, -1.8f, 0.05f, Pupil.ROUND, false)
+        3 -> EyeShape(10.8f, 13.2f, 0f, 0f, Pupil.ROUND, true)
+        4 -> EyeShape(12.2f, 12f, 1.6f, 0f, Pupil.SLIT, false)
+        5 -> EyeShape(11.8f, 11.2f, 0.3f, 0.33f, Pupil.ROUND, false)
+        6 -> EyeShape(11.8f, 13.6f, 0.4f, 0f, Pupil.STAR, true)
+        7 -> EyeShape(11.8f, 13.6f, 0.2f, 0f, Pupil.HEART, true)
+        8 -> EyeShape(11.8f, 12f, 0.2f, 0.12f, Pupil.NONE, false, shine = false)
+        9 -> EyeShape(13.2f, 7.5f, 2.6f, 0f, Pupil.ROUND, false)
+        10 -> EyeShape(13.2f, 16f, 0f, 0f, Pupil.ROUND, true)
+        11 -> EyeShape(12.2f, 13f, 1f, 0f, Pupil.ROUND, true, lashes = true)
+        12 -> EyeShape(11.8f, 13f, 0.5f, 0f, Pupil.RING, true)
+        else -> EyeShape(12f, 14.2f, 0.4f, 0f, Pupil.ROUND, true)
     }
 
     private fun eyes() {
@@ -617,8 +618,8 @@ private class Ctx(
         val closedHappy = e == Emotion.LAUGH || (e == Emotion.HAPPY && a.eyeStyle == 5)
         val blinkClosed = pose.blink > 0.5f
         for (side in listOf(-1f, 1f)) {
-            val cx = 50f + side * 10.5f
-            val cy = 52f
+            val cx = 50f + side * 10.2f
+            val cy = 51.6f
             val iris = if (side < 0) eye else eye2
             if (closedHappy) {
                 // ^ ^
@@ -695,8 +696,15 @@ private class Ctx(
                 drawRect(Brush.verticalGradient(listOf(line.copy(alpha = 0.35f), Color.Transparent), cy - h * 0.6f, cy - h * 0.15f), Offset(cx - w, cy - h), Size(w * 2, h * 0.85f))
                 // Highlights
                 if (s.shine) {
-                    drawCircle(Color.White, rx * 0.42f, Offset(irisCenter.x - side * rx * 0.25f - rx * 0.15f, irisCenter.y - ry * 0.45f))
-                    drawCircle(Color.White.copy(alpha = 0.85f), rx * 0.18f, Offset(irisCenter.x + rx * 0.35f, irisCenter.y + ry * 0.45f))
+                    // Triple catchlight gives the eyes a softer shoujo-manga sparkle.
+                    drawCircle(Color.White, rx * 0.44f, Offset(irisCenter.x - side * rx * 0.25f - rx * 0.15f, irisCenter.y - ry * 0.46f))
+                    drawCircle(Color.White.copy(alpha = 0.88f), rx * 0.19f, Offset(irisCenter.x + rx * 0.36f, irisCenter.y + ry * 0.42f))
+                    drawCircle(Color.White.copy(alpha = 0.72f), rx * 0.10f, Offset(irisCenter.x - side * rx * 0.48f, irisCenter.y + ry * 0.18f))
+                    drawOval(
+                        iris.lighter(0.62f).copy(alpha = 0.32f),
+                        Offset(irisCenter.x - rx * 0.72f, irisCenter.y + ry * 0.30f),
+                        Size(rx * 1.44f, ry * 0.34f),
+                    )
                 }
                 if (s.sparkle) sparkle(Offset(irisCenter.x + rx * 0.3f, irisCenter.y - ry * 0.1f), 1.3f, Color.White)
                 if (e == Emotion.SAD) {
@@ -784,7 +792,7 @@ private class Ctx(
 
     private fun mouth() {
         val mx = 50f
-        val my = 64.5f
+        val my = 63.8f
         val talking = pose.mouthOpen
         val style = when {
             talking -> -1

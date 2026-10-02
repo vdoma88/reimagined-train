@@ -50,9 +50,21 @@ fun SakuraBackground(modifier: Modifier = Modifier, petals: Int = 14, content: @
     val time by t.animateFloat(0f, 1f, infiniteRepeatable(tween(26000, easing = LinearEasing)), label = "petalTime")
     Box(modifier.fillMaxSize().background(Palette.background)) {
         Canvas(Modifier.fillMaxSize()) {
-            // Soft glows
-            drawCircle(Brush.radialGradient(listOf(Palette.Lavender.copy(alpha = 0.18f), Color.Transparent), Offset(size.width * 0.15f, size.height * 0.1f), size.width * 0.7f), size.width * 0.7f, Offset(size.width * 0.15f, size.height * 0.1f))
-            drawCircle(Brush.radialGradient(listOf(Palette.Sakura.copy(alpha = 0.12f), Color.Transparent), Offset(size.width * 0.9f, size.height * 0.75f), size.width * 0.8f), size.width * 0.8f, Offset(size.width * 0.9f, size.height * 0.75f))
+            // Soft shoujo glows + subtle manga halftone dots.
+            drawCircle(Brush.radialGradient(listOf(Palette.Lavender.copy(alpha = 0.20f), Color.Transparent), Offset(size.width * 0.15f, size.height * 0.1f), size.width * 0.7f), size.width * 0.7f, Offset(size.width * 0.15f, size.height * 0.1f))
+            drawCircle(Brush.radialGradient(listOf(Palette.Sakura.copy(alpha = 0.16f), Color.Transparent), Offset(size.width * 0.9f, size.height * 0.75f), size.width * 0.8f), size.width * 0.8f, Offset(size.width * 0.9f, size.height * 0.75f))
+            val dot = 34.dp.toPx()
+            var yy = dot * 0.6f
+            var row = 0
+            while (yy < size.height) {
+                var xx = if (row % 2 == 0) dot * 0.5f else dot
+                while (xx < size.width) {
+                    drawCircle(Palette.Cream.copy(alpha = 0.035f), 1.2.dp.toPx(), Offset(xx, yy))
+                    xx += dot
+                }
+                yy += dot
+                row++
+            }
             seeds.forEach { s ->
                 val speed = 0.6f + s[0] * 0.8f
                 val prog = (time * speed + s[1]) % 1f
@@ -86,7 +98,7 @@ fun GlassCard(
     Box(
         modifier
             .clip(shape)
-            .background(if (selected) Palette.Sakura.copy(alpha = 0.14f) else Palette.Glass)
+            .background(if (selected) Palette.Sakura.copy(alpha = 0.18f) else Palette.Glass)
             .border(border, shape)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         content = content,
@@ -144,7 +156,7 @@ fun AvatarFrame(modifier: Modifier = Modifier, ring: Dp = 2.dp, content: @Compos
             .background(Palette.accentWide)
             .padding(ring)
             .clip(RoundedCornerShape(50))
-            .background(Brush.verticalGradient(listOf(Color(0xFF3A2C6B), Color(0xFF1B1438)))),
+            .background(Brush.verticalGradient(listOf(Color(0xFF5A3F75), Color(0xFF2A1D3C), Color(0xFF171225)))),
         contentAlignment = Alignment.Center,
         content = content,
     )
