@@ -1,0 +1,196 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "70053eaef8536470fe67125417f329dc",
+    "entities": [
+      {
+        "tableName": "characters",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `gender` TEXT NOT NULL, `appearanceJson` TEXT NOT NULL, `archetypeId` TEXT NOT NULL, `professionId` TEXT NOT NULL, `directionId` TEXT NOT NULL, `extraNote` TEXT NOT NULL, `memory` TEXT NOT NULL, `summarizedUntilId` INTEGER NOT NULL, `affection` INTEGER NOT NULL, `voiceSeed` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `lastMessageAt` INTEGER NOT NULL, `lastMessagePreview` TEXT NOT NULL, `lastEmotion` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gender",
+            "columnName": "gender",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "appearanceJson",
+            "columnName": "appearanceJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "archetypeId",
+            "columnName": "archetypeId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "professionId",
+            "columnName": "professionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "directionId",
+            "columnName": "directionId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "extraNote",
+            "columnName": "extraNote",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "memory",
+            "columnName": "memory",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "summarizedUntilId",
+            "columnName": "summarizedUntilId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "affection",
+            "columnName": "affection",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "voiceSeed",
+            "columnName": "voiceSeed",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastMessageAt",
+            "columnName": "lastMessageAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastMessagePreview",
+            "columnName": "lastMessagePreview",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastEmotion",
+            "columnName": "lastEmotion",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [],
+        "foreignKeys": []
+      },
+      {
+        "tableName": "messages",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `characterId` INTEGER NOT NULL, `role` TEXT NOT NULL, `text` TEXT NOT NULL, `emotion` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, FOREIGN KEY(`characterId`) REFERENCES `characters`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "characterId",
+            "columnName": "characterId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "role",
+            "columnName": "role",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "text",
+            "columnName": "text",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "emotion",
+            "columnName": "emotion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_messages_characterId",
+            "unique": false,
+            "columnNames": [
+              "characterId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_messages_characterId` ON `${TABLE_NAME}` (`characterId`)"
+          }
+        ],
+        "foreignKeys": [
+          {
+            "table": "characters",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "characterId"
+            ],
+            "referencedColumns": [
+              "id"
+            ]
+          }
+        ]
+      }
+    ],
+    "views": [],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '70053eaef8536470fe67125417f329dc')"
+    ]
+  }
+}

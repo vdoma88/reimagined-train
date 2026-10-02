@@ -1,0 +1,41 @@
+package com.animate.companion
+
+import android.app.Application
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
+import com.animate.companion.audio.SoundDirector
+import com.animate.companion.data.AppDatabase
+import com.animate.companion.data.SettingsRepository
+import com.animate.companion.llm.ChatRepository
+import com.animate.companion.llm.LlmClient
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+
+/** Manual dependency container; small enough not to need a DI framework. */
+class AppContainer(app: Application) {
+    val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    val db = AppDatabase.create(app)
+    val settings = SettingsRepository(app)
+    val llm = LlmClient()
+    val chat = ChatRepository(db, settings, llm, scope)
+    val sound = SoundDirector(scope)
+}
+
+class AniMateApp : Application() {
+    lateinit var container: AppContainer
+        private set
+
+    override fun onCreate() {
+        super.onCreate()
+        container = AppContainer(this)
+        container.settings.settings.onEach { container.sound.apply(it) }.launchIn(container.scope)
+        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) = container.sound.onForeground()
+            override fun onStop(owner: LifecycleOwner) = container.sound.onBackground()
+        })
+    }
+}
