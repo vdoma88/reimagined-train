@@ -94,3 +94,29 @@ class AvatarBigSnapshotTest {
         }
     }
 }
+
+class AvatarCatalogSnapshotTest {
+    @get:Rule
+    val paparazzi = Paparazzi(deviceConfig = DeviceConfig.PIXEL_5, maxPercentDifference = 1.0)
+
+    @Test
+    fun hairAndOutfits() {
+        val p = com.animate.companion.model.AppearancePresets
+        paparazzi.snapshot {
+            Column(Modifier.background(Color(0xFF1B1140))) {
+                (p.hairStyles.indices.toList() + p.outfits.indices.map { 100 + it }).chunked(5).forEach { row ->
+                    Row {
+                        row.forEach { i ->
+                            val a = if (i < 100) Appearance(hairStyle = i, hairColor = i % 11, bangs = i % 5, eyeColor = i % 9)
+                            else Appearance(outfit = i - 100, outfitColor = (i - 100) % 8, hairStyle = 2, hairColor = 3)
+                            Column {
+                                AvatarView(a, Gender.FEMALE, Modifier.size(78.dp), animated = false)
+                                Text(if (i < 100) p.hairStyles[i].label else p.outfits[i - 100].label, color = Color.White, fontSize = 7.sp)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

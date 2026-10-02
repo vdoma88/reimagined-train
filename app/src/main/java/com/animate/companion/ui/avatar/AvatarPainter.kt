@@ -72,6 +72,7 @@ fun DrawScope.drawAvatar(a: Appearance, gender: Gender, pose: AvatarPose, headOn
         translate(0f, pose.breath * 0.4f) { c.body() }
         translate(0f, pose.breath) {
             c.earsBehind()
+            c.hairBesideFace()
             c.face()
             c.features()
             c.frontHair()
@@ -134,7 +135,26 @@ private class Ctx(
                     lineTo(24f, 72f)
                     cubicTo(20f, 64f, 22f, 52f, 24f, 40f)
                 }
-                1, 3, 6 -> { // tails / ponytail / buns: medium back
+                12 -> { // wolf cut: long jagged mane
+                    moveTo(24f, 40f)
+                    cubicTo(20f, 20f, 80f, 20f, 76f, 40f)
+                    lineTo(80f, 52f); lineTo(77f, 54f); lineTo(82f, 64f); lineTo(77f, 65f)
+                    lineTo(80f, 76f); lineTo(72f, 72f); lineTo(70f, 80f)
+                    lineTo(30f, 80f); lineTo(28f, 72f); lineTo(20f, 76f)
+                    lineTo(23f, 65f); lineTo(18f, 64f); lineTo(23f, 54f); lineTo(20f, 52f)
+                }
+                14 -> { // fluffy: scalloped medium
+                    moveTo(24f, 40f)
+                    cubicTo(20f, 20f, 80f, 20f, 76f, 40f)
+                    cubicTo(84f, 44f, 82f, 52f, 79f, 54f)
+                    cubicTo(84f, 58f, 81f, 66f, 76f, 66f)
+                    cubicTo(76f, 72f, 68f, 72f, 66f, 68f)
+                    lineTo(34f, 68f)
+                    cubicTo(32f, 72f, 24f, 72f, 24f, 66f)
+                    cubicTo(19f, 66f, 16f, 58f, 21f, 54f)
+                    cubicTo(18f, 52f, 16f, 44f, 24f, 40f)
+                }
+                1, 3, 6, 9, 10, 11 -> { // tails / ponytail / buns / drills / braids: medium back
                     moveTo(25f, 40f)
                     cubicTo(22f, 20f, 78f, 20f, 75f, 40f)
                     cubicTo(77f, 50f, 76f, 58f, 72f, 64f)
@@ -184,7 +204,22 @@ private class Ctx(
                 fillOutlined(tail, hairShadow)
             }
         }
+        if (a.hairStyle == 10) { // side ponytail with scrunchie
+            val tail = path {
+                moveTo(70f, 24f)
+                cubicTo(92f, 24f, 96f, 52f, 88f, 82f)
+                cubicTo(86f, 88f, 82f, 90f, 80f, 86f)
+                cubicTo(86f, 62f, 84f, 42f, 72f, 34f)
+                close()
+            }
+            fillOutlined(tail, hairShadow)
+            d.drawPath(path { moveTo(80f, 34f); cubicTo(88f, 46f, 88f, 64f, 85f, 78f) }, hair.lighter(0.25f), style = Stroke(1.2f, cap = StrokeCap.Round))
+        }
         fillOutlined(bp, hairShadow)
+        if (a.hairStyle == 10) {
+            d.drawCircle(Color(0xFFFF8FBF), 3.4f, Offset(74f, 27f))
+            d.drawCircle(line, 3.4f, Offset(74f, 27f), style = Stroke(outline))
+        }
         if (a.hairStyle == 6) { // odango buns
             for (side in listOf(-1f, 1f)) {
                 val center = Offset(50f + side * 21f, 17f)
@@ -301,6 +336,101 @@ private class Ctx(
                 for (i in 0..3) d.drawCircle(Color(0xFFE0B04A), 1f, Offset(50f, 84f + i * 4.5f))
                 d.drawLine(line, Offset(50f, 81f), Offset(50f, 101f), outline)
             }
+            8 -> { // idol stage costume
+                val frill = path {
+                    moveTo(30f, 84f)
+                    for (i in 0..10) quadraticBezierTo(32f + i * 4f, 88f, 34f + i * 4f, 84f)
+                    lineTo(74f, 86f); lineTo(26f, 86f); close()
+                }
+                fillOutlined(frill, Color.White, width = 0.4f)
+                val tie = path { moveTo(50f, 81f); lineTo(44f, 78f); lineTo(44f, 84f); close(); moveTo(50f, 81f); lineTo(56f, 78f); lineTo(56f, 84f); close() }
+                fillOutlined(tie, accent)
+                for ((sx, sy) in listOf(32f to 94f, 66f to 92f, 58f to 98f)) with(d) { sparkle(Offset(sx, sy), 2.4f, Color(0xFFFFD983)) }
+            }
+            9 -> { // miko: white haori, red hakama ties
+                val haori = path { moveTo(42f, 78f); lineTo(58f, 78f); lineTo(64f, 101f); lineTo(36f, 101f); close() }
+                fillOutlined(haori, Color(0xFFF7F7FC))
+                d.drawLine(line, Offset(42f, 78f), Offset(54f, 101f), outline)
+                d.drawLine(line, Offset(58f, 78f), Offset(48f, 92f), outline)
+                val hakama = path { moveTo(30f, 96f); lineTo(70f, 96f); lineTo(71f, 101f); lineTo(29f, 101f); close() }
+                fillOutlined(hakama, Color(0xFFD8334A))
+                d.drawCircle(Color(0xFFD8334A), 1.8f, Offset(50f, 96f))
+            }
+            10 -> { // ninja: scarf around the neck
+                val scarf = path { moveTo(40f, 72f); cubicTo(44f, 69f, 56f, 69f, 60f, 72f); lineTo(61f, 81f); cubicTo(55f, 84f, 45f, 84f, 39f, 81f); close() }
+                fillOutlined(scarf, accent.takeIf { cloth.luminance() < 0.3f } ?: Color(0xFFD8334A))
+                val tail = path { moveTo(57f, 80f); lineTo(70f, 92f); lineTo(66f, 95f); lineTo(54f, 82f); close() }
+                fillOutlined(tail, accent.takeIf { cloth.luminance() < 0.3f } ?: Color(0xFFD8334A))
+                d.drawLine(line, Offset(40f, 92f), Offset(60f, 92f), 1.4f)
+            }
+            11 -> { // butler tailcoat: vest + bow tie
+                val shirt = path { moveTo(43f, 78f); lineTo(57f, 78f); lineTo(54f, 101f); lineTo(46f, 101f); close() }
+                fillOutlined(shirt, Color.White)
+                val vest = path { moveTo(45f, 86f); lineTo(55f, 86f); lineTo(56f, 101f); lineTo(44f, 101f); close() }
+                fillOutlined(vest, Color(0xFF6B4A8F))
+                for (side in listOf(-1f, 1f)) d.drawLine(line, Offset(50f + side * 7f, 78f), Offset(50f + side * 9f, 101f), outline * 1.4f)
+                val bow = path { moveTo(50f, 80.5f); lineTo(46f, 78.5f); lineTo(46f, 82.5f); close(); moveTo(50f, 80.5f); lineTo(54f, 78.5f); lineTo(54f, 82.5f); close() }
+                fillOutlined(bow, Color(0xFF1E1E26))
+                d.drawCircle(Color(0xFFE0B04A), 0.8f, Offset(50f, 92f))
+                d.drawCircle(Color(0xFFE0B04A), 0.8f, Offset(50f, 97f))
+            }
+            12 -> { // turtleneck sweater
+                val collar = path { moveTo(43f, 70f); lineTo(57f, 70f); lineTo(58f, 80f); cubicTo(53f, 82f, 47f, 82f, 42f, 80f); close() }
+                fillOutlined(collar, cloth.lighter(0.1f))
+                for (i in 0..3) d.drawLine(cloth.darker(0.25f), Offset(44.5f + i * 3.5f, 71f), Offset(44.5f + i * 3.5f, 80f), 0.5f)
+                for (x in listOf(34f, 42f, 50f, 58f, 66f)) d.drawLine(cloth.darker(0.18f), Offset(x, 85f), Offset(x, 101f), 0.6f)
+            }
+            13 -> { // gothic lolita: lace collar + cross
+                val collar = path {
+                    moveTo(40f, 78f); lineTo(60f, 78f); lineTo(58f, 84f)
+                    for (i in 0..4) quadraticBezierTo(56f - i * 4f, 87f, 54f - i * 4f, 84f)
+                    close()
+                }
+                fillOutlined(collar, Color.White, width = 0.4f)
+                d.drawLine(Color(0xFFE0B04A), Offset(50f, 87f), Offset(50f, 96f), 1.2f)
+                d.drawLine(Color(0xFFE0B04A), Offset(46.5f, 90f), Offset(53.5f, 90f), 1.2f)
+                for (side in listOf(-1f, 1f)) for (k in 0..3) d.drawCircle(Color(0xFFD8334A), 0.7f, Offset(50f + side * 4f, 88f + k * 3.5f))
+            }
+            14 -> { // mage robe with hood and clasp
+                val hood = path { moveTo(26f, 86f); cubicTo(30f, 72f, 70f, 72f, 74f, 86f); cubicTo(64f, 80f, 36f, 80f, 26f, 86f); close() }
+                fillOutlined(hood, cloth.darker(0.25f))
+                val trim = path { moveTo(44f, 82f); lineTo(56f, 82f); lineTo(53f, 101f); lineTo(47f, 101f); close() }
+                fillOutlined(trim, cloth.darker(0.4f))
+                for (side in listOf(-1f, 1f)) d.drawLine(Color(0xFFE0B04A), Offset(50f + side * 6f, 82f), Offset(50f + side * 3f, 101f), 0.8f)
+                d.drawCircle(Color(0xFF9CCBFF), 2.4f, Offset(50f, 84f))
+                d.drawCircle(Color(0xFFE0B04A), 2.4f, Offset(50f, 84f), style = Stroke(0.8f))
+            }
+            15 -> { // cyber jacket with neon trim
+                val neon = Color(0xFF3FF2E6)
+                val collar = path { moveTo(38f, 76f); lineTo(46f, 78f); lineTo(44f, 86f); lineTo(36f, 82f); close(); moveTo(62f, 76f); lineTo(54f, 78f); lineTo(56f, 86f); lineTo(64f, 82f); close() }
+                fillOutlined(collar, cloth.darker(0.3f))
+                d.drawLine(line, Offset(50f, 80f), Offset(50f, 101f), 0.9f)
+                d.drawLine(neon, Offset(24f, 92f), Offset(38f, 88f), 0.9f, cap = StrokeCap.Round)
+                d.drawLine(neon, Offset(76f, 92f), Offset(62f, 88f), 0.9f, cap = StrokeCap.Round)
+                d.drawLine(Color(0xFFFF4FD8), Offset(53f, 86f), Offset(53f, 96f), 0.7f, cap = StrokeCap.Round)
+                d.drawRoundRect(neon.copy(alpha = 0.8f), Offset(40f, 94f), Size(6f, 2.4f), androidx.compose.ui.geometry.CornerRadius(1f))
+            }
+            16 -> { // sports jersey
+                for (side in listOf(-1f, 1f)) {
+                    d.drawLine(accent, Offset(50f + side * 18f, 82f), Offset(50f + side * 34f, 94f), 2f, cap = StrokeCap.Round)
+                    d.drawLine(accent, Offset(50f + side * 16f, 85f), Offset(50f + side * 31f, 97f), 1f, cap = StrokeCap.Round)
+                }
+                val zip = path { moveTo(44f, 77f); lineTo(56f, 77f); lineTo(50f, 85f); close() }
+                fillOutlined(zip, accent)
+                d.drawLine(line, Offset(50f, 85f), Offset(50f, 101f), 0.7f)
+            }
+            17 -> { // qipao: high collar, diagonal placket, frog buttons
+                val collar = path { moveTo(43f, 71f); lineTo(57f, 71f); lineTo(57.5f, 79f); lineTo(42.5f, 79f); close() }
+                fillOutlined(collar, cloth)
+                d.drawLine(Color(0xFFE0B04A), Offset(43f, 78f), Offset(57f, 78f), 0.6f)
+                val placket = path { moveTo(50f, 79f); quadraticBezierTo(58f, 82f, 64f, 92f) }
+                d.drawPath(placket, Color(0xFFE0B04A), style = Stroke(0.9f, cap = StrokeCap.Round))
+                for ((bx, by) in listOf(55f to 81.5f, 60f to 86f, 63f to 90.5f)) {
+                    d.drawLine(Color(0xFFE0B04A), Offset(bx - 2f, by), Offset(bx + 2f, by), 1f, cap = StrokeCap.Round)
+                    d.drawCircle(Color(0xFFE0B04A), 0.8f, Offset(bx + 2.2f, by))
+                }
+                for (i in 0..2) with(d) { sparkle(Offset(32f + i * 7f, 94f - i * 2f), 1.6f, Color(0xFFFFD983).copy(alpha = 0.8f)) }
+            }
             7 -> { // armor
                 for (side in listOf(-1f, 1f)) {
                     val pad = path {
@@ -339,6 +469,50 @@ private class Ctx(
         }
         cubicTo(72f, 18f, 28f, 18f, 28f, 42f)
         close()
+    }
+
+    fun hairBesideFace() {
+        when (a.hairStyle) {
+            9 -> { // ojou drills
+                for (side in listOf(-1f, 1f)) {
+                    val x = 50f + side * 26f
+                    for (k in 0 until 5) {
+                        val w = 11f - k * 1.4f
+                        val cy = 46f + k * 7.5f
+                        val seg = path { addOval(androidx.compose.ui.geometry.Rect(x - w / 2f, cy - 5f, x + w / 2f, cy + 5f)) }
+                        fillOutlined(seg, hair)
+                        d.drawLine(hairDark.copy(alpha = 0.6f), Offset(x - w * 0.4f, cy - 2f), Offset(x + w * 0.35f, cy + 3f), 0.5f, cap = StrokeCap.Round)
+                    }
+                    d.drawCircle(Color(0xFFE5485D), 2.2f, Offset(x, 41f))
+                }
+            }
+            11 -> { // two braids over the shoulders
+                for (side in listOf(-1f, 1f)) {
+                    val x = 50f + side * 23f
+                    for (k in 0 until 6) {
+                        val cx = x + (if (k % 2 == 0) -1f else 1f) * 1.2f * side + side * k * 0.6f
+                        val cy = 58f + k * 5.5f
+                        val seg = path { addOval(androidx.compose.ui.geometry.Rect(cx - 3.6f, cy - 3.6f, cx + 3.6f, cy + 3.6f)) }
+                        fillOutlined(seg, hair)
+                    }
+                    val tipX = x + side * 3.6f
+                    d.drawCircle(Color(0xFF9CCBFF), 2f, Offset(tipX, 91f))
+                    fillOutlined(path { moveTo(tipX - 2f, 92f); lineTo(tipX - 3.5f, 99f); lineTo(tipX + 3.5f, 99f); lineTo(tipX + 2f, 92f); close() }, hair)
+                }
+            }
+            13 -> { // low tail draped over the shoulder
+                val tail = path {
+                    moveTo(58f, 60f)
+                    cubicTo(70f, 64f, 74f, 78f, 72f, 98f)
+                    lineTo(66f, 99f)
+                    cubicTo(66f, 82f, 62f, 72f, 54f, 66f)
+                    close()
+                }
+                fillOutlined(tail, hair)
+                d.drawRoundRect(Color(0xFFE5485D), Offset(59f, 63f), Size(6f, 3f), androidx.compose.ui.geometry.CornerRadius(1f))
+                d.drawPath(path { moveTo(64f, 70f); cubicTo(69f, 78f, 70f, 88f, 69f, 96f) }, hair.lighter(0.3f), style = Stroke(0.8f, cap = StrokeCap.Round))
+            }
+        }
     }
 
     fun face() {
@@ -622,7 +796,10 @@ private class Ctx(
         // Side locks framing the face.
         val lockEnd = when (a.hairStyle) {
             4, 8 -> 56f
+            13 -> 60f
+            14 -> 64f
             2 -> 68f
+            12 -> 70f
             7 -> 66f
             else -> 74f
         }

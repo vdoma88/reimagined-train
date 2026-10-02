@@ -89,7 +89,7 @@ class LogicTest {
         assertEquals(Appearance(), Appearance.fromJson("garbage"))
         repeat(100) {
             val m = Appearance.random(Gender.MALE, Random(it))
-            assertTrue(m.hairStyle !in setOf(0, 1, 5, 6, 7))
+            assertTrue(m.hairStyle !in setOf(0, 1, 5, 6, 7, 9, 10, 11))
         }
     }
 }
