@@ -14,6 +14,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -239,8 +240,12 @@ internal fun Hero(c: CharacterEntity, emotion: Emotion, talking: Boolean, bubble
             ) {
                 Text(
                     bubble.orEmpty(),
-                    modifier = Modifier.clip(RoundedCornerShape(16.dp)).background(Color.White).padding(horizontal = 12.dp, vertical = 6.dp),
-                    color = Color(0xFF2A0A1C),
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(24.dp, 24.dp, 24.dp, 7.dp))
+                        .background(Color(0xFFFFF7FB))
+                        .border(1.dp, Palette.Sakura.copy(alpha = 0.58f), RoundedCornerShape(24.dp, 24.dp, 24.dp, 7.dp))
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    color = Palette.Ink,
                     fontWeight = FontWeight.Bold,
                 )
             }
@@ -281,7 +286,7 @@ fun styledText(text: String, actionColor: Color): AnnotatedString = buildAnnotat
 internal fun MessageBubble(m: MessageEntity, isLastAssistant: Boolean, onDelete: () -> Unit, onRegenerate: () -> Unit) {
     var menu by remember { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
-    val shape = if (m.isUser) RoundedCornerShape(22.dp, 22.dp, 6.dp, 22.dp) else RoundedCornerShape(22.dp, 22.dp, 22.dp, 6.dp)
+    val shape = if (m.isUser) RoundedCornerShape(24.dp, 24.dp, 7.dp, 24.dp) else RoundedCornerShape(24.dp, 24.dp, 24.dp, 7.dp)
     Box(Modifier.fillMaxWidth(), contentAlignment = if (m.isUser) Alignment.CenterEnd else Alignment.CenterStart) {
         Box {
             Text(
@@ -289,11 +294,19 @@ internal fun MessageBubble(m: MessageEntity, isLastAssistant: Boolean, onDelete:
                 modifier = Modifier
                     .widthIn(max = 300.dp)
                     .clip(shape)
-                    .background(if (m.isUser) Palette.accent else Brush.linearGradient(listOf(Color(0x2BFFFFFF), Color(0x18FFFFFF))))
+                    .background(
+                        if (m.isUser) Palette.accent
+                        else Brush.linearGradient(listOf(Color(0x35FFF7FB), Color(0x20EEDCFF))),
+                    )
+                    .border(
+                        1.dp,
+                        if (m.isUser) Palette.Sakura.copy(alpha = 0.45f) else Palette.Lavender.copy(alpha = 0.32f),
+                        shape,
+                    )
                     .combinedClickable(onClick = {}, onLongClick = { menu = true })
                     .padding(horizontal = 14.dp, vertical = 10.dp)
                     .animateContentSize(),
-                color = if (m.isUser) Color(0xFF2A0A1C) else Palette.Text,
+                color = if (m.isUser) Palette.Ink else Palette.Text,
                 style = MaterialTheme.typography.bodyLarge,
             )
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
