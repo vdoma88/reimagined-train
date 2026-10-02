@@ -15,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import com.animate.companion.model.Appearance
 import com.animate.companion.model.Emotion
 import com.animate.companion.model.Gender
@@ -77,7 +78,7 @@ fun AvatarView(
         0f
     }
 
-    Canvas(modifier) {
+    Canvas(modifier.clipToBounds()) {
         drawAvatar(
             appearance, gender,
             AvatarPose(emotion = emotion, blink = blink, breath = sin(breathPhase) * 0.7f, mouthOpen = mouthOpen),
