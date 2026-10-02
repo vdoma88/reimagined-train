@@ -11,25 +11,29 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 
 object Palette {
-    val Night = Color(0xFF0E0A1F)
-    val NightHigh = Color(0xFF1A1433)
-    val Glass = Color(0x1FFFFFFF)
-    val GlassBorder = Color(0x33FFFFFF)
-    val Sakura = Color(0xFFFF7EB6)
-    val Lavender = Color(0xFFA78BFA)
-    val Sky = Color(0xFF7DD3FC)
-    val Peach = Color(0xFFFFB38A)
-    val Text = Color(0xFFF4EEFF)
-    val TextDim = Color(0xFFB9AED6)
+    val Night = Color(0xFF171225)
+    val NightHigh = Color(0xFF241A36)
+    val Glass = Color(0x24FFF9FD)
+    val GlassBorder = Color(0x47FFD9EA)
+    val Sakura = Color(0xFFFF9FC9)
+    val Lavender = Color(0xFFC2A8FF)
+    val Sky = Color(0xFF9EDCFF)
+    val Peach = Color(0xFFFFC2A8)
+    val Cream = Color(0xFFFFF5F9)
+    val Ink = Color(0xFF3A2545)
+    val Text = Color(0xFFFFF7FC)
+    val TextDim = Color(0xFFD7C8E3)
 
-    val accent = Brush.linearGradient(listOf(Sakura, Lavender))
+    val accent = Brush.linearGradient(listOf(Sakura, Color(0xFFFFC2DD), Lavender))
     val accentWide = Brush.linearGradient(listOf(Sakura, Lavender, Sky))
-    val background = Brush.verticalGradient(listOf(Color(0xFF1B1140), Night, Color(0xFF0A0716)))
+    val background = Brush.verticalGradient(
+        listOf(Color(0xFF33204A), Color(0xFF20172F), Night, Color(0xFF100C19)),
+    )
 }
 
 private val scheme = darkColorScheme(
     primary = Palette.Sakura,
-    onPrimary = Color(0xFF2A0A1C),
+    onPrimary = Palette.Ink,
     secondary = Palette.Lavender,
     onSecondary = Color(0xFF1A0F33),
     tertiary = Palette.Sky,
@@ -37,11 +41,11 @@ private val scheme = darkColorScheme(
     onBackground = Palette.Text,
     surface = Palette.NightHigh,
     onSurface = Palette.Text,
-    surfaceVariant = Color(0xFF2A2250),
+    surfaceVariant = Color(0xFF382B4C),
     onSurfaceVariant = Palette.TextDim,
-    surfaceContainer = Color(0xFF1C1638),
-    surfaceContainerHigh = Color(0xFF241D45),
-    surfaceContainerHighest = Color(0xFF2C2453),
+    surfaceContainer = Color(0xFF261C36),
+    surfaceContainerHigh = Color(0xFF30223F),
+    surfaceContainerHighest = Color(0xFF3B294C),
     outline = Palette.GlassBorder,
     error = Color(0xFFFF6B81),
 )
