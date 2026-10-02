@@ -241,7 +241,8 @@ private class Ctx(
         fillOutlined(neck, skin)
         d.drawPath(path { moveTo(44.5f, 66f); quadraticBezierTo(50f, 71f, 55.5f, 66f); lineTo(55.5f, 64f); lineTo(44.5f, 64f); close() }, skinShadow)
 
-        val shoulders = if (g == Gender.MALE) 12f else 16f
+        // Slightly narrower shoulders make the full-body silhouette read more chibi/kawaii.
+        val shoulders = if (g == Gender.MALE) 15f else 19f
         val torso = path {
             moveTo(shoulders - 4f, 101f)
             cubicTo(shoulders - 2f, 88f, 22f, 81f, 40f, 78f)
@@ -568,6 +569,13 @@ private class Ctx(
                 }
             }
         }
+        if (e == Emotion.LOVE || e == Emotion.SHY) {
+            for (side in listOf(-1f, 1f)) {
+                val x = 50f + side * 18f
+                d.drawCircle(Color.White.copy(alpha = 0.82f), 0.75f, Offset(x, 57.3f))
+                d.drawCircle(Color(0xFFFFB7D3).copy(alpha = 0.72f), 0.48f, Offset(x + side * 2.1f, 59.1f))
+            }
+        }
         if (a.beautyMark) d.drawCircle(line, 0.55f, Offset(60.5f, 58.5f))
         if (a.bandaid) {
             d.rotate(-20f, Offset(37f, 61f)) {
@@ -731,7 +739,8 @@ private class Ctx(
             }
             d.drawPath(lash, line, style = Stroke(1.5f, cap = StrokeCap.Round, join = StrokeJoin.Round))
             if (g != Gender.MALE) {
-                d.drawLine(line, Offset(xo - side * 0.5f, outerY - 0.2f), Offset(xo + side * 1.4f, outerY + 1.4f), 0.8f, cap = StrokeCap.Round)
+                d.drawLine(line, Offset(xo - side * 0.5f, outerY - 0.2f), Offset(xo + side * 1.7f, outerY + 1.5f), 0.85f, cap = StrokeCap.Round)
+                d.drawLine(line, Offset(xo - side * 1.7f, outerY - 0.8f), Offset(xo + side * 0.8f, outerY - 2.7f), 0.62f, cap = StrokeCap.Round)
             }
             if (s.lashes) {
                 for (k in 0..2) {
@@ -908,7 +917,15 @@ private class Ctx(
                 quadraticBezierTo(50f, 22f, 30f, 27f)
                 close()
             }
-            drawPath(ring, Color.White.copy(alpha = 0.45f))
+            drawPath(ring, Color.White.copy(alpha = 0.58f))
+            drawPath(
+                path {
+                    moveTo(36f, 25f)
+                    quadraticBezierTo(50f, 20.5f, 64f, 25f)
+                },
+                hair.lighter(0.78f).copy(alpha = 0.42f),
+                style = Stroke(1.1f, cap = StrokeCap.Round),
+            )
             for (i in 0..4) {
                 val x = 34f + i * 8f
                 val y = 22f + kotlin.math.abs(i - 2) * 1.2f
@@ -1024,7 +1041,8 @@ private class Ctx(
                         lineTo(bx + side * 6.5f, 22f)
                         close()
                     }
-                    d.drawPath(inner, if (a.ears == 2) Color.White else Color(0xFFFFB3C9))
+                    d.drawPath(inner, if (a.ears == 2) Color(0xFFFFF4F8) else Color(0xFFFFB8D2))
+                    d.drawCircle(Color.White.copy(alpha = 0.72f), 0.7f, Offset(bx + side * 3.5f, 15f - tall * 0.3f))
                     if (a.ears == 2) {
                         d.drawPath(path { moveTo(bx + side * 4f, 9f - tall); lineTo(bx + side * 6f, 5f - tall); lineTo(bx + side * 7f, 10f - tall); close() }, Color.White)
                     }

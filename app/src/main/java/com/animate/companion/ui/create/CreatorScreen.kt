@@ -112,12 +112,12 @@ class CreatorViewModel : ViewModel() {
 }
 
 private enum class Cat(val label: String, val headOnly: Boolean = true) {
-    HAIR("Причёска", false), BANGS("Чёлка"), HAIR_COLOR("Цвет волос"), EYES("Глаза"), EYE_COLOR("Цвет глаз"),
-    MOUTH("Рот"), FACE("Лицо"), SKIN("Кожа"), EARS("Ушки"), ACCESSORY("Аксессуар"),
-    OUTFIT("Одежда", false), OUTFIT_COLOR("Цвет одежды", false), EXTRAS("Особенности"),
+    HAIR("✦ Причёска", false), BANGS("Чёлка"), HAIR_COLOR("Цвет волос"), EYES("♡ Глаза"), EYE_COLOR("Цвет глаз"),
+    MOUTH("Рот"), FACE("Лицо"), SKIN("Кожа"), EARS("ᓚᘏᗢ Ушки"), ACCESSORY("🎀 Аксессуар"),
+    OUTFIT("✧ Одежда", false), OUTFIT_COLOR("Цвет одежды", false), EXTRAS("✨ Детали"),
 }
 
-private val steps = listOf("Внешность", "Кто это?", "Характер")
+private val steps = listOf("Образ", "История", "Характер")
 
 @Composable
 fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long) -> Unit) {
@@ -152,7 +152,10 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
                 IconButton(onClick = { if (vm.step > 0) vm.step-- else onBack() }) {
                     Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Назад", tint = Palette.Text)
                 }
-                Text("Новый персонаж", style = MaterialTheme.typography.titleLarge, color = Palette.Text, modifier = Modifier.weight(1f))
+                Column(Modifier.weight(1f)) {
+                    Text("Kawaii Studio ♡", style = MaterialTheme.typography.titleLarge, color = Palette.Text)
+                    Text("создай своего аниме-героя", style = MaterialTheme.typography.labelSmall, color = Palette.TextDim)
+                }
                 IconButton(onClick = {
                     container.sound.sfx(SfxType.DICE)
                     when (vm.step) {
@@ -171,6 +174,9 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
             Box(Modifier.fillMaxWidth().weight(0.42f), contentAlignment = Alignment.Center) {
                 Box(
                     Modifier.fillMaxHeight().aspectRatio(1f)
+                        .clip(RoundedCornerShape(36.dp))
+                        .background(Color.White.copy(alpha = 0.035f))
+                        .border(1.dp, Palette.Sakura.copy(alpha = 0.22f), RoundedCornerShape(36.dp))
                         .clickable(remember { MutableInteractionSource() }, null) { voicePreview(listOf(Emotion.HAPPY, Emotion.SHY, Emotion.SURPRISED, Emotion.LOVE, Emotion.SMUG).random()) },
                 ) {
                     AvatarView(vm.appearance, vm.gender, Modifier.fillMaxSize(), emotion = previewEmotion, talking = talking)
@@ -182,14 +188,17 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
                     ) {
                         Text(
                             bubble.orEmpty(),
-                            modifier = Modifier.clip(RoundedCornerShape(16.dp)).background(Color.White).padding(horizontal = 12.dp, vertical = 6.dp),
-                            color = Color(0xFF2A0A1C),
+                            modifier = Modifier.clip(RoundedCornerShape(22.dp, 22.dp, 22.dp, 8.dp))
+                                .background(Color(0xFFFFF6FB))
+                                .border(1.dp, Palette.Sakura.copy(alpha = 0.55f), RoundedCornerShape(22.dp, 22.dp, 22.dp, 8.dp))
+                                .padding(horizontal = 14.dp, vertical = 8.dp),
+                            color = Palette.Ink,
                             fontWeight = FontWeight.Bold,
                         )
                     }
                 }
                 Text(
-                    "нажми, чтобы услышать голос",
+                    "♡ нажми на героя — он оживёт",
                     style = MaterialTheme.typography.labelSmall,
                     color = Palette.TextDim,
                     modifier = Modifier.align(Alignment.BottomCenter),
@@ -209,7 +218,7 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
             }
 
             GradientButton(
-                text = if (vm.step < 2) "Далее" else "Оживить персонажа",
+                text = if (vm.step < 2) "Дальше ✦" else "Оживить героя ♡",
                 icon = if (vm.step < 2) Icons.AutoMirrored.Rounded.ArrowForward else Icons.Rounded.Favorite,
                 enabled = !saving,
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
