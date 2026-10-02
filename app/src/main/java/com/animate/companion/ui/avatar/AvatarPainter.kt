@@ -1226,6 +1226,23 @@ private class Ctx(
 
     fun expressionMarks() {
         when (e) {
+            Emotion.HAPPY, Emotion.LAUGH -> {
+                with(d) {
+                    star(Offset(78f, 35f), 2.4f, Color(0xFFFFDC94))
+                    star(Offset(22f, 42f), 1.7f, Color(0xFFFFB8D9))
+                }
+            }
+            Emotion.SMUG -> with(d) { star(Offset(76f, 38f), 2f, Color(0xFFFFDC94)) }
+            Emotion.SAD -> {
+                for (x in listOf(35f, 65f)) {
+                    val tear = path {
+                        moveTo(x, 54f); cubicTo(x - 2f, 57f, x - 1.5f, 60f, x, 60f)
+                        cubicTo(x + 1.5f, 60f, x + 2f, 57f, x, 54f); close()
+                    }
+                    d.drawPath(tear, Color(0xFFB6E5FF).copy(alpha = 0.85f))
+                    d.drawLine(Color.White.copy(alpha = 0.8f), Offset(x - 0.4f, 56.5f), Offset(x - 0.4f, 58f), 0.45f, cap = StrokeCap.Round)
+                }
+            }
             Emotion.ANGRY -> { // 💢
                 val c = Offset(70f, 30f)
                 for (i in 0 until 4) {

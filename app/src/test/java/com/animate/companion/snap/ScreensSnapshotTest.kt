@@ -23,6 +23,8 @@ import com.animate.companion.ui.chat.Hero
 import com.animate.companion.ui.chat.MessageBubble
 import com.animate.companion.ui.chat.TypingBubble
 import com.animate.companion.ui.components.GradientButton
+import com.animate.companion.ui.components.MangaStage
+import com.animate.companion.ui.create.EmotionStrip
 import com.animate.companion.ui.components.SakuraBackground
 import com.animate.companion.ui.create.AppearanceStep
 import com.animate.companion.ui.create.CreatorViewModel
@@ -80,8 +82,10 @@ class ScreensSnapshotTest {
                     SakuraBackground {
                         Column(Modifier.fillMaxSize().padding(top = 24.dp)) {
                             Box(Modifier.fillMaxWidth().weight(0.42f), contentAlignment = Alignment.Center) {
+                                MangaStage(Emotion.HAPPY, Modifier.aspectRatio(1f))
                                 AvatarView(vm.appearance, vm.gender, Modifier.aspectRatio(1f), emotion = Emotion.HAPPY, animated = false)
                             }
+                            EmotionStrip(Emotion.HAPPY) {}
                             StepTabs(step) {}
                             Box(Modifier.weight(0.58f).fillMaxWidth()) {
                                 when (step) {

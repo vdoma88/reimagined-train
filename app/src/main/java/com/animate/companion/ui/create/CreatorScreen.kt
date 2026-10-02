@@ -9,6 +9,9 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
+import kotlinx.coroutines.Job
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -78,6 +81,8 @@ import com.animate.companion.model.Gender
 import com.animate.companion.model.NameGenerator
 import com.animate.companion.model.PersonaPresets
 import com.animate.companion.model.Swatch
+import com.animate.companion.model.StudioLooks
+import com.animate.companion.ui.components.MangaStage
 import com.animate.companion.ui.avatar.AvatarView
 import com.animate.companion.ui.components.GlassCard
 import com.animate.companion.ui.components.GradientButton
@@ -96,7 +101,7 @@ class CreatorViewModel : ViewModel() {
     var profession by mutableStateOf(PersonaPresets.professions.random().id)
     var direction by mutableStateOf(PersonaPresets.directions.first().id)
     var step by mutableIntStateOf(0)
-    var category by mutableIntStateOf(0)
+    var category by mutableIntStateOf(Cat.LOOKS.ordinal)
     val voiceSeed = Random.nextInt()
 
     fun draft() = CharacterEntity(
@@ -114,7 +119,7 @@ class CreatorViewModel : ViewModel() {
 private enum class Cat(val label: String, val headOnly: Boolean = true) {
     HAIR("✦ Причёска", false), BANGS("Чёлка"), HAIR_COLOR("Цвет волос"), EYES("♡ Глаза"), EYE_COLOR("Цвет глаз"),
     MOUTH("Рот"), FACE("Лицо"), SKIN("Кожа"), EARS("ᓚᘏᗢ Ушки"), ACCESSORY("🎀 Аксессуар"),
-    OUTFIT("✧ Одежда", false), OUTFIT_COLOR("Цвет одежды", false), EXTRAS("✨ Детали"),
+    OUTFIT("✧ Одежда", false), OUTFIT_COLOR("Цвет одежды", false), EXTRAS("✨ Детали"), LOOKS("♡ Готовые образы", false),
 }
 
 private val steps = listOf("Образ", "История", "Характер")
@@ -127,10 +132,14 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
     var previewEmotion by remember { mutableStateOf(Emotion.HAPPY) }
     var talking by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
+    var voiceJob by remember { mutableStateOf<Job?>(null) }
 
     fun voicePreview(emotion: Emotion = Emotion.HAPPY) {
-        scope.launch {
-            previewEmotion = emotion
+        voiceJob?.cancel()
+        talking = false
+        bubble = null
+        previewEmotion = emotion
+        voiceJob = scope.launch {
             val text = container.sound.voice(vm.draft(), emotion, force = true)
             if (text != null) {
                 bubble = text
@@ -140,8 +149,6 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
                 delay(900)
                 bubble = null
             }
-            delay(600)
-            previewEmotion = Emotion.HAPPY
         }
     }
 
@@ -179,6 +186,7 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
                         .border(1.dp, Palette.Sakura.copy(alpha = 0.22f), RoundedCornerShape(36.dp))
                         .clickable(remember { MutableInteractionSource() }, null) { voicePreview(listOf(Emotion.HAPPY, Emotion.SHY, Emotion.SURPRISED, Emotion.LOVE, Emotion.SMUG).random()) },
                 ) {
+                    MangaStage(previewEmotion, Modifier.fillMaxSize())
                     AvatarView(vm.appearance, vm.gender, Modifier.fillMaxSize(), emotion = previewEmotion, talking = talking)
                     androidx.compose.animation.AnimatedVisibility(
                         visible = bubble != null,
@@ -205,6 +213,7 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
                 )
             }
 
+            EmotionStrip(previewEmotion) { voicePreview(it) }
             StepTabs(vm.step) { container.sound.sfx(SfxType.TAP); vm.step = it }
 
             Box(Modifier.weight(0.58f).fillMaxWidth()) {
@@ -269,17 +278,17 @@ internal fun StepTabs(step: Int, onSelect: (Int) -> Unit) {
 
 @Composable
 internal fun AppearanceStep(vm: CreatorViewModel, onTap: () -> Unit) {
-    val cats = Cat.entries
+    val cats = listOf(Cat.LOOKS) + Cat.entries.filter { it != Cat.LOOKS }
     Column(Modifier.fillMaxSize()) {
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             itemsIndexed(cats) { i, c ->
-                val sel = i == vm.category
+                val sel = c.ordinal == vm.category
                 Text(
                     c.label,
                     modifier = Modifier.clip(RoundedCornerShape(50))
                         .background(if (sel) Palette.Sakura.copy(alpha = 0.25f) else Palette.Glass)
                         .border(1.dp, if (sel) Palette.Sakura else Palette.GlassBorder, RoundedCornerShape(50))
-                        .clickable { onTap(); vm.category = i }
+                        .clickable { onTap(); vm.category = c.ordinal }
                         .padding(horizontal = 14.dp, vertical = 8.dp),
                     color = Palette.Text,
                     style = MaterialTheme.typography.labelLarge,
@@ -287,9 +296,10 @@ internal fun AppearanceStep(vm: CreatorViewModel, onTap: () -> Unit) {
             }
         }
         Spacer(Modifier.height(8.dp))
-        val cat = cats[vm.category]
+        val cat = Cat.entries[vm.category]
         val a = vm.appearance
         when (cat) {
+            Cat.LOOKS -> StudioLookGrid(vm, onTap)
             Cat.HAIR_COLOR -> SwatchGrid(AppearancePresets.hairColors, a.hairColor) { onTap(); vm.appearance = a.copy(hairColor = it) }
             Cat.EYE_COLOR -> SwatchGrid(AppearancePresets.eyeColors, a.eyeColor) { onTap(); vm.appearance = a.copy(eyeColor = it) }
             Cat.SKIN -> SwatchGrid(AppearancePresets.skinTones, a.skinTone) { onTap(); vm.appearance = a.copy(skinTone = it) }
@@ -313,6 +323,54 @@ internal fun AppearanceStep(vm: CreatorViewModel, onTap: () -> Unit) {
 }
 
 @Composable
+internal fun EmotionStrip(selected: Emotion, onSelect: (Emotion) -> Unit) {
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        itemsIndexed(Emotion.entries) { _, emotion ->
+            Text(
+                "${emotion.emoji} ${emotion.label}",
+                color = if (selected == emotion) Palette.Ink else Palette.Text,
+                style = MaterialTheme.typography.labelMedium,
+                modifier = Modifier.clip(RoundedCornerShape(50))
+                    .background(if (selected == emotion) Palette.Sakura else Palette.Glass)
+                    .selectable(selected == emotion, role = Role.RadioButton) { onSelect(emotion) }
+                    .padding(horizontal = 12.dp, vertical = 14.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun StudioLookGrid(vm: CreatorViewModel, onTap: () -> Unit) {
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(140.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+    ) {
+        item(span = { GridItemSpan(maxLineSpan) }) {
+            Text("Выбери настроение образа, затем меняй любые детали. Тон кожи и форма лица сохранятся.",
+                color = Palette.TextDim, style = MaterialTheme.typography.bodySmall)
+        }
+        itemsIndexed(StudioLooks.all) { _, look ->
+            val appearance = look.applyTo(vm.appearance, vm.gender)
+            GlassCard(selected = vm.appearance == appearance, onClick = { onTap(); vm.appearance = appearance }) {
+                Column(Modifier.fillMaxWidth().padding(10.dp)) {
+                    Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
+                        MangaStage(Emotion.HAPPY, Modifier.fillMaxSize())
+                        AvatarView(appearance, vm.gender, Modifier.fillMaxSize(), animated = false, emotion = Emotion.HAPPY)
+                    }
+                    Text(look.label, color = Palette.Text, style = MaterialTheme.typography.titleSmall)
+                    Text(look.description, color = Palette.TextDim, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun OptionGrid(
     labels: List<String>,
     current: Int,
@@ -322,7 +380,7 @@ private fun OptionGrid(
     onPick: (Appearance) -> Unit,
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(3),
+        columns = GridCells.Adaptive(96.dp),
         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp),

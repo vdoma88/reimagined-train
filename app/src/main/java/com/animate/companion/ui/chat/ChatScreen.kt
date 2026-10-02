@@ -90,6 +90,7 @@ import com.animate.companion.model.PersonaPresets
 import com.animate.companion.ui.avatar.AvatarView
 import com.animate.companion.ui.components.AvatarFrame
 import com.animate.companion.ui.components.GlassCard
+import com.animate.companion.ui.components.MangaStage
 import com.animate.companion.ui.components.SakuraBackground
 import com.animate.companion.ui.create.fieldColors
 import com.animate.companion.ui.theme.Palette
@@ -231,6 +232,7 @@ internal fun Hero(c: CharacterEntity, emotion: Emotion, talking: Boolean, bubble
             Modifier.fillMaxHeight().aspectRatio(1f).align(Alignment.Center)
                 .clickable(remember { MutableInteractionSource() }, null, onClick = onPoke),
         ) {
+            MangaStage(emotion, Modifier.fillMaxSize())
             AvatarView(c.appearance, c.genderEnum, Modifier.fillMaxSize(), emotion = emotion, talking = talking)
             androidx.compose.animation.AnimatedVisibility(
                 visible = bubble != null,
