@@ -49,7 +49,20 @@
 ./gradlew :app:recordPaparazziDebug # перерисовать скриншоты в app/src/test/snapshots
 ```
 
-GitHub Actions собирает debug- и release-APK на каждый push (артефакт `animate-apk`). Release подписан debug-ключом — для публикации в стор замените `signingConfig`.
+GitHub Actions собирает debug- и release-APK на каждый push (артефакт `animate-apk`).
+
+### Релизы
+
+Релиз публикуется workflow **Release**: запустите его вручную (Actions → Release → Run workflow, версия вида `1.0.0`) или запушьте тег `v1.0.0`. Он прогоняет тесты, собирает APK и создаёт GitHub Release с файлом `AniMate-vX.Y.Z.apk`.
+
+Чтобы обновления ставились поверх старой версии, APK должен подписываться одним и тем же ключом. Создайте ключ и добавьте секреты репозитория:
+
+```bash
+keytool -genkeypair -keystore animate.jks -alias animate -keyalg RSA -keysize 2048 -validity 10000
+base64 -w0 animate.jks   # → секрет ANIMATE_KEYSTORE_BASE64
+```
+
+Секреты: `ANIMATE_KEYSTORE_BASE64`, `ANIMATE_KEYSTORE_PASSWORD`, `ANIMATE_KEY_ALIAS`, `ANIMATE_KEY_PASSWORD`. Без них релиз подписывается одноразовым debug-ключом.
 
 ## Архитектура
 
