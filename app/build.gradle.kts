@@ -17,9 +17,22 @@ android {
         applicationId = "com.animate.companion"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    // Stable release key from the environment (CI secrets); falls back to the debug key locally.
+    val releaseKeystore = System.getenv("ANIMATE_KEYSTORE_PATH")?.let { file(it) }?.takeIf { it.exists() }
+    signingConfigs {
+        if (releaseKeystore != null) {
+            create("release") {
+                storeFile = releaseKeystore
+                storePassword = System.getenv("ANIMATE_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("ANIMATE_KEY_ALIAS")
+                keyPassword = System.getenv("ANIMATE_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
@@ -27,8 +40,7 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
-            // Debug signing so the release APK is installable out of the box; replace for store builds.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")
         }
     }
     compileOptions {
