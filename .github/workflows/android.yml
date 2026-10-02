@@ -16,6 +16,12 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
       - name: Unit tests
         run: ./gradlew :app:testDebugUnitTest
+      - name: Render visual previews
+        run: ./gradlew :app:recordPaparazziDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: manga-visual-previews
+          path: app/src/test/snapshots/images/*.png
       - name: Build APKs
         run: ./gradlew :app:assembleDebug :app:assembleRelease
       - uses: actions/upload-artifact@v4
