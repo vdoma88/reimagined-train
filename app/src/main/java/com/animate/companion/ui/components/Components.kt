@@ -169,7 +169,7 @@ fun GlassCard(
         modifier
             .clip(shape)
             .background(
-                if (selected) Palette.Amber.copy(alpha = 0.13f)
+                if (selected) Brush.linearGradient(listOf(Palette.Amber.copy(alpha = 0.16f), Palette.Teal.copy(alpha = 0.08f)))
                 else Brush.verticalGradient(
                     listOf(
                         Palette.NightHigh.copy(alpha = 0.92f),
