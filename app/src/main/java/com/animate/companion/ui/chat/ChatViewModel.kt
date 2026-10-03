@@ -45,8 +45,10 @@ class ChatViewModel(
         private set
     var emotion by mutableStateOf<Emotion?>(null)
         private set
-    var talking by mutableStateOf(false)
-        private set
+    /** Lip-sync: on while TTS speaks or while a short reaction (interjection, poke) plays. */
+    private var speechTalking by mutableStateOf(false)
+    private var reactionTalking by mutableStateOf(false)
+    val talking: Boolean get() = speechTalking || reactionTalking
     var bubble by mutableStateOf<String?>(null)
         private set
 
@@ -61,7 +63,7 @@ class ChatViewModel(
 
     init {
         viewModelScope.launch {
-            container.speaker.speakingId.collect { talking = it != null }
+            container.speaker.speakingId.collect { speechTalking = it != null }
         }
         viewModelScope.launch {
             val c = character.filterNotNull().first()
@@ -97,9 +99,9 @@ class ChatViewModel(
             bubble = container.sound.voice(c, reply.emotion)
             val spoken = readAloud(c, reply.text, latestReplyId(reply.text), afterInterjection = bubble != null)
             if (!spoken) {
-                talking = true
+                reactionTalking = true
                 delay((reply.text.length * 35L).coerceIn(900L, 3200L))
-                talking = false
+                reactionTalking = false
             }
             delay(800)
             bubble = null
@@ -132,7 +134,9 @@ class ChatViewModel(
             val s = container.settings.current()
             val arch = PersonaPresets.archetype(c.archetypeId)
             val voice = SpeechText.voiceFor(c.genderEnum, c.archetypeId, arch.voicePitch, c.voiceSeed, s.speechRate)
-            if (!container.speaker.speak(SpeechText.clean(m.text), voice, "msg-${m.id}")) {
+            val text = SpeechText.clean(m.text)
+            if (text.isBlank()) return@launch // only *actions*: nothing to read, not an error
+            if (!container.speaker.speak(text, voice, "msg-${m.id}")) {
                 error = speechProblem()
             }
         }
@@ -143,6 +147,8 @@ class ChatViewModel(
         SpeakerStatus.INITIALIZING -> "Голос ещё загружается, попробуй через секунду."
         else -> "Синтез речи недоступен на этом телефоне."
     }
+
+    fun stopSpeech() = container.stopSpeech()
 
     override fun onCleared() {
         container.stopSpeech()
@@ -228,9 +234,9 @@ class ChatViewModel(
             val prev = emotion
             emotion = e
             bubble = container.sound.voice(c, e, force = true)
-            talking = true
+            reactionTalking = true
             delay(500)
-            talking = false
+            reactionTalking = false
             delay(900)
             bubble = null
             emotion = prev

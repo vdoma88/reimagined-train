@@ -65,6 +65,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -115,6 +116,8 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
     val character by vm.character.collectAsStateWithLifecycle()
     val messages by vm.messages.collectAsStateWithLifecycle()
     val speakingId by vm.speakingId.collectAsStateWithLifecycle()
+    // The chat entry stays on the back stack when Settings opens, so stop reading on leave.
+    DisposableEffect(Unit) { onDispose { vm.stopSpeech() } }
     val c = character ?: run {
         SakuraBackground { }
         return
