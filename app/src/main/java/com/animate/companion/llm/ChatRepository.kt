@@ -56,6 +56,17 @@ class ChatRepository(
                 return llm.complete(config, messages, s.temperature, maxTokens)
             } catch (e: Exception) {
                 if (e is kotlinx.coroutines.CancellationException) throw e
+                // A retired or mistyped model: switch back to the provider's default and retry.
+                if (e is LlmException && e.isUnknownModel && config.model != config.provider.defaultModel) {
+                    settings.setModel(config.provider, "")
+                    try {
+                        return llm.complete(config.copy(model = config.provider.defaultModel), messages, s.temperature, maxTokens)
+                    } catch (e2: Exception) {
+                        if (e2 is kotlinx.coroutines.CancellationException) throw e2
+                        errors += e2.message ?: e2.javaClass.simpleName
+                        continue
+                    }
+                }
                 errors += e.message ?: e.javaClass.simpleName
             }
         }

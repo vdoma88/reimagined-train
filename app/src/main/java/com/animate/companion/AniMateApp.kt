@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 /** Manual dependency container; small enough not to need a DI framework. */
-class AppContainer(app: Application) {
+class AppContainer(app: android.content.Context) {
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     val db = AppDatabase.create(app)
     val settings = SettingsRepository(app)
