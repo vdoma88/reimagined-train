@@ -138,11 +138,11 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                     Text(
                         if (vm.busy) "печатает…" else "${emotion.emoji} ${emotion.label}",
                         style = MaterialTheme.typography.labelMedium,
-                        color = if (vm.busy) Palette.Sakura else Palette.TextDim,
+                        color = if (vm.busy) Palette.Amber else Palette.TextDim,
                     )
                 }
-                Icon(Icons.Rounded.Favorite, null, tint = Palette.Sakura, modifier = Modifier.size(16.dp))
-                Text(" ${c.affection}", color = Palette.Sakura, style = MaterialTheme.typography.labelLarge)
+                Icon(Icons.Rounded.Favorite, null, tint = Palette.Amber, modifier = Modifier.size(16.dp))
+                Text(" ${c.affection}", color = Palette.Amber, style = MaterialTheme.typography.labelLarge)
                 IconButton(onClick = { heroOpen = !heroOpen }) {
                     Icon(if (heroOpen) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore, "Показать персонажа", tint = Palette.Text)
                 }
@@ -150,11 +150,11 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                     IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, "Меню", tint = Palette.Text) }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                         if (c.appearance.illustrationId != null) DropdownMenuItem(
-                            text = { Text("Редактировать образ") }, onClick = { menu = false; editArt = true })
+                            text = { Text("Открыть студию образа") }, onClick = { menu = false; editArt = true })
                         DropdownMenuItem(text = { Text("Сменить образ") }, onClick = { menu = false; artDialog = true })
-                        DropdownMenuItem(text = { Text("Память персонажа") }, onClick = { menu = false; memoryDialog = true })
+                        DropdownMenuItem(text = { Text("Записи и память") }, onClick = { menu = false; memoryDialog = true })
                         DropdownMenuItem(text = { Text("Начать заново") }, onClick = { menu = false; confirmClear = true })
-                        DropdownMenuItem(text = { Text("Настройки ИИ и звука") }, onClick = { menu = false; onSettings() })
+                        DropdownMenuItem(text = { Text("Настройки мира") }, onClick = { menu = false; onSettings() })
                         DropdownMenuItem(text = { Text("Удалить персонажа", color = MaterialTheme.colorScheme.error) }, onClick = { menu = false; confirmDelete = true })
                     }
                 }
@@ -205,7 +205,7 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                         unfocusedContainerColor = Palette.Glass,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
-                        cursorColor = Palette.Sakura,
+                        cursorColor = Palette.Amber,
                         focusedTextColor = Palette.Text,
                         unfocusedTextColor = Palette.Text,
                     ),
@@ -218,7 +218,7 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                         .clickable(enabled = canSend, onClick = vm::send),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.AutoMirrored.Rounded.Send, "Отправить", tint = if (canSend) Color(0xFF2A0A1C) else Palette.TextDim)
+                    Icon(Icons.AutoMirrored.Rounded.Send, "Отправить", tint = if (canSend) Palette.Ink else Palette.TextDim)
                 }
             }
         }
@@ -273,8 +273,8 @@ internal fun Hero(c: CharacterEntity, emotion: Emotion, talking: Boolean, bubble
                     bubble.orEmpty(),
                     modifier = Modifier
                         .clip(RoundedCornerShape(24.dp, 24.dp, 24.dp, 7.dp))
-                        .background(Color(0xFFFFF7FB))
-                        .border(1.dp, Palette.Sakura.copy(alpha = 0.58f), RoundedCornerShape(24.dp, 24.dp, 24.dp, 7.dp))
+                        .background(Palette.Paper)
+                        .border(1.dp, Palette.Amber.copy(alpha = 0.58f), RoundedCornerShape(24.dp, 24.dp, 24.dp, 7.dp))
                         .padding(horizontal = 14.dp, vertical = 8.dp),
                     color = Palette.Ink,
                     fontWeight = FontWeight.Bold,
@@ -296,7 +296,7 @@ internal fun Hero(c: CharacterEntity, emotion: Emotion, talking: Boolean, bubble
 private fun TagChip(text: String) {
     Text(
         text,
-        modifier = Modifier.clip(RoundedCornerShape(50)).background(Color(0x55120C28)).padding(horizontal = 10.dp, vertical = 4.dp),
+        modifier = Modifier.clip(RoundedCornerShape(50)).background(Color(0x6610211C)).padding(horizontal = 10.dp, vertical = 4.dp),
         color = Palette.Text,
         style = MaterialTheme.typography.labelSmall,
     )
@@ -324,17 +324,17 @@ internal fun MessageBubble(m: MessageEntity, isLastAssistant: Boolean, onDelete:
     Box(Modifier.fillMaxWidth(), contentAlignment = if (m.isUser) Alignment.CenterEnd else Alignment.CenterStart) {
         Box {
             Text(
-                styledText(m.text, if (m.isUser) Color(0xFF5B1E46) else Palette.Lavender),
+                styledText(m.text, if (m.isUser) Palette.Ink else Palette.Teal),
                 modifier = Modifier
                     .widthIn(max = 300.dp)
                     .clip(shape)
                     .background(
                         if (m.isUser) Palette.accent
-                        else Brush.linearGradient(listOf(Color(0x35FFF7FB), Color(0x20EEDCFF))),
+                        else Brush.linearGradient(listOf(Color(0x30243A33), Color(0x203ED0B4))),
                     )
                     .border(
                         1.dp,
-                        if (m.isUser) Palette.Sakura.copy(alpha = 0.45f) else Palette.Lavender.copy(alpha = 0.32f),
+                        if (m.isUser) Palette.Amber.copy(alpha = 0.45f) else Palette.Teal.copy(alpha = 0.32f),
                         shape,
                     )
                     .combinedClickable(onClick = {}, onLongClick = { menu = true })
@@ -345,7 +345,7 @@ internal fun MessageBubble(m: MessageEntity, isLastAssistant: Boolean, onDelete:
             )
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                 DropdownMenuItem(text = { Text("Копировать") }, onClick = { clipboard.setText(AnnotatedString(m.text)); menu = false })
-                if (isLastAssistant) DropdownMenuItem(text = { Text("Другой ответ") }, onClick = { menu = false; onRegenerate() })
+                if (isLastAssistant) DropdownMenuItem(text = { Text("Другой вариант") }, onClick = { menu = false; onRegenerate() })
                 DropdownMenuItem(text = { Text("Удалить") }, onClick = { menu = false; onDelete() })
             }
         }
@@ -365,7 +365,7 @@ internal fun TypingBubble() {
                 infiniteRepeatable(tween(380, delayMillis = i * 120), RepeatMode.Reverse),
                 label = "dot$i",
             )
-            Box(Modifier.offset(y = y.dp).size(8.dp).clip(CircleShape).background(Palette.Sakura))
+            Box(Modifier.offset(y = y.dp).size(8.dp).clip(CircleShape).background(Palette.Amber))
         }
     }
 }
