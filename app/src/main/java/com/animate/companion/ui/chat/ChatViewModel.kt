@@ -9,7 +9,11 @@ import com.animate.companion.AppContainer
 import com.animate.companion.audio.SfxType
 import com.animate.companion.data.CharacterEntity
 import com.animate.companion.data.MessageEntity
+import com.animate.companion.audio.SpeakerStatus
+import com.animate.companion.audio.SpeechText
 import com.animate.companion.llm.ParsedReply
+import com.animate.companion.model.PersonaPresets
+import kotlinx.coroutines.withTimeoutOrNull
 import com.animate.companion.llm.SafetyPolicy
 import com.animate.companion.model.Emotion
 import com.animate.companion.model.IllustratedCharacters
@@ -41,8 +45,10 @@ class ChatViewModel(
         private set
     var emotion by mutableStateOf<Emotion?>(null)
         private set
-    var talking by mutableStateOf(false)
-        private set
+    /** Lip-sync: on while TTS speaks or while a short reaction (interjection, poke) plays. */
+    private var speechTalking by mutableStateOf(false)
+    private var reactionTalking by mutableStateOf(false)
+    val talking: Boolean get() = speechTalking || reactionTalking
     var bubble by mutableStateOf<String?>(null)
         private set
 
@@ -52,7 +58,13 @@ class ChatViewModel(
 
     private var reactJob: Job? = null
 
+    /** Id of the message being read aloud ("msg-<id>"), drives the 🔊 buttons and lip-sync. */
+    val speakingId: StateFlow<String?> = container.speaker.speakingId
+
     init {
+        viewModelScope.launch {
+            container.speaker.speakingId.collect { speechTalking = it != null }
+        }
         viewModelScope.launch {
             val c = character.filterNotNull().first()
             emotion = Emotion.fromTag(c.lastEmotion)
@@ -85,18 +97,68 @@ class ChatViewModel(
             val c = character.value ?: return@launch
             delay(250)
             bubble = container.sound.voice(c, reply.emotion)
-            talking = true
-            delay((reply.text.length * 35L).coerceIn(900L, 3200L))
-            talking = false
+            val spoken = readAloud(c, reply.text, latestReplyId(reply.text), afterInterjection = bubble != null)
+            if (!spoken) {
+                reactionTalking = true
+                delay((reply.text.length * 35L).coerceIn(900L, 3200L))
+                reactionTalking = false
+            }
             delay(800)
             bubble = null
         }
+    }
+
+    /** Id of the just-saved assistant message, so its 🔊 button lights up while it is read. */
+    private suspend fun latestReplyId(text: String): Long? = withTimeoutOrNull(1500) {
+        messages.first { list -> list.lastOrNull()?.let { !it.isUser && it.text == text } == true }.last().id
+    }
+
+    private suspend fun readAloud(c: CharacterEntity, text: String, messageId: Long?, afterInterjection: Boolean = false): Boolean {
+        val s = container.settings.current()
+        if (!s.speechEnabled) return false
+        if (afterInterjection) delay(450)
+        val arch = PersonaPresets.archetype(c.archetypeId)
+        val voice = SpeechText.voiceFor(c.genderEnum, c.archetypeId, arch.voicePitch, c.voiceSeed, s.speechRate)
+        return container.speaker.speak(SpeechText.clean(text), voice, "msg-${messageId ?: 0}")
+    }
+
+    /** 🔊 on a message: read it aloud, or stop if it is already being read. */
+    fun toggleSpeech(m: MessageEntity) {
+        if (speakingId.value == "msg-${m.id}") {
+            container.speaker.stop()
+            return
+        }
+        val c = character.value ?: return
+        viewModelScope.launch {
+            emotion = Emotion.fromTag(m.emotion)
+            val s = container.settings.current()
+            val arch = PersonaPresets.archetype(c.archetypeId)
+            val voice = SpeechText.voiceFor(c.genderEnum, c.archetypeId, arch.voicePitch, c.voiceSeed, s.speechRate)
+            val text = SpeechText.clean(m.text)
+            if (text.isBlank()) return@launch // only *actions*: nothing to read, not an error
+            if (!container.speaker.speak(text, voice, "msg-${m.id}")) {
+                error = speechProblem()
+            }
+        }
+    }
+
+    private fun speechProblem(): String = when (container.speaker.status.value) {
+        SpeakerStatus.NO_RUSSIAN_VOICE -> "На телефоне нет русского голоса. Его можно скачать в Настройки → Озвучка."
+        SpeakerStatus.INITIALIZING -> "Голос ещё загружается, попробуй через секунду."
+        else -> "Синтез речи недоступен на этом телефоне."
+    }
+
+    fun stopSpeech() = container.stopSpeech()
+
+    override fun onCleared() {
+        container.stopSpeech()
     }
 
     fun send() {
         val text = input.trim()
         if (text.isEmpty() || busy) return
         input = ""
+        container.speaker.stop()
         SafetyPolicy.detect(text)?.let { concern = it }
         container.sound.sfx(SfxType.SEND)
         viewModelScope.launch { perform { repo.send(characterId, text) } }
@@ -172,9 +234,9 @@ class ChatViewModel(
             val prev = emotion
             emotion = e
             bubble = container.sound.voice(c, e, force = true)
-            talking = true
+            reactionTalking = true
             delay(500)
-            talking = false
+            reactionTalking = false
             delay(900)
             bubble = null
             emotion = prev

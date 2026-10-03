@@ -5,6 +5,13 @@
     <!-- In-app updates: the system still asks the user before installing. -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
+    <!-- Android 11+ package visibility: lets TextToSpeech find and bind the installed engine. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
     <application
         android:name=".AniMateApp"
         android:allowBackup="true"
