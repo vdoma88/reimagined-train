@@ -104,6 +104,7 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
                     }
                     ToggleRow("Звуки интерфейса и окружения", settings.sfxEnabled) { scope.launch { repo.setSfxEnabled(it) } }
                 }
+                SpeechSection(container, settings)
                 UpdatesSection(container, settings)
                 Spacer(Modifier.height(24.dp))
             }

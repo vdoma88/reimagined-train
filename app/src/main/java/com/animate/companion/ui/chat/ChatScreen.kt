@@ -45,6 +45,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.VolumeUp
+import androidx.compose.material.icons.rounded.StopCircle
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.Send
 import androidx.compose.material.icons.rounded.ExpandLess
@@ -112,6 +114,7 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
     )
     val character by vm.character.collectAsStateWithLifecycle()
     val messages by vm.messages.collectAsStateWithLifecycle()
+    val speakingId by vm.speakingId.collectAsStateWithLifecycle()
     val c = character ?: run {
         SakuraBackground { }
         return
@@ -212,6 +215,8 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                         isLastAssistant = !m.isUser && m.id == messages.lastOrNull()?.id,
                         onDelete = { vm.deleteMessage(m.id) },
                         onRegenerate = vm::regenerate,
+                        speaking = speakingId == "msg-${m.id}",
+                        onSpeak = { vm.toggleSpeech(m) },
                     )
                 }
                 vm.concern?.let { concern ->
@@ -348,11 +353,19 @@ fun styledText(text: String, actionColor: Color): AnnotatedString = buildAnnotat
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-internal fun MessageBubble(m: MessageEntity, isLastAssistant: Boolean, onDelete: () -> Unit, onRegenerate: () -> Unit) {
+internal fun MessageBubble(
+    m: MessageEntity,
+    isLastAssistant: Boolean,
+    onDelete: () -> Unit,
+    onRegenerate: () -> Unit,
+    speaking: Boolean = false,
+    onSpeak: (() -> Unit)? = null,
+) {
     var menu by remember { mutableStateOf(false) }
     val clipboard = LocalClipboardManager.current
     val shape = if (m.isUser) RoundedCornerShape(24.dp, 24.dp, 7.dp, 24.dp) else RoundedCornerShape(24.dp, 24.dp, 24.dp, 7.dp)
     Box(Modifier.fillMaxWidth(), contentAlignment = if (m.isUser) Alignment.CenterEnd else Alignment.CenterStart) {
+        Row(verticalAlignment = Alignment.Bottom) {
         Box {
             Text(
                 styledText(m.text, if (m.isUser) Palette.Ink else Palette.Teal),
@@ -379,6 +392,16 @@ internal fun MessageBubble(m: MessageEntity, isLastAssistant: Boolean, onDelete:
                 if (isLastAssistant) DropdownMenuItem(text = { Text("Другой вариант") }, onClick = { menu = false; onRegenerate() })
                 DropdownMenuItem(text = { Text("Удалить") }, onClick = { menu = false; onDelete() })
             }
+        }
+        if (!m.isUser && onSpeak != null) {
+            IconButton(onClick = onSpeak, modifier = Modifier.size(36.dp)) {
+                Icon(
+                    if (speaking) Icons.Rounded.StopCircle else Icons.AutoMirrored.Rounded.VolumeUp,
+                    contentDescription = if (speaking) "Остановить" else "Прочитать вслух",
+                    tint = if (speaking) Palette.Amber else Palette.TextDim,
+                )
+            }
+        }
         }
     }
 }

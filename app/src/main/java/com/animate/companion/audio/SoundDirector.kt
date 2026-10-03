@@ -47,6 +47,11 @@ class SoundDirector(private val scope: CoroutineScope) {
         }
     }
 
+    /** Lowers the music while a character reads a reply aloud. */
+    fun duck(on: Boolean) {
+        if (musicStarted) music.setVolume(if (on) settings.musicVolume * 0.3f else settings.musicVolume)
+    }
+
     fun onBackground() {
         foreground = false
         music.pause()

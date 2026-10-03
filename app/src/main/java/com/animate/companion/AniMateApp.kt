@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import com.animate.companion.update.UpdateManager
+import com.animate.companion.audio.Speaker
 
 /** Manual dependency container; small enough not to need a DI framework. */
 class AppContainer(app: android.content.Context) {
@@ -26,6 +27,16 @@ class AppContainer(app: android.content.Context) {
     val chat = ChatRepository(db, settings, llm, scope)
     val sound = SoundDirector(scope)
     val updates = UpdateManager(app, scope)
+
+    /** Created on first use: binding the TTS service is not free and tests never need it. */
+    private val speakerLazy = lazy {
+        Speaker(app).apply { onSpeakingChanged = { speaking -> scope.launch { sound.duck(speaking) } } }
+    }
+    val speaker: Speaker by speakerLazy
+
+    fun stopSpeech() {
+        if (speakerLazy.isInitialized()) speaker.stop()
+    }
 }
 
 class AniMateApp : Application() {
@@ -41,7 +52,10 @@ class AniMateApp : Application() {
                 container.sound.onForeground()
                 container.scope.launch { if (container.settings.current().autoUpdate) container.updates.autoCheck() }
             }
-            override fun onStop(owner: LifecycleOwner) = container.sound.onBackground()
+            override fun onStop(owner: LifecycleOwner) {
+                container.sound.onBackground()
+                container.stopSpeech()
+            }
         })
     }
 }
