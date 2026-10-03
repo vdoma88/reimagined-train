@@ -23,6 +23,14 @@ class CharacterLookTest {
         assertEquals(look, restored.characterLook)
         assertNull(Appearance.mergeStudioEdit(saved.copy(illustrationId = "classic"), saved))
     }
+    @Test fun galleryReplacementCannotKeepRenderingThePreviousCustomLook() {
+        val a = Appearance(illustrationId = "classic", characterLook = CharacterLook(hair = 4), useCharacterLook = true)
+        assertEquals(a, a.selectIllustration("classic"))
+        val b = a.selectIllustration("modern")
+        assertEquals("modern", b.illustrationId)
+        assertFalse(b.useCharacterLook)
+        assertNull(b.characterLook)
+    }
     @Test fun invalidValuesCannotSelectMissingLayers() {
         val n = CharacterLook(hair = 900, outfit = -1, eyes = 44, skin = -2).normalized()
         assertEquals(5, n.hair); assertEquals(0, n.outfit); assertEquals(3, n.eyes); assertEquals(0, n.skin)

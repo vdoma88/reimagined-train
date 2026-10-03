@@ -208,7 +208,7 @@ class ChatViewModel(
         if (id != null && IllustratedCharacters.find(id) == null) return@launch
         try {
             val c = container.db.characters().get(characterId) ?: return@launch
-            container.db.characters().updateAppearance(characterId, c.appearance.copy(illustrationId = id).toJson())
+            container.db.characters().updateAppearance(characterId, c.appearance.selectIllustration(id).toJson())
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             error = "Не удалось сохранить образ. Попробуйте ещё раз."

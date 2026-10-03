@@ -31,6 +31,11 @@ data class Appearance(
     val heterochromia: Boolean = false,
     val bandaid: Boolean = false,
 ) {
+    /** Gallery replacement starts with that artwork; toggling inside the editor retains its draft. */
+    fun selectIllustration(id: String?): Appearance = if (id == illustrationId) this else copy(
+        illustrationId = id, useCharacterLook = false, characterLook = null,
+    )
+
     fun toJson(): String = json.encodeToString(serializer(), this)
 
     companion object {

@@ -176,7 +176,7 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
                         0 -> {
                             if (vm.appearance.illustrationId != null) {
                                 val art = IllustratedCharacters.all.random()
-                                vm.appearance = vm.appearance.copy(illustrationId = art.id)
+                                vm.appearance = vm.appearance.selectIllustration(art.id)
                                 if (vm.gender != art.gender) vm.name = NameGenerator.generate(art.gender)
                                 vm.gender = art.gender
                             } else vm.appearance = Appearance.random(vm.gender)
@@ -304,7 +304,7 @@ internal fun AppearanceStep(vm: CreatorViewModel, onTap: () -> Unit) {
     if (vm.category == Cat.ILLUSTRATIONS.ordinal) {
         IllustrationGallery(vm.appearance.illustrationId, onSelect = { id ->
             onTap()
-            vm.appearance = vm.appearance.copy(illustrationId = id)
+            vm.appearance = vm.appearance.selectIllustration(id)
             if (id == null) vm.category = Cat.LOOKS.ordinal
             IllustratedCharacters.find(id)?.let { art ->
                 if (vm.gender != art.gender) vm.name = NameGenerator.generate(art.gender)

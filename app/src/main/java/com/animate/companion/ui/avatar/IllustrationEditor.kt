@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,6 +52,7 @@ fun IllustrationEditor(
     var saving by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val previewHeight = (LocalConfiguration.current.screenHeightDp.dp * 0.34f).coerceIn(100.dp, 300.dp)
     val draft = Appearance.fromJson(draftJson)
     val tab = EditorTab.entries.firstOrNull { it.name == tabName } ?: EditorTab.LOOK
 
@@ -115,7 +117,7 @@ fun IllustrationEditor(
                     Box(
                         Modifier
                             .fillMaxWidth()
-                            .height(260.dp)
+                            .height(previewHeight)
                             .clip(RoundedCornerShape(24.dp))
                             .background(Palette.Glass)
                     ) {
