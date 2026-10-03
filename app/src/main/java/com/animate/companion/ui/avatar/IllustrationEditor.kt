@@ -16,6 +16,10 @@ import androidx.compose.ui.window.DialogProperties
 import com.animate.companion.model.Appearance
 import com.animate.companion.model.Gender
 import com.animate.companion.model.IllustrationStyle
+import com.animate.companion.model.IllustrationDetails
+import com.animate.companion.model.IllustrationExpression
+import com.animate.companion.model.IllustrationAccent
+import com.animate.companion.model.IllustrationAccessory
 import com.animate.companion.ui.theme.Palette
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -48,12 +52,16 @@ fun IllustrationEditor(
                 AvatarView(draft, gender, Modifier.fillMaxWidth().weight(1f).background(Palette.Glass),
                     fullBody = fullBody)
                 Column(Modifier.weight(1.15f).fillMaxWidth().verticalScroll(rememberScrollState())) {
+                    IllustrationDetailControls(draft.illustrationDetails, enabled = !saving) {
+                        draftJson = draft.copy(illustrationDetails = it.normalized()).toJson()
+                        error = false
+                    }
                     IllustrationControls(draft.illustrationStyle, enabled = !saving) {
                         draftJson = draft.copy(illustrationStyle = it.normalized()).toJson()
                         error = false
                     }
                     Spacer(Modifier.height(8.dp))
-                    Text("Волосы, одежда и мимика пока являются частью цельной иллюстрации. Следующий этап — послойные варианты.",
+                    Text("Детали сохраняются независимо от кадра и цветокоррекции. Архитектура готова для замены этих эффектов полноценными прозрачными PNG-слоями.",
                         style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
                 }
                 if (error) Text("Не удалось сохранить. Попробуй ещё раз.", color = MaterialTheme.colorScheme.error)
@@ -72,6 +80,81 @@ fun IllustrationEditor(
                     }) { Text(if (saving) "Сохраняем…" else "Сохранить") }
                 }
             }
+        }
+    }
+}
+
+@Composable
+internal fun IllustrationDetailControls(
+    details: IllustrationDetails,
+    enabled: Boolean = true,
+    onChange: (IllustrationDetails) -> Unit
+) {
+    EditorSection("Лицо и настроение")
+    ChoiceRow(
+        options = IllustrationExpression.entries,
+        selected = details.expression,
+        enabled = enabled,
+        label = { it.label },
+        onSelect = { onChange(details.copy(expression = it)) }
+    )
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Text("Румянец", Modifier.weight(1f), color = Palette.Text)
+        Switch(details.blush, { onChange(details.copy(blush = it)) }, enabled = enabled)
+    }
+
+    EditorSection("Волосы")
+    ChoiceRow(
+        options = IllustrationAccent.entries,
+        selected = details.hairAccent,
+        enabled = enabled,
+        label = { it.label },
+        onSelect = { onChange(details.copy(hairAccent = it)) }
+    )
+
+    EditorSection("Одежда")
+    ChoiceRow(
+        options = IllustrationAccent.entries,
+        selected = details.outfitAccent,
+        enabled = enabled,
+        label = { it.label },
+        onSelect = { onChange(details.copy(outfitAccent = it)) }
+    )
+
+    EditorSection("Аксессуар")
+    ChoiceRow(
+        options = IllustrationAccessory.entries,
+        selected = details.accessory,
+        enabled = enabled,
+        label = { it.label },
+        onSelect = { onChange(details.copy(accessory = it)) }
+    )
+
+    TextButton(
+        enabled = enabled,
+        onClick = { onChange(IllustrationDetails()) }
+    ) { Text("Сбросить детали") }
+}
+
+@Composable
+private fun <T> ChoiceRow(
+    options: List<T>,
+    selected: T,
+    enabled: Boolean,
+    label: (T) -> String,
+    onSelect: (T) -> Unit
+) {
+    Row(
+        Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        options.forEach { option ->
+            FilterChip(
+                selected = selected == option,
+                onClick = { onSelect(option) },
+                enabled = enabled,
+                label = { Text(label(option)) }
+            )
         }
     }
 }
