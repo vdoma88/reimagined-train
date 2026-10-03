@@ -80,22 +80,7 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
                     DebouncedField(settings.userName, "Как персонажам тебя называть?") { scope.launch { repo.setUserName(it) } }
                 }
 
-                Section("Мозг персонажей (ИИ)") {
-                    Text(
-                        "Выбери провайдера и вставь свой бесплатный ключ. Если основной недоступен или упёрся в лимит, " +
-                            "приложение само переключится на другие провайдеры с ключами, а в крайнем случае — на Pollinations без ключа.",
-                        color = Palette.TextDim, style = MaterialTheme.typography.bodySmall,
-                    )
-                    Provider.entries.forEach { p -> ProviderCard(container, settings, p) }
-                    ToggleRow("Автопереключение при ошибке", settings.autoFallback) { scope.launch { repo.setAutoFallback(it) } }
-                    Text("Креативность: ${"%.1f".format(settings.temperature)}", color = Palette.Text)
-                    Slider(
-                        value = settings.temperature,
-                        onValueChange = { v -> scope.launch { repo.setTemperature((v * 10).toInt() / 10f) } },
-                        valueRange = 0.3f..1.3f,
-                        colors = sliderColors(),
-                    )
-                }
+                AiSection(container, settings)
 
                 Section("Звук") {
                     ToggleRow("Лофай-музыка", settings.musicEnabled) { scope.launch { repo.setMusicEnabled(it) } }
@@ -126,71 +111,7 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
 }
 
 @Composable
-private fun ProviderCard(container: AppContainer, settings: AppSettings, p: Provider) {
-    val scope = rememberCoroutineScope()
-    val selected = settings.provider == p
-    val uri = LocalUriHandler.current
-    var status by remember { mutableStateOf<String?>(null) }
-    var models by remember { mutableStateOf<List<String>>(emptyList()) }
-    var modelsMenu by remember { mutableStateOf(false) }
-
-    GlassCard(Modifier.fillMaxWidth(), selected = selected, onClick = { scope.launch { container.settings.setProvider(p) } }, shape = RoundedCornerShape(20.dp)) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                RadioButton(selected = selected, onClick = { scope.launch { container.settings.setProvider(p) } }, colors = radioColors())
-                Column(Modifier.weight(1f)) {
-                    Text(p.label + if (!p.needsKey) " · без ключа" else "", color = Palette.Text, style = MaterialTheme.typography.titleSmall)
-                    Text(p.blurb, color = Palette.TextDim, style = MaterialTheme.typography.bodySmall)
-                }
-            }
-            if (selected) {
-                SecretField(settings.keys[p].orEmpty(), if (p.needsKey) "API-ключ" else "API-ключ (рекомендуется)") {
-                    scope.launch { container.settings.setKey(p, it) }
-                }
-                TextButton(onClick = { uri.openUri(p.keyUrl) }) {
-                    Text(if (p == Provider.XAI) "Получить ключ →" else "Получить ключ бесплатно →")
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    DebouncedField(settings.models[p].orEmpty(), "Модель (по умолчанию ${p.defaultModel})", Modifier.weight(1f)) {
-                        scope.launch { container.settings.setModel(p, it) }
-                    }
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    TextButton(onClick = {
-                        status = "Загружаю список…"
-                        scope.launch {
-                            runCatching { container.llm.listModels(settings.config(p)) }
-                                .onSuccess { models = it; modelsMenu = true; status = "Моделей: ${it.size}" }
-                                .onFailure { status = "Ошибка: ${it.message}" }
-                        }
-                    }) { Text("Список моделей") }
-                    TextButton(onClick = {
-                        status = "Проверяю…"
-                        scope.launch {
-                            runCatching {
-                                container.llm.complete(settings.config(p), listOf(ChatMessage("user", "Скажи «ня» одним словом.")), 0.5f, 20)
-                            }
-                                .onSuccess { status = "✅ Работает: «${it.take(40)}»" }
-                                .onFailure { status = "❌ ${it.message}" }
-                        }
-                    }) { Text("Проверить") }
-                    DropdownMenu(expanded = modelsMenu, onDismissRequest = { modelsMenu = false }) {
-                        models.take(80).forEach { m ->
-                            DropdownMenuItem(text = { Text(m) }, onClick = {
-                                modelsMenu = false
-                                scope.launch { container.settings.setModel(p, m) }
-                            })
-                        }
-                    }
-                }
-                status?.let { Text(it, color = Palette.TextDim, style = MaterialTheme.typography.bodySmall) }
-            }
-        }
-    }
-}
-
-@Composable
-private fun Section(title: String, content: @Composable () -> Unit) {
+internal fun Section(title: String, content: @Composable () -> Unit) {
     GlassCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(title, style = MaterialTheme.typography.titleMedium, color = Palette.Sakura)
@@ -200,7 +121,7 @@ private fun Section(title: String, content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun ToggleRow(label: String, value: Boolean, onChange: (Boolean) -> Unit) {
+internal fun ToggleRow(label: String, value: Boolean, onChange: (Boolean) -> Unit) {
     Row(Modifier.fillMaxWidth().clickable { onChange(!value) }, verticalAlignment = Alignment.CenterVertically) {
         Text(label, color = Palette.Text, modifier = Modifier.weight(1f))
         Switch(
@@ -213,7 +134,7 @@ private fun ToggleRow(label: String, value: Boolean, onChange: (Boolean) -> Unit
 
 /** Text field that keeps local state and persists on every change (DataStore writes are cheap). */
 @Composable
-private fun DebouncedField(value: String, label: String, modifier: Modifier = Modifier.fillMaxWidth(), onChange: (String) -> Unit) {
+internal fun DebouncedField(value: String, label: String, modifier: Modifier = Modifier.fillMaxWidth(), onChange: (String) -> Unit) {
     var text by remember { mutableStateOf(value) }
     LaunchedEffect(value) { if (value != text) text = value }
     OutlinedTextField(
@@ -228,9 +149,10 @@ private fun DebouncedField(value: String, label: String, modifier: Modifier = Mo
 }
 
 @Composable
-private fun SecretField(value: String, label: String, onChange: (String) -> Unit) {
+internal fun SecretField(value: String, label: String, onChange: (String) -> Unit) {
     var text by remember { mutableStateOf(value) }
     var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(value) { if (value != text) text = value }
     OutlinedTextField(
         value = text,
         onValueChange = { text = it.trim(); onChange(it.trim()) },
@@ -250,7 +172,7 @@ private fun SecretField(value: String, label: String, onChange: (String) -> Unit
 }
 
 @Composable
-private fun sliderColors() = SliderDefaults.colors(thumbColor = Palette.Sakura, activeTrackColor = Palette.Sakura, inactiveTrackColor = Palette.GlassBorder)
+internal fun sliderColors() = SliderDefaults.colors(thumbColor = Palette.Sakura, activeTrackColor = Palette.Sakura, inactiveTrackColor = Palette.GlassBorder)
 
 @Composable
-private fun radioColors() = RadioButtonDefaults.colors(selectedColor = Palette.Sakura, unselectedColor = Palette.TextDim)
+internal fun radioColors() = RadioButtonDefaults.colors(selectedColor = Palette.Sakura, unselectedColor = Palette.TextDim)
