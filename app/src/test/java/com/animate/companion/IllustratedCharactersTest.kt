@@ -5,6 +5,8 @@ import com.animate.companion.model.IllustrationDetails
 import com.animate.companion.model.IllustrationExpression
 import com.animate.companion.model.IllustrationAccent
 import com.animate.companion.model.IllustrationAccessory
+import com.animate.companion.model.IllustrationLayerCategory
+import com.animate.companion.model.IllustrationLayerRegistry
 import com.animate.companion.model.Appearance
 import com.animate.companion.model.AppearancePresets
 import com.animate.companion.model.Gender
@@ -13,6 +15,29 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class IllustratedCharactersTest {
+    @Test fun layerRegistryUsesStableCompatibleIdsAndRejectsWrongCategories() {
+        IllustrationLayerCategory.entries.forEach { category ->
+            listOf("classic", "modern", "adventure").forEach { characterId ->
+                assertTrue(IllustrationLayerRegistry.forCharacter(characterId, category).isNotEmpty())
+            }
+        }
+        assertTrue(IllustrationLayerRegistry.assets.map { it.id }.distinct().size == IllustrationLayerRegistry.assets.size)
+
+        val details = IllustrationDetails(
+            expressionLayerId = "expression.bright",
+            hairLayerId = "hair.cool",
+            outfitLayerId = "outfit.violet",
+            accessoryLayerId = "accessory.star_pin"
+        ).normalized()
+        assertEquals(IllustrationExpression.BRIGHT, details.resolvedExpression())
+        assertEquals(IllustrationAccent.COOL, details.resolvedHairAccent())
+        assertEquals(IllustrationAccent.VIOLET, details.resolvedOutfitAccent())
+        assertEquals(IllustrationAccessory.STAR_PIN, details.resolvedAccessory())
+
+        val invalid = IllustrationDetails(hairLayerId = "accessory.star_pin").normalized()
+        assertNull(invalid.hairLayerId)
+    }
+
     @Test fun detailLayersPersistAndLegacyJsonGetsNeutralDefaults() {
         val details = IllustrationDetails(
             expression = IllustrationExpression.BRIGHT,
