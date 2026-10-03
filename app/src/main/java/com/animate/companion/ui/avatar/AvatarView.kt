@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clipToBounds
 import com.animate.companion.model.Appearance
 import com.animate.companion.model.Emotion
 import com.animate.companion.model.Gender
+import com.animate.companion.model.IllustratedCharacters
 import kotlinx.coroutines.delay
 import kotlin.math.sin
 import kotlin.random.Random
@@ -36,7 +37,13 @@ fun AvatarView(
     talking: Boolean = false,
     animated: Boolean = true,
     headOnly: Boolean = false,
+    fullBody: Boolean = false,
 ) {
+    val illustration = IllustratedCharacters.find(appearance.illustrationId)
+    if (illustration != null) {
+        IllustratedAvatar(illustration, modifier, headOnly, fullBody, animated)
+        return
+    }
     var blink by remember { mutableFloatStateOf(0f) }
     var mouthOpen by remember { mutableStateOf(false) }
 

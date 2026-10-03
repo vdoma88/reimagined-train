@@ -7,6 +7,7 @@ import kotlin.random.Random
 /** Indexes into the preset lists in [AppearancePresets]. Stored as JSON in the database. */
 @Serializable
 data class Appearance(
+    val illustrationId: String? = null,
     val skinTone: Int = 0,
     val faceShape: Int = 0,
     val hairStyle: Int = 0,

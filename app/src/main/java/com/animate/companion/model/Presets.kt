@@ -163,7 +163,9 @@ object AppearancePresets {
         Swatch("Горчичный", "горчичного цвета", 0xFFE0B04A),
     )
 
-    fun describe(a: Appearance, gender: Gender): String = buildList {
+    fun describe(a: Appearance, gender: Gender): String {
+        IllustratedCharacters.find(a.illustrationId)?.let { return it.description }
+        return buildList {
         add(faceShapes.getOrNull(a.faceShape)?.prompt)
         add(skinTones.getOrNull(a.skinTone)?.prompt)
         add(hairColors.getOrNull(a.hairColor)?.prompt + ", " + hairStyles.getOrNull(a.hairStyle)?.prompt)
@@ -180,7 +182,8 @@ object AppearancePresets {
         if (a.beautyMark) add("родинка под глазом")
         if (a.bandaid) add("пластырь на щеке")
         add(if (gender == Gender.MALE) "юноша" else if (gender == Gender.FEMALE) "девушка" else "андрогинная внешность")
-    }.filterNot { it.isNullOrBlank() }.joinToString("; ")
+        }.filterNot { it.isNullOrBlank() }.joinToString("; ")
+    }
 }
 
 /** Character archetype ("dere" types and other classic tropes). */

@@ -11,6 +11,7 @@ import com.animate.companion.data.CharacterEntity
 import com.animate.companion.data.MessageEntity
 import com.animate.companion.llm.ParsedReply
 import com.animate.companion.model.Emotion
+import com.animate.companion.model.IllustratedCharacters
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
@@ -125,6 +126,17 @@ class ChatViewModel(
     fun deleteCharacter(then: () -> Unit) = viewModelScope.launch {
         repo.deleteCharacter(characterId)
         then()
+    }
+
+    fun setIllustration(id: String?) = viewModelScope.launch {
+        if (id != null && IllustratedCharacters.find(id) == null) return@launch
+        try {
+            val c = container.db.characters().get(characterId) ?: return@launch
+            container.db.characters().updateAppearance(characterId, c.appearance.copy(illustrationId = id).toJson())
+        } catch (e: Exception) {
+            if (e is kotlinx.coroutines.CancellationException) throw e
+            error = "Не удалось сохранить образ. Попробуйте ещё раз."
+        }
     }
 
     fun saveMemory(text: String) = viewModelScope.launch { repo.updateMemory(characterId, text) }
