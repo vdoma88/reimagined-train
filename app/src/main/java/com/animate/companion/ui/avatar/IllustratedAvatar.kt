@@ -109,7 +109,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawDetailLayers(
     val faceX = size.width * 0.5f
     val faceRadius = size.minDimension * if (headOnly) 0.13f else 0.085f
 
-    accentColor(details.hairAccent)?.let { color ->
+    accentColor(details.resolvedHairAccent())?.let { color ->
         drawCircle(
             color = color.copy(alpha = 0.12f),
             radius = faceRadius * 1.75f,
@@ -118,7 +118,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawDetailLayers(
     }
 
     if (!headOnly) {
-        accentColor(details.outfitAccent)?.let { color ->
+        accentColor(details.resolvedOutfitAccent())?.let { color ->
             val top = if (fullBody) size.height * 0.36f else size.height * 0.57f
             drawRect(
                 color = color.copy(alpha = 0.10f),
@@ -128,7 +128,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawDetailLayers(
         }
     }
 
-    when (details.expression) {
+    when (details.resolvedExpression()) {
         IllustrationExpression.NEUTRAL -> Unit
         IllustrationExpression.SOFT -> {
             drawCircle(Color(0xFFFF9EB5).copy(alpha = 0.16f), faceRadius * 0.24f,
@@ -161,7 +161,7 @@ private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawDetailLayers(
     }
 
     val pin = Offset(faceX + faceRadius * 0.95f, faceY - faceRadius * 0.78f)
-    when (details.accessory) {
+    when (details.resolvedAccessory()) {
         IllustrationAccessory.NONE -> Unit
         IllustrationAccessory.SPARKLE -> {
             drawLine(Color.White.copy(alpha = 0.85f), pin + Offset(-faceRadius * 0.2f, 0f),
