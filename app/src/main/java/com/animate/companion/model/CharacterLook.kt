@@ -12,11 +12,11 @@ data class CharacterLook(
     val blush: Boolean = true, val freckles: Boolean = false,
 ) {
     fun normalized() = copy(
-        hair = hair.coerceIn(0, 5), hairColor = hairColor.coerceIn(0, 7),
+        hair = hair.coerceIn(0, CharacterLookCatalog.hairstyles.lastIndex), hairColor = hairColor.coerceIn(0, 7),
         face = face.coerceIn(0, 2), skin = skin.coerceIn(0, 5),
         eyes = eyes.coerceIn(0, 3), eyeColor = eyeColor.coerceIn(0, 5),
         brows = brows.coerceIn(0, 2), mouth = mouth.coerceIn(0, 2),
-        outfit = outfit.coerceIn(0, 3), outfitColor = outfitColor.coerceIn(0, 7),
+        outfit = outfit.coerceIn(0, CharacterLookCatalog.outfits.lastIndex), outfitColor = outfitColor.coerceIn(0, 7),
         accessory = accessory.coerceIn(0, 4),
     )
 

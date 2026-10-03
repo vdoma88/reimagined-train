@@ -5,6 +5,19 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class CharacterLookTest {
+    @Test fun expandedCatalogSurvivesSaveAndReload() {
+        for (hair in CharacterLookCatalog.hairstyles.indices) {
+            for (outfit in CharacterLookCatalog.outfits.indices) {
+                val look = CharacterLook(hair = hair, outfit = outfit)
+                val original = Appearance(illustrationId = "classic")
+                val saved = Appearance.mergeStudioEdit(original, original.copy(characterLook = look, useCharacterLook = true))!!
+                assertEquals(look, Appearance.fromJson(saved.toJson()).characterLook)
+                assertTrue(look.layers().contains("back.$hair"))
+                assertTrue(look.layers().contains("front.$hair"))
+                assertTrue(look.layers().contains("outfit.$outfit"))
+            }
+        }
+    }
     @Test fun legacyArtworkIsNotAutomaticallyReplaced() {
         val old = Appearance.fromJson("""{"illustrationId":"classic","hairColor":3}""")
         assertFalse(old.useCharacterLook)
@@ -33,7 +46,7 @@ class CharacterLookTest {
     }
     @Test fun invalidValuesCannotSelectMissingLayers() {
         val n = CharacterLook(hair = 900, outfit = -1, eyes = 44, skin = -2).normalized()
-        assertEquals(5, n.hair); assertEquals(0, n.outfit); assertEquals(3, n.eyes); assertEquals(0, n.skin)
+        assertEquals(CharacterLookCatalog.hairstyles.lastIndex, n.hair); assertEquals(0, n.outfit); assertEquals(3, n.eyes); assertEquals(0, n.skin)
     }
     @Test fun changingPartsReplacesTheirLayersWithoutChangingOtherParts() {
         val a = CharacterLook()
