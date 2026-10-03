@@ -9,3 +9,18 @@ Prompt set (one call per supplied style/identity): Preserve the reference person
 Illustrated art has a fixed face and costume, with gentle breathing movement; it does not implement lip sync or facial emotion replacement. The existing procedural constructor retains those capabilities. LLM appearance descriptions follow the displayed illustration rather than the hidden customizable parameters.
 
 Portrait, full-height and thumbnail crops are drawn from the same packaged image. Only the compositing bounds change; there are no duplicate decoded portrait resources. Preview tests cover all three artwork IDs, full-height silhouettes, bust crops, and 44/72dp avatars on a light background.
+
+
+## Editor: first stage
+
+The illustration editor is available in the creation studio and the chat menu.
+It keeps a private, rotation-safe draft until Save; Cancel leaves the stored appearance unchanged.
+Settings include framing (zoom and horizontal/vertical position), mirroring, saturation,
+warmth and idle motion. Reset restores the original presentation. These controls apply
+consistently to portrait, full-body and thumbnail rendering and never modify source assets.
+Save updates appearance only, retaining chat history, memory and the procedural avatar.
+Older appearance JSON receives neutral defaults. Numeric controls are bounded before rendering.
+
+This is a presentation editor, not yet a layered character constructor. Hair, face,
+outfit and expression are part of the same bitmap. Independent editing requires registered
+layers and expression variants for each character; global colour controls are explicitly labelled.

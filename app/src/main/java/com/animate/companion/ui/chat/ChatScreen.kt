@@ -88,6 +88,8 @@ import com.animate.companion.data.MessageEntity
 import com.animate.companion.model.Emotion
 import com.animate.companion.model.PersonaPresets
 import com.animate.companion.ui.avatar.AvatarView
+import com.animate.companion.ui.avatar.IllustrationEditor
+import com.animate.companion.model.Gender
 import com.animate.companion.ui.avatar.IllustrationGallery
 import androidx.compose.runtime.saveable.rememberSaveable
 import com.animate.companion.ui.components.AvatarFrame
@@ -111,6 +113,7 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
     }
     var heroOpen by remember { mutableStateOf(true) }
     var menu by remember { mutableStateOf(false) }
+    var editArt by rememberSaveable { mutableStateOf(false) }
     var artDialog by remember { mutableStateOf(false) }
     var memoryDialog by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
@@ -141,6 +144,8 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                 Box {
                     IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, "Меню", tint = Palette.Text) }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                        if (c.appearance.illustrationId != null) DropdownMenuItem(
+                            text = { Text("Редактировать образ") }, onClick = { menu = false; editArt = true })
                         DropdownMenuItem(text = { Text("Сменить образ") }, onClick = { menu = false; artDialog = true })
                         DropdownMenuItem(text = { Text("Память персонажа") }, onClick = { menu = false; memoryDialog = true })
                         DropdownMenuItem(text = { Text("Начать заново") }, onClick = { menu = false; confirmClear = true })
@@ -211,6 +216,9 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
         }
     }
 
+    if (editArt) IllustrationEditor(c.appearance,
+        runCatching { Gender.valueOf(c.gender) }.getOrDefault(Gender.NEUTRAL),
+        onDismiss = { editArt = false }, onSave = { vm.saveIllustrationStyle(it) })
     if (artDialog) AlertDialog(
         onDismissRequest = { artDialog = false },
         title = { Text("Образ персонажа") },

@@ -83,6 +83,7 @@ import com.animate.companion.model.PersonaPresets
 import com.animate.companion.model.Swatch
 import com.animate.companion.model.StudioLooks
 import com.animate.companion.model.IllustratedCharacters
+import com.animate.companion.ui.avatar.IllustrationEditor
 import com.animate.companion.ui.avatar.IllustrationGallery
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -132,6 +133,7 @@ private val steps = listOf("Образ", "История", "Характер")
 fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long) -> Unit) {
     val vm: CreatorViewModel = viewModel()
     val scope = rememberCoroutineScope()
+    var editArt by rememberSaveable { mutableStateOf(false) }
     var fullBody by rememberSaveable { mutableStateOf(false) }
     var bubble by remember { mutableStateOf<String?>(null) }
     var previewEmotion by remember { mutableStateOf(Emotion.HAPPY) }
@@ -230,6 +232,7 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
                     TextButton(onClick = { fullBody = false }) { Text(if (!fullBody) "✓ Портрет" else "Портрет") }
                     TextButton(onClick = { fullBody = true }) { Text(if (fullBody) "✓ В полный рост" else "В полный рост") }
                 }
+                TextButton(onClick = { editArt = true }, modifier = Modifier.align(Alignment.CenterHorizontally)) { Text("Редактировать образ") }
             } else EmotionStrip(previewEmotion) { voicePreview(it) }
             StepTabs(vm.step) { container.sound.sfx(SfxType.TAP); vm.step = it }
 
@@ -264,6 +267,9 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
             )
         }
     }
+    if (editArt) IllustrationEditor(vm.appearance, vm.gender,
+        onDismiss = { editArt = false }, onSave = { vm.appearance = it; true })
+
 }
 
 @Composable

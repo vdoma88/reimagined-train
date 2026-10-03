@@ -10,6 +10,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.drawscope.withTransform
+import com.animate.companion.model.IllustrationStyle
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.res.imageResource
@@ -29,14 +33,21 @@ internal fun IllustratedAvatar(
     headOnly: Boolean,
     fullBody: Boolean,
     animated: Boolean,
+    style: IllustrationStyle = IllustrationStyle(),
 ) {
+    val settings = style.normalized()
+    val colors = ColorMatrix().apply {
+        setToSaturation(settings.saturation)
+        this[0, 4] = settings.warmth * 18f
+        this[2, 4] = -settings.warmth * 18f
+    }
     val resource = when (character.id) {
         "modern" -> R.drawable.character_modern
         "adventure" -> R.drawable.character_adventure
         else -> R.drawable.character_classic
     }
     val bitmap = ImageBitmap.imageResource(resource)
-    val drift = if (animated && !headOnly) {
+    val drift = if (animated && settings.motion && !headOnly) {
         val transition = rememberInfiniteTransition(label = "illustrationBreathing")
         val value by transition.animateFloat(0f, 0.006f,
             infiniteRepeatable(tween(2600), RepeatMode.Reverse), label = "illustrationDrift")
@@ -53,9 +64,14 @@ internal fun IllustratedAvatar(
         val scale = minOf(size.width / source.second.width, size.height / source.second.height)
         val width = (source.second.width * scale).roundToInt().coerceAtLeast(1)
         val height = (source.second.height * scale).roundToInt().coerceAtLeast(1)
+        withTransform({
+            translate(size.width * settings.offsetX, size.height * settings.offsetY)
+            scale(if (settings.mirrored) -settings.zoom else settings.zoom, settings.zoom, center)
+        }) {
         drawImage(bitmap, srcOffset = source.first, srcSize = source.second,
             dstOffset = IntOffset(((size.width - width) / 2f).roundToInt(),
                 ((size.height - height) / 2f + size.height * drift).roundToInt()),
-            dstSize = IntSize(width, height), filterQuality = FilterQuality.High)
+            dstSize = IntSize(width, height), filterQuality = FilterQuality.High, colorFilter = ColorFilter.colorMatrix(colors))
+        }
     }
 }
