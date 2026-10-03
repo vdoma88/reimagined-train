@@ -188,7 +188,7 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
                             vm.direction = PersonaPresets.directions.random().id
                         }
                     }
-                }) { Icon(Icons.Rounded.Casino, "Случайно", tint = Palette.Sakura) }
+                }) { Icon(Icons.Rounded.Casino, "Случайно", tint = Palette.Amber) }
             }
 
             // Live preview
@@ -197,7 +197,7 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
                     Modifier.fillMaxHeight().aspectRatio(1f)
                         .clip(RoundedCornerShape(36.dp))
                         .background(Color.White.copy(alpha = 0.035f))
-                        .border(1.dp, Palette.Sakura.copy(alpha = 0.22f), RoundedCornerShape(36.dp))
+                        .border(1.dp, Palette.Amber.copy(alpha = 0.22f), RoundedCornerShape(36.dp))
                         .clickable(remember { MutableInteractionSource() }, null) { voicePreview(listOf(Emotion.HAPPY, Emotion.SHY, Emotion.SURPRISED, Emotion.LOVE, Emotion.SMUG).random()) },
                 ) {
                     MangaStage(previewEmotion, Modifier.fillMaxSize())
@@ -212,7 +212,7 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
                             bubble.orEmpty(),
                             modifier = Modifier.clip(RoundedCornerShape(22.dp, 22.dp, 22.dp, 8.dp))
                                 .background(Color(0xFFFFF6FB))
-                                .border(1.dp, Palette.Sakura.copy(alpha = 0.55f), RoundedCornerShape(22.dp, 22.dp, 22.dp, 8.dp))
+                                .border(1.dp, Palette.Amber.copy(alpha = 0.55f), RoundedCornerShape(22.dp, 22.dp, 22.dp, 8.dp))
                                 .padding(horizontal = 14.dp, vertical = 8.dp),
                             color = Palette.Ink,
                             fontWeight = FontWeight.Bold,
@@ -289,7 +289,7 @@ internal fun StepTabs(step: Int, onSelect: (Int) -> Unit) {
             ) {
                 Text(
                     "${i + 1}. $label",
-                    color = if (sel) Color(0xFF2A0A1C) else Palette.TextDim,
+                    color = if (sel) Palette.Ink else Palette.TextDim,
                     style = MaterialTheme.typography.labelLarge,
                 )
             }
@@ -321,8 +321,8 @@ internal fun AppearanceStep(vm: CreatorViewModel, onTap: () -> Unit) {
                 Text(
                     c.label,
                     modifier = Modifier.clip(RoundedCornerShape(50))
-                        .background(if (sel) Palette.Sakura.copy(alpha = 0.25f) else Palette.Glass)
-                        .border(1.dp, if (sel) Palette.Sakura else Palette.GlassBorder, RoundedCornerShape(50))
+                        .background(if (sel) Palette.Amber.copy(alpha = 0.25f) else Palette.Glass)
+                        .border(1.dp, if (sel) Palette.Amber else Palette.GlassBorder, RoundedCornerShape(50))
                         .clickable { onTap(); vm.category = c.ordinal }
                         .padding(horizontal = 14.dp, vertical = 8.dp),
                     color = Palette.Text,
@@ -369,7 +369,7 @@ internal fun EmotionStrip(selected: Emotion, onSelect: (Emotion) -> Unit) {
                 color = if (selected == emotion) Palette.Ink else Palette.Text,
                 style = MaterialTheme.typography.labelMedium,
                 modifier = Modifier.clip(RoundedCornerShape(50))
-                    .background(if (selected == emotion) Palette.Sakura else Palette.Glass)
+                    .background(if (selected == emotion) Palette.Amber else Palette.Glass)
                     .selectable(selected == emotion, role = Role.RadioButton) { onSelect(emotion) }
                     .padding(horizontal = 12.dp, vertical = 14.dp),
             )
@@ -443,12 +443,12 @@ private fun SwatchGrid(swatches: List<Swatch>, current: Int, onPick: (Int) -> Un
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(64.dp).clickable { onPick(i) }) {
                 Box(
                     Modifier.size(52.dp).clip(CircleShape)
-                        .border(if (i == current) 3.dp else 1.dp, if (i == current) Palette.Sakura else Palette.GlassBorder, CircleShape)
+                        .border(if (i == current) 3.dp else 1.dp, if (i == current) Palette.Amber else Palette.GlassBorder, CircleShape)
                         .padding(5.dp).clip(CircleShape)
                         .background(Color(s.argb)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    if (i == current) Icon(Icons.Rounded.Check, null, tint = if (s.argb.lum() > 0.6f) Color(0xFF2A0A1C) else Color.White)
+                    if (i == current) Icon(Icons.Rounded.Check, null, tint = if (s.argb.lum() > 0.6f) Palette.Ink else Color.White)
                 }
                 Text(s.label, style = MaterialTheme.typography.labelSmall, color = Palette.TextDim, maxLines = 1)
             }
@@ -512,7 +512,7 @@ internal fun IdentityStep(vm: CreatorViewModel, onDice: () -> Unit, onTap: () ->
                     }
                 }) {
                     Column(Modifier.fillMaxWidth().padding(vertical = 14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(g.emoji, style = MaterialTheme.typography.headlineMedium, color = Palette.Sakura)
+                        Text(g.emoji, style = MaterialTheme.typography.headlineMedium, color = Palette.Amber)
                         Text(g.label, color = Palette.Text, style = MaterialTheme.typography.labelLarge)
                     }
                 }
@@ -534,10 +534,10 @@ internal fun IdentityStep(vm: CreatorViewModel, onDice: () -> Unit, onTap: () ->
                 Modifier.size(56.dp).clip(RoundedCornerShape(18.dp)).background(Palette.accent)
                     .clickable { onDice(); vm.name = NameGenerator.generate(vm.gender) },
                 contentAlignment = Alignment.Center,
-            ) { Icon(Icons.Rounded.Casino, "Случайное имя", tint = Color(0xFF2A0A1C)) }
+            ) { Icon(Icons.Rounded.Casino, "Случайное имя", tint = Palette.Ink) }
         }
         Text(
-            "Будут звать «${vm.name.substringBefore(' ')}${NameGenerator.suffix(vm.gender)}» 💮",
+            "Будут звать «${vm.name.substringBefore(' ')}${NameGenerator.suffix(vm.gender)}» ✦",
             color = Palette.TextDim,
             style = MaterialTheme.typography.bodySmall,
             modifier = Modifier.padding(top = 6.dp, start = 4.dp),
@@ -546,7 +546,7 @@ internal fun IdentityStep(vm: CreatorViewModel, onDice: () -> Unit, onTap: () ->
         OutlinedTextField(
             value = vm.note,
             onValueChange = { vm.note = it.take(400) },
-            placeholder = { Text("Любит клубничные данго, боится грозы, мечтает стать звездой…", color = Palette.TextDim) },
+            placeholder = { Text("Боится грозы, коллекционирует странные карты, мечтает увидеть море…", color = Palette.TextDim) },
             modifier = Modifier.fillMaxWidth().height(120.dp),
             shape = RoundedCornerShape(18.dp),
             colors = fieldColors(),
@@ -557,11 +557,11 @@ internal fun IdentityStep(vm: CreatorViewModel, onDice: () -> Unit, onTap: () ->
 
 @Composable
 fun fieldColors() = OutlinedTextFieldDefaults.colors(
-    focusedBorderColor = Palette.Sakura,
+    focusedBorderColor = Palette.Amber,
     unfocusedBorderColor = Palette.GlassBorder,
     focusedContainerColor = Palette.Glass,
     unfocusedContainerColor = Palette.Glass,
-    cursorColor = Palette.Sakura,
+    cursorColor = Palette.Amber,
     focusedTextColor = Palette.Text,
     unfocusedTextColor = Palette.Text,
 )
@@ -586,7 +586,7 @@ internal fun PersonaStep(vm: CreatorViewModel, onTap: () -> Unit) {
         itemsIndexed(PersonaPresets.archetypes) { _, a ->
             ChoiceCard(a.emoji, a.label, a.short, vm.archetype == a.id) { onTap(); vm.archetype = a.id }
         }
-        item(span = { GridItemSpan(2) }) { SectionTitle("Профессия / роль") }
+        item(span = { GridItemSpan(2) }) { SectionTitle("Роль в истории") }
         item(span = { GridItemSpan(2) }) {
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 PersonaPresets.professions.forEach { p ->
@@ -601,7 +601,7 @@ internal fun PersonaStep(vm: CreatorViewModel, onTap: () -> Unit) {
                 }
             }
         }
-        item(span = { GridItemSpan(2) }) { SectionTitle("Направление общения") }
+        item(span = { GridItemSpan(2) }) { SectionTitle("Тон общения") }
         itemsIndexed(PersonaPresets.directions) { _, d ->
             ChoiceCard(d.emoji, d.label, d.short, vm.direction == d.id) { onTap(); vm.direction = d.id }
         }
