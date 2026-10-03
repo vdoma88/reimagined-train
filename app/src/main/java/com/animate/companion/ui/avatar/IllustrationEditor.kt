@@ -32,7 +32,7 @@ import kotlin.math.roundToInt
 
 private enum class EditorTab(val title: String) {
     LOOK("Образ"),
-    DETAILS("Детали"),
+    DETAILS("Внешность"),
     COLOR("Цвет"),
     FRAME("Кадр"),
 }
@@ -46,7 +46,7 @@ fun IllustrationEditor(
     onSave: suspend (Appearance) -> Boolean,
 ) {
     var draftJson by rememberSaveable { mutableStateOf(initial.toJson()) }
-    var tabName by rememberSaveable { mutableStateOf(EditorTab.LOOK.name) }
+    var tabName by rememberSaveable { mutableStateOf(EditorTab.DETAILS.name) }
     var fullBody by rememberSaveable { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf(false) }
@@ -115,7 +115,7 @@ fun IllustrationEditor(
                     Box(
                         Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 220.dp, max = 330.dp)
+                            .height(260.dp)
                             .clip(RoundedCornerShape(24.dp))
                             .background(Palette.Glass)
                     ) {
@@ -174,11 +174,7 @@ fun IllustrationEditor(
                             enabled = !saving,
                         ) { update(draft.copy(illustrationStyle = it.normalized())) }
 
-                        EditorTab.DETAILS -> IllustrationDetailControls(
-                            draft.illustrationId,
-                            draft.illustrationDetails,
-                            enabled = !saving,
-                        ) { update(draft.copy(illustrationDetails = it.normalized())) }
+                        EditorTab.DETAILS -> CharacterLookControls(draft, enabled = !saving) { update(it) }
 
                         EditorTab.COLOR -> IllustrationColorControls(
                             draft.illustrationStyle,

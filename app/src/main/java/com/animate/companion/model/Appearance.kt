@@ -8,6 +8,8 @@ import kotlin.random.Random
 @Serializable
 data class Appearance(
     val illustrationId: String? = null,
+    val characterLook: CharacterLook? = null,
+    val useCharacterLook: Boolean = false,
     val illustrationStyle: IllustrationStyle = IllustrationStyle(),
     val illustrationDetails: IllustrationDetails = IllustrationDetails(),
     val skinTone: Int = 0,
@@ -41,6 +43,8 @@ data class Appearance(
         fun mergeStudioEdit(current: Appearance, draft: Appearance): Appearance? {
             if (current.illustrationId != draft.illustrationId) return null
             return current.copy(
+                characterLook = draft.characterLook?.normalized(),
+                useCharacterLook = draft.useCharacterLook && draft.characterLook != null,
                 illustrationStyle = draft.illustrationStyle.normalized(),
                 illustrationDetails = draft.illustrationDetails.normalized(),
             )

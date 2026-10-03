@@ -40,14 +40,14 @@ fun AvatarView(
     fullBody: Boolean = false,
 ) {
     val illustration = IllustratedCharacters.find(appearance.illustrationId)
-    if (illustration != null) {
+    if (illustration != null && !(appearance.useCharacterLook && appearance.characterLook != null)) {
         IllustratedAvatar(illustration, modifier, headOnly, fullBody, animated, appearance.illustrationStyle, appearance.illustrationDetails)
         return
     }
     var blink by remember { mutableFloatStateOf(0f) }
     var mouthOpen by remember { mutableStateOf(false) }
 
-    if (animated) {
+    if (animated && (!appearance.useCharacterLook || appearance.illustrationStyle.motion)) {
         LaunchedEffect(Unit) {
             while (true) {
                 delay(Random.nextLong(1800, 4800))
@@ -74,7 +74,7 @@ fun AvatarView(
         }
     }
 
-    val breathPhase = if (animated) {
+    val breathPhase = if (animated && (!appearance.useCharacterLook || appearance.illustrationStyle.motion)) {
         val t = rememberInfiniteTransition(label = "breath")
         t.animateFloat(
             0f, (2 * Math.PI).toFloat(),
@@ -83,6 +83,13 @@ fun AvatarView(
         ).value
     } else {
         0f
+    }
+
+    if (illustration != null && appearance.useCharacterLook && appearance.characterLook != null) {
+        LayeredCharacter(appearance.characterLook, appearance.illustrationStyle, modifier,
+            headOnly, fullBody, emotion, if (animated && appearance.illustrationStyle.motion) blink else 0f,
+            sin(breathPhase) * 1.5f, animated && appearance.illustrationStyle.motion && mouthOpen)
+        return
     }
 
     Canvas(modifier.clipToBounds()) {
