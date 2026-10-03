@@ -9,6 +9,7 @@ import kotlin.random.Random
 data class Appearance(
     val illustrationId: String? = null,
     val illustrationStyle: IllustrationStyle = IllustrationStyle(),
+    val illustrationDetails: IllustrationDetails = IllustrationDetails(),
     val skinTone: Int = 0,
     val faceShape: Int = 0,
     val hairStyle: Int = 0,
