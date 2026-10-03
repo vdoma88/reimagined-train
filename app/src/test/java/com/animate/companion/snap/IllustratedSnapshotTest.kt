@@ -9,7 +9,8 @@ import androidx.compose.ui.unit.dp
 import app.cash.paparazzi.DeviceConfig
 import app.cash.paparazzi.Paparazzi
 import com.animate.companion.model.IllustrationStyle
-import com.animate.companion.ui.avatar.IllustrationControls
+import com.animate.companion.model.IllustrationDetails
+import com.animate.companion.ui.avatar.IllustrationDetailControls
 import com.animate.companion.model.Appearance
 import com.animate.companion.model.IllustratedCharacters
 import com.animate.companion.ui.avatar.AvatarView
@@ -28,7 +29,7 @@ class IllustratedSnapshotTest {
                         IllustrationStyle(zoom = 1.15f, mirrored = true, saturation = 0.6f, warmth = 0.7f)),
                         com.animate.companion.model.Gender.FEMALE,
                         Modifier.fillMaxWidth().height(260.dp), animated = false)
-                    IllustrationControls(IllustrationStyle()) {}
+                    IllustrationDetailControls(characterId = "adventure", details = IllustrationDetails()) {}
                 }
             }
         }
