@@ -29,6 +29,7 @@ data class AppSettings(
     val voiceEnabled: Boolean = true,
     val voiceVolume: Float = 0.8f,
     val sfxEnabled: Boolean = true,
+    val autoUpdate: Boolean = true,
 ) {
     fun config(p: Provider) = ProviderConfig(p, keys[p].orEmpty(), models[p].orEmpty().ifBlank { p.defaultModel })
 
@@ -58,6 +59,7 @@ class SettingsRepository(private val context: Context) {
         val voiceEnabled = booleanPreferencesKey("voice_enabled")
         val voiceVolume = floatPreferencesKey("voice_volume")
         val sfxEnabled = booleanPreferencesKey("sfx_enabled")
+        val autoUpdate = booleanPreferencesKey("auto_update")
         fun key(p: Provider) = stringPreferencesKey("key_${p.name}")
         fun model(p: Provider) = stringPreferencesKey("model_${p.name}")
     }
@@ -79,6 +81,7 @@ class SettingsRepository(private val context: Context) {
         voiceEnabled = this[K.voiceEnabled] ?: true,
         voiceVolume = this[K.voiceVolume] ?: 0.8f,
         sfxEnabled = this[K.sfxEnabled] ?: true,
+        autoUpdate = this[K.autoUpdate] ?: true,
     )
 
     suspend fun setUserName(v: String) = context.dataStore.edit { it[K.userName] = v }
@@ -93,4 +96,5 @@ class SettingsRepository(private val context: Context) {
     suspend fun setVoiceEnabled(v: Boolean) = context.dataStore.edit { it[K.voiceEnabled] = v }
     suspend fun setVoiceVolume(v: Float) = context.dataStore.edit { it[K.voiceVolume] = v }
     suspend fun setSfxEnabled(v: Boolean) = context.dataStore.edit { it[K.sfxEnabled] = v }
+    suspend fun setAutoUpdate(v: Boolean) = context.dataStore.edit { it[K.autoUpdate] = v }
 }

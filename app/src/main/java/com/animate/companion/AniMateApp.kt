@@ -14,6 +14,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+import com.animate.companion.update.UpdateManager
 
 /** Manual dependency container; small enough not to need a DI framework. */
 class AppContainer(app: android.content.Context) {
@@ -23,6 +25,7 @@ class AppContainer(app: android.content.Context) {
     val llm = LlmClient()
     val chat = ChatRepository(db, settings, llm, scope)
     val sound = SoundDirector(scope)
+    val updates = UpdateManager(app, scope)
 }
 
 class AniMateApp : Application() {
@@ -34,7 +37,10 @@ class AniMateApp : Application() {
         container = AppContainer(this)
         container.settings.settings.onEach { container.sound.apply(it) }.launchIn(container.scope)
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
-            override fun onStart(owner: LifecycleOwner) = container.sound.onForeground()
+            override fun onStart(owner: LifecycleOwner) {
+                container.sound.onForeground()
+                container.scope.launch { if (container.settings.current().autoUpdate) container.updates.autoCheck() }
+            }
             override fun onStop(owner: LifecycleOwner) = container.sound.onBackground()
         })
     }

@@ -19,6 +19,7 @@ import com.animate.companion.ui.create.CreatorScreen
 import com.animate.companion.ui.home.HomeScreen
 import com.animate.companion.ui.settings.SettingsScreen
 import com.animate.companion.ui.theme.AniMateTheme
+import com.animate.companion.update.UpdateDialog
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -26,7 +27,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         val container = (application as AniMateApp).container
         setContent {
-            AniMateTheme { AppNav(container) }
+            AniMateTheme {
+                AppNav(container)
+                UpdateDialog(container.updates)
+            }
         }
     }
 }

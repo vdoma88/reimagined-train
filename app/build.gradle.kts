@@ -20,6 +20,8 @@ android {
         versionCode = 5
         versionName = "1.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // GitHub repository whose releases the in-app updater checks.
+        buildConfigField("String", "UPDATE_REPO", "\"vdoma88/reimagined-train\"")
     }
 
     // Stable release key from the environment (CI secrets); falls back to the debug key locally.
@@ -53,6 +55,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
