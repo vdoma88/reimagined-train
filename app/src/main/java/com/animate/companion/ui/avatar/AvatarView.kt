@@ -41,7 +41,7 @@ fun AvatarView(
 ) {
     val illustration = IllustratedCharacters.find(appearance.illustrationId)
     if (illustration != null) {
-        IllustratedAvatar(illustration, modifier, headOnly, fullBody, animated, appearance.illustrationStyle)
+        IllustratedAvatar(illustration, modifier, headOnly, fullBody, animated, appearance.illustrationStyle, appearance.illustrationDetails)
         return
     }
     var blink by remember { mutableFloatStateOf(0f) }
