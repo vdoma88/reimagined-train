@@ -1,6 +1,10 @@
 package com.animate.companion
 
 import com.animate.companion.model.IllustrationStyle
+import com.animate.companion.model.IllustrationDetails
+import com.animate.companion.model.IllustrationExpression
+import com.animate.companion.model.IllustrationAccent
+import com.animate.companion.model.IllustrationAccessory
 import com.animate.companion.model.Appearance
 import com.animate.companion.model.AppearancePresets
 import com.animate.companion.model.Gender
@@ -9,6 +13,22 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class IllustratedCharactersTest {
+    @Test fun detailLayersPersistAndLegacyJsonGetsNeutralDefaults() {
+        val details = IllustrationDetails(
+            expression = IllustrationExpression.BRIGHT,
+            hairAccent = IllustrationAccent.COOL,
+            outfitAccent = IllustrationAccent.VIOLET,
+            accessory = IllustrationAccessory.STAR_PIN,
+            blush = true
+        )
+        val original = Appearance(illustrationId = "classic", illustrationDetails = details)
+        val restored = Appearance.fromJson(original.toJson())
+        assertEquals(details, restored.illustrationDetails)
+
+        val legacy = Appearance.fromJson("""{"illustrationId":"classic"}""")
+        assertEquals(IllustrationDetails(), legacy.illustrationDetails)
+    }
+
     @Test fun editorSettingsPersistWithoutChangingCustomAvatar() {
         val original = Appearance(hairColor = 7, eyeColor = 4)
         val style = IllustrationStyle(
