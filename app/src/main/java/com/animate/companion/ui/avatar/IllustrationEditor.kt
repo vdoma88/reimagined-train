@@ -20,6 +20,9 @@ import com.animate.companion.model.IllustrationDetails
 import com.animate.companion.model.IllustrationExpression
 import com.animate.companion.model.IllustrationAccent
 import com.animate.companion.model.IllustrationAccessory
+import com.animate.companion.model.IllustrationLayerAsset
+import com.animate.companion.model.IllustrationLayerCategory
+import com.animate.companion.model.IllustrationLayerRegistry
 import com.animate.companion.ui.theme.Palette
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
@@ -52,7 +55,7 @@ fun IllustrationEditor(
                 AvatarView(draft, gender, Modifier.fillMaxWidth().weight(1f).background(Palette.Glass),
                     fullBody = fullBody)
                 Column(Modifier.weight(1.15f).fillMaxWidth().verticalScroll(rememberScrollState())) {
-                    IllustrationDetailControls(draft.illustrationDetails, enabled = !saving) {
+                    IllustrationDetailControls(draft.illustrationId, draft.illustrationDetails, enabled = !saving) {
                         draftJson = draft.copy(illustrationDetails = it.normalized()).toJson()
                         error = false
                     }
@@ -86,17 +89,17 @@ fun IllustrationEditor(
 
 @Composable
 internal fun IllustrationDetailControls(
+    characterId: String?,
     details: IllustrationDetails,
     enabled: Boolean = true,
     onChange: (IllustrationDetails) -> Unit
 ) {
     EditorSection("Лицо и настроение")
-    ChoiceRow(
-        options = IllustrationExpression.entries,
-        selected = details.expression,
+    LayerChoiceRow(
+        options = IllustrationLayerRegistry.forCharacter(characterId, IllustrationLayerCategory.EXPRESSION),
+        selectedId = details.expressionLayerId ?: "expression.${details.expression.name.lowercase()}",
         enabled = enabled,
-        label = { it.label },
-        onSelect = { onChange(details.copy(expression = it)) }
+        onSelect = { onChange(details.copy(expressionLayerId = it.id)) }
     )
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text("Румянец", Modifier.weight(1f), color = Palette.Text)
@@ -104,30 +107,27 @@ internal fun IllustrationDetailControls(
     }
 
     EditorSection("Волосы")
-    ChoiceRow(
-        options = IllustrationAccent.entries,
-        selected = details.hairAccent,
+    LayerChoiceRow(
+        options = IllustrationLayerRegistry.forCharacter(characterId, IllustrationLayerCategory.HAIR),
+        selectedId = details.hairLayerId ?: accentLayerId("hair", details.hairAccent),
         enabled = enabled,
-        label = { it.label },
-        onSelect = { onChange(details.copy(hairAccent = it)) }
+        onSelect = { onChange(details.copy(hairLayerId = it.id)) }
     )
 
     EditorSection("Одежда")
-    ChoiceRow(
-        options = IllustrationAccent.entries,
-        selected = details.outfitAccent,
+    LayerChoiceRow(
+        options = IllustrationLayerRegistry.forCharacter(characterId, IllustrationLayerCategory.OUTFIT),
+        selectedId = details.outfitLayerId ?: accentLayerId("outfit", details.outfitAccent),
         enabled = enabled,
-        label = { it.label },
-        onSelect = { onChange(details.copy(outfitAccent = it)) }
+        onSelect = { onChange(details.copy(outfitLayerId = it.id)) }
     )
 
     EditorSection("Аксессуар")
-    ChoiceRow(
-        options = IllustrationAccessory.entries,
-        selected = details.accessory,
+    LayerChoiceRow(
+        options = IllustrationLayerRegistry.forCharacter(characterId, IllustrationLayerCategory.ACCESSORY),
+        selectedId = details.accessoryLayerId ?: accessoryLayerId(details.accessory),
         enabled = enabled,
-        label = { it.label },
-        onSelect = { onChange(details.copy(accessory = it)) }
+        onSelect = { onChange(details.copy(accessoryLayerId = it.id)) }
     )
 
     TextButton(
@@ -137,12 +137,11 @@ internal fun IllustrationDetailControls(
 }
 
 @Composable
-private fun <T> ChoiceRow(
-    options: List<T>,
-    selected: T,
+private fun LayerChoiceRow(
+    options: List<IllustrationLayerAsset>,
+    selectedId: String,
     enabled: Boolean,
-    label: (T) -> String,
-    onSelect: (T) -> Unit
+    onSelect: (IllustrationLayerAsset) -> Unit
 ) {
     Row(
         Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()),
@@ -150,14 +149,20 @@ private fun <T> ChoiceRow(
     ) {
         options.forEach { option ->
             FilterChip(
-                selected = selected == option,
+                selected = selectedId == option.id,
                 onClick = { onSelect(option) },
                 enabled = enabled,
-                label = { Text(label(option)) }
+                label = { Text(option.title) }
             )
         }
     }
 }
+
+private fun accentLayerId(prefix: String, accent: IllustrationAccent): String =
+    "$prefix.${accent.name.lowercase()}"
+
+private fun accessoryLayerId(accessory: IllustrationAccessory): String =
+    "accessory.${accessory.name.lowercase()}"
 
 @Composable
 internal fun IllustrationControls(style: IllustrationStyle, enabled: Boolean = true, onChange: (IllustrationStyle) -> Unit) {
