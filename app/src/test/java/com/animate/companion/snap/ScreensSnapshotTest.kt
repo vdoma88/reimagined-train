@@ -59,6 +59,7 @@ class ScreensSnapshotTest {
                         Hero(character, Emotion.SHY, false, "Хававаа~") {}
                         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             msgs.forEach { MessageBubble(it, isLastAssistant = it.id == 3L, onDelete = {}, onRegenerate = {}) }
+                            com.animate.companion.ui.chat.HelpCard(com.animate.companion.llm.SafetyPolicy.Concern.BULLYING) {}
                             TypingBubble()
                             ErrorCard("Google Gemini: HTTP 429 quota exceeded", {}, {}, {})
                         }
