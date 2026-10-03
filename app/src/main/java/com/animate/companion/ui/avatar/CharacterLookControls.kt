@@ -26,7 +26,7 @@ internal fun CharacterLookControls(appearance: Appearance, enabled: Boolean, onC
             onClick = { update(look) }, label = { Text("Редактировать") })
     }
     if (!appearance.useCharacterLook) return
-    LookOptions("Причёска", listOf("Волны", "Боб", "Каре", "Хвост", "Два хвоста", "Короткая"), look.hair, enabled) { update(look.copy(hair = it)) }
+    LookOptions("Причёска", CharacterLookCatalog.hairstyles, look.hair, enabled) { update(look.copy(hair = it)) }
     LookColors("Цвет волос", hairPalette, look.hairColor, enabled) { update(look.copy(hairColor = it)) }
     LookOptions("Форма лица", listOf("Мягкая", "Сердечко", "Угловатая"), look.face, enabled) { update(look.copy(face = it)) }
     LookColors("Тон кожи", skinPalette, look.skin, enabled) { update(look.copy(skin = it)) }
@@ -34,7 +34,7 @@ internal fun CharacterLookControls(appearance: Appearance, enabled: Boolean, onC
     LookColors("Радужка", irisPalette, look.eyeColor, enabled) { update(look.copy(eyeColor = it)) }
     LookOptions("Брови", listOf("Дуга", "Прямые", "Приподнятые"), look.brows, enabled) { update(look.copy(brows = it)) }
     LookOptions("Рот", listOf("Спокойный", "Улыбка", "Открытый"), look.mouth, enabled) { update(look.copy(mouth = it)) }
-    LookOptions("Одежда", listOf("Жакет и юбка", "Худи и карго", "Походный образ", "Платье"), look.outfit, enabled) { update(look.copy(outfit = it)) }
+    LookOptions("Одежда", CharacterLookCatalog.outfits, look.outfit, enabled) { update(look.copy(outfit = it)) }
     LookColors("Цвет одежды", clothPalette, look.outfitColor, enabled) { update(look.copy(outfitColor = it)) }
     LookOptions("Аксессуар", listOf("Нет", "Очки", "Бант", "Серьги", "Чокер"), look.accessory, enabled) { update(look.copy(accessory = it)) }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
