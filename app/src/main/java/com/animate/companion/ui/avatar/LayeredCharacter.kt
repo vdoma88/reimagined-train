@@ -19,7 +19,7 @@ import kotlinx.serialization.json.Json
 internal data class CharacterPath(
     val path: String, val fill: String = "none", val stroke: String = "ink",
     val width: Float = 1.5f, val tx: Float = 0f, val ty: Float = 0f,
-    val sx: Float = 1f,
+    val sx: Float = 1f, val clip: String? = null,
 )
 
 internal val hairPalette = listOf(0xFF654337,0xFF242733,0xFFAF5C32,0xFFC8A76D,0xFFE0DCE5,0xFFB45C83,0xFF756198,0xFF3C8589)
@@ -27,7 +27,7 @@ internal val skinPalette = listOf(0xFFF3D0B9,0xFFEBC3A5,0xFFD7A17F,0xFFB77C5B,0x
 internal val irisPalette = listOf(0xFF916739,0xFF478CA9,0xFF66894C,0xFF8D659F,0xFF88929F,0xFFB35F7D)
 internal val clothPalette = listOf(0xFF344663,0xFF303543,0xFF647957,0xFFA86681,0xFF83719E,0xFFE1CDA8,0xFF538B91,0xFF964C4F)
 
-private data class PaintedPath(val path: Path, val data: CharacterPath)
+private data class PaintedPath(val path: Path, val data: CharacterPath, val clip: Path?)
 
 @Composable
 internal fun LayeredCharacter(
@@ -39,7 +39,7 @@ internal fun LayeredCharacter(
     val layers = remember(context) {
         val data = context.assets.open("character_layers.json").bufferedReader().use { it.readText() }
         Json.decodeFromString<Map<String, List<CharacterPath>>>(data).mapValues { (_, pieces) ->
-            pieces.map { PaintedPath(PathParser().parsePathString(it.path).toPath(), it) }
+            pieces.map { PaintedPath(PathParser().parsePathString(it.path).toPath(), it, it.clip?.let { clip -> PathParser().parsePathString(clip).toPath() }) }
         }
     }
     val n = look.normalized()
@@ -85,12 +85,16 @@ internal fun LayeredCharacter(
                     } else layers.getValue(key).forEach { piece ->
                         val d = piece.data
                         withTransform({ translate(d.tx,d.ty); scale(d.sx,1f,Offset.Zero) }) {
+                            fun DrawScope.paintPart() {
                             if (d.fill != "none") {
                                 val c = palette.getValue(d.fill)
                                 val shadow = when (d.fill) { "hair" -> palette.getValue("hairShadow"); "cloth" -> palette.getValue("clothShadow"); else -> c }
                                 drawPath(piece.path, Brush.linearGradient(listOf(c,shadow), piece.path.getBounds().topLeft, piece.path.getBounds().bottomRight))
                             }
                             if (d.stroke != "none") drawPath(piece.path, palette.getValue(d.stroke), style = Stroke(d.width, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                            }
+                            val mask = piece.clip
+                            if (mask == null) paintPart() else clipPath(mask) { paintPart() }
                         }
                     }
                 }
