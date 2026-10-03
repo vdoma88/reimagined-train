@@ -1,5 +1,8 @@
 package com.animate.companion.ui.chat
 
+import android.content.Intent
+import android.net.Uri
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.RepeatMode
@@ -71,6 +74,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -85,6 +89,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.animate.companion.AppContainer
 import com.animate.companion.data.CharacterEntity
 import com.animate.companion.data.MessageEntity
+import com.animate.companion.llm.SafetyPolicy
 import com.animate.companion.model.Emotion
 import com.animate.companion.model.PersonaPresets
 import com.animate.companion.ui.avatar.AvatarView
@@ -157,7 +162,7 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
 
             // Messages
             val listState = rememberLazyListState()
-            val total = messages.size + (if (vm.busy) 1 else 0) + (if (vm.error != null) 1 else 0)
+            val total = messages.size + (if (vm.busy) 1 else 0) + (if (vm.error != null) 1 else 0) + (if (vm.concern != null) 1 else 0)
             LaunchedEffect(total) { if (total > 0) listState.animateScrollToItem(total - 1) }
             LazyColumn(
                 state = listState,
@@ -172,6 +177,9 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                         onDelete = { vm.deleteMessage(m.id) },
                         onRegenerate = vm::regenerate,
                     )
+                }
+                vm.concern?.let { concern ->
+                    item(key = "help") { HelpCard(concern, onDismiss = vm::dismissConcern) }
                 }
                 if (vm.busy) item(key = "typing") { TypingBubble() }
                 vm.error?.let { err ->
@@ -364,6 +372,35 @@ internal fun ErrorCard(text: String, onRetry: () -> Unit, onSettings: () -> Unit
                 TextButton(onClick = onDismiss) { Text("Скрыть") }
                 TextButton(onClick = onSettings) { Text("Настройки") }
                 TextButton(onClick = onRetry) { Text("Повторить") }
+            }
+        }
+    }
+}
+
+/** Safety card with help lines; shown by the app itself, independent of what the model replies. */
+@Composable
+internal fun HelpCard(concern: SafetyPolicy.Concern, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    fun dial(number: String) {
+        runCatching {
+            context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + number.filter { it.isDigit() })))
+        }
+    }
+    GlassCard(Modifier.fillMaxWidth(), selected = true) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text("💗 ${concern.title}", color = Palette.Text, style = MaterialTheme.typography.titleSmall)
+            Text(concern.advice, color = Palette.Text, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                "Детский телефон доверия: ${SafetyPolicy.CHILD_HELPLINE} — бесплатно, анонимно, круглосуточно.\n" +
+                    "Если есть опасность прямо сейчас: ${SafetyPolicy.EMERGENCY}.",
+                color = Palette.TextDim,
+                style = MaterialTheme.typography.bodySmall,
+            )
+            Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+                TextButton(onClick = { dial(SafetyPolicy.CHILD_HELPLINE) }) { Text("📞 Телефон доверия", maxLines = 1) }
+                TextButton(onClick = { dial(SafetyPolicy.EMERGENCY) }) { Text("📞 ${SafetyPolicy.EMERGENCY}", maxLines = 1) }
+                Spacer(Modifier.weight(1f))
+                TextButton(onClick = onDismiss) { Text("Понятно", maxLines = 1) }
             }
         }
     }

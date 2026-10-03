@@ -78,7 +78,7 @@ enum class Emotion(val tag: String, val label: String, val emoji: String) {
     SAD("sad", "грусть", "😢"),
     SURPRISED("surprised", "удивление", "😲"),
     SMUG("smug", "ехидство", "😏"),
-    LOVE("love", "влюблённость", "😍"),
+    LOVE("love", "восхищение", "😍"),
     THINKING("thinking", "задумчивость", "🤔");
 
     companion object {

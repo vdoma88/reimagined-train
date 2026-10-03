@@ -10,6 +10,7 @@ import com.animate.companion.audio.SfxType
 import com.animate.companion.data.CharacterEntity
 import com.animate.companion.data.MessageEntity
 import com.animate.companion.llm.ParsedReply
+import com.animate.companion.llm.SafetyPolicy
 import com.animate.companion.model.Emotion
 import com.animate.companion.model.IllustratedCharacters
 import kotlinx.coroutines.Job
@@ -43,6 +44,10 @@ class ChatViewModel(
     var talking by mutableStateOf(false)
         private set
     var bubble by mutableStateOf<String?>(null)
+        private set
+
+    /** Set when the user's message touches self-harm, abuse, bullying etc.; shows the help card. */
+    var concern by mutableStateOf<SafetyPolicy.Concern?>(null)
         private set
 
     private var reactJob: Job? = null
@@ -92,6 +97,7 @@ class ChatViewModel(
         val text = input.trim()
         if (text.isEmpty() || busy) return
         input = ""
+        SafetyPolicy.detect(text)?.let { concern = it }
         container.sound.sfx(SfxType.SEND)
         viewModelScope.launch { perform { repo.send(characterId, text) } }
     }
@@ -140,6 +146,10 @@ class ChatViewModel(
     }
 
     fun saveMemory(text: String) = viewModelScope.launch { repo.updateMemory(characterId, text) }
+
+    fun dismissConcern() {
+        concern = null
+    }
 
     fun dismissError() {
         error = null

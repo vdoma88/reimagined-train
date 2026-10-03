@@ -18,6 +18,16 @@ class ChatRepository(
 ) {
     private val summarizeLock = Mutex()
 
+    /** App-wide chat session: resets after a long pause, used for "take a break" nudges. */
+    private var sessionStart = 0L
+    private var lastActivity = 0L
+
+    private fun sessionMinutes(now: Long): Long {
+        if (now - lastActivity > SESSION_GAP_MS) sessionStart = now
+        lastActivity = now
+        return (now - sessionStart) / 60_000
+    }
+
     fun observeCharacters() = db.characters().observeAll()
     fun observeCharacter(id: Long) = db.characters().observe(id)
     fun observeMessages(id: Long) = db.messages().observe(id)
@@ -56,7 +66,7 @@ class ChatRepository(
         val c = db.characters().get(characterId) ?: error("no character")
         val s = settings.current()
         val msgs = listOf(
-            ChatMessage("system", PromptBuilder.systemPrompt(c, s.userName)),
+            ChatMessage("system", PromptBuilder.systemPrompt(c, s.userName, System.currentTimeMillis(), sessionMinutes(System.currentTimeMillis()))),
             ChatMessage("user", PromptBuilder.greetingInstruction()),
         )
         val reply = runCatching { PromptBuilder.parseReply(complete(msgs)) }
@@ -75,7 +85,9 @@ class ChatRepository(
         val c = db.characters().get(characterId) ?: error("no character")
         val s = settings.current()
         val history = db.messages().all(characterId)
-        val parsed = PromptBuilder.parseReply(complete(PromptBuilder.buildContext(c, s.userName, history)))
+        val now = System.currentTimeMillis()
+        val context = PromptBuilder.buildContext(c, s.userName, history, now, sessionMinutes(now))
+        val parsed = PromptBuilder.parseReply(complete(context))
         saveReply(c, parsed)
         appScope.launch { runCatching { summarizeIfNeeded(characterId) } }
         return parsed
@@ -116,6 +128,8 @@ class ChatRepository(
     }
 }
 
+private const val SESSION_GAP_MS = 20 * 60_000L
+
 /** Offline lines used when every provider is unreachable on first meeting. */
 object FallbackLines {
     fun greeting(c: CharacterEntity): ParsedReply {
@@ -131,7 +145,7 @@ object FallbackLines {
         "genki" -> ParsedReply(Emotion.HAPPY, "*подпрыгивает* Йахо-о! Я ${c.name}! Давай дружить! Что будем делать?!")
         "himedere" -> ParsedReply(Emotion.SMUG, "О-хо-хо! Перед тобой ${c.name}. Можешь считать себя счастливчиком. Представься же!")
         "chuuni" -> ParsedReply(Emotion.SMUG, "*закрывает глаз ладонью* Печать ослабла… Я — ${c.name}, носитель Тёмного Пламени. А кто ты, смертный?")
-        "yandere" -> ParsedReply(Emotion.LOVE, "*сладко улыбается* Наконец-то ты здесь~ Я ${c.name}. Теперь ты ведь никуда не уйдёшь, правда?")
+        "yandere" -> ParsedReply(Emotion.HAPPY, "*драматично прижимает ладони к щекам* Ах, новое знакомство! Я ${c.name}~ Расскажи, чем ты сегодня занимался?")
         "lazy" -> ParsedReply(Emotion.THINKING, "*зевает* Ммм… я ${c.name}. Привет. Расскажи что-нибудь интересное, ладно?")
         "onee" -> ParsedReply(Emotion.HAPPY, "Ара-ара, новое лицо~ Я ${c.name}. Устал(а)? Присаживайся, поболтаем.")
         else -> ParsedReply(Emotion.HAPPY, "*машет рукой* Привет! Я ${c.name}! Очень $glad познакомиться~ Как тебя зовут?")
