@@ -160,9 +160,40 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                 }
             }
 
-            // Hero avatar
-            AnimatedVisibility(heroOpen, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-                Hero(c, emotion, vm.talking, vm.bubble, onPoke = vm::poke)
+            // Character scene
+            AnimatedVisibility(
+                heroOpen,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut(),
+            ) {
+                GlassCard(
+                    Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Column {
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    "Сцена персонажа",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = Palette.Amber,
+                                )
+                                Text(
+                                    "образ, эмоция и настроение меняются в реальном времени",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Palette.TextDim,
+                                )
+                            }
+                            Text(
+                                emotion.emoji,
+                                style = MaterialTheme.typography.headlineSmall,
+                            )
+                        }
+                        Hero(c, emotion, vm.talking, vm.bubble, onPoke = vm::poke)
+                    }
+                }
             }
 
             // Messages
@@ -198,7 +229,7 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                     value = vm.input,
                     onValueChange = { vm.input = it },
                     placeholder = { Text("Написать ${c.name.substringBefore(' ')}…", color = Palette.TextDim) },
-                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(26.dp)),
+                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(18.dp)),
                     maxLines = 5,
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color(0x2EFFFFFF),
@@ -213,7 +244,7 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                 Spacer(Modifier.size(8.dp))
                 val canSend = vm.input.isNotBlank() && !vm.busy
                 Box(
-                    Modifier.size(54.dp).clip(CircleShape)
+                    Modifier.size(54.dp).clip(RoundedCornerShape(18.dp))
                         .background(if (canSend) Palette.accent else Brush.linearGradient(listOf(Color(0x33FFFFFF), Color(0x22FFFFFF))))
                         .clickable(enabled = canSend, onClick = vm::send),
                     contentAlignment = Alignment.Center,
@@ -374,7 +405,7 @@ internal fun TypingBubble() {
 internal fun ErrorCard(text: String, onRetry: () -> Unit, onSettings: () -> Unit, onDismiss: () -> Unit) {
     GlassCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(14.dp)) {
-            Text("Связь с ИИ прервалась 💦", color = Palette.Text, style = MaterialTheme.typography.titleSmall)
+            Text("Связь с персонажем прервалась", color = Palette.Text, style = MaterialTheme.typography.titleSmall)
             Text(text, color = Palette.TextDim, style = MaterialTheme.typography.bodySmall, maxLines = 6)
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                 TextButton(onClick = onDismiss) { Text("Скрыть") }
@@ -419,11 +450,11 @@ private fun MemoryDialog(memory: String, onDismiss: () -> Unit, onSave: (String)
     var text by remember { mutableStateOf(memory) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Память персонажа") },
+        title = { Text("Записи и память") },
         text = {
             Column {
                 Text(
-                    "Сюда автоматически сжимаются старые сообщения. Можно поправить вручную — персонаж будет это помнить.",
+                    "Здесь хранится сжатая история важных разговоров. Можно поправить записи вручную — персонаж будет опираться на них дальше.",
                     style = MaterialTheme.typography.bodySmall,
                     color = Palette.TextDim,
                 )
