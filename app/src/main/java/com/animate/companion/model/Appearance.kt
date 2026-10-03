@@ -34,6 +34,18 @@ data class Appearance(
     companion object {
         private val json = Json { ignoreUnknownKeys = true }
 
+        /**
+         * Applies a studio draft to the stored appearance: style *and* detail layers.
+         * Returns null when the artwork changed meanwhile, so an old editor never overwrites it.
+         */
+        fun mergeStudioEdit(current: Appearance, draft: Appearance): Appearance? {
+            if (current.illustrationId != draft.illustrationId) return null
+            return current.copy(
+                illustrationStyle = draft.illustrationStyle.normalized(),
+                illustrationDetails = draft.illustrationDetails.normalized(),
+            )
+        }
+
         fun fromJson(s: String): Appearance =
             runCatching { json.decodeFromString(serializer(), s) }.getOrDefault(Appearance())
 

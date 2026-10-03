@@ -126,6 +126,7 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
     var menu by remember { mutableStateOf(false) }
     var editArt by rememberSaveable { mutableStateOf(false) }
     var artDialog by remember { mutableStateOf(false) }
+    var studioAfterPick by remember { mutableStateOf(false) }
     var memoryDialog by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     var confirmClear by remember { mutableStateOf(false) }
@@ -155,8 +156,14 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                 Box {
                     IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, "Меню", tint = Palette.Text) }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                        if (c.appearance.illustrationId != null) DropdownMenuItem(
-                            text = { Text("Открыть студию образа") }, onClick = { menu = false; editArt = true })
+                        DropdownMenuItem(
+                            text = { Text("Открыть студию образа") },
+                            onClick = {
+                                menu = false
+                                // Characters from older versions have no artwork yet: pick one first.
+                                if (c.appearance.illustrationId != null) editArt = true else { studioAfterPick = true; artDialog = true }
+                            },
+                        )
                         DropdownMenuItem(text = { Text("Сменить образ") }, onClick = { menu = false; artDialog = true })
                         DropdownMenuItem(text = { Text("Записи и память") }, onClick = { menu = false; memoryDialog = true })
                         DropdownMenuItem(text = { Text("Начать заново") }, onClick = { menu = false; confirmClear = true })
@@ -266,11 +273,19 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
     if (editArt) IllustrationEditor(c.appearance,
         runCatching { Gender.valueOf(c.gender) }.getOrDefault(Gender.NEUTRAL),
         onDismiss = { editArt = false }, onSave = { vm.saveIllustrationStyle(it) })
+    // Open the studio once the newly picked artwork has been saved and observed.
+    LaunchedEffect(c.appearance.illustrationId) {
+        if (studioAfterPick && c.appearance.illustrationId != null) {
+            studioAfterPick = false
+            editArt = true
+        }
+    }
     if (artDialog) AlertDialog(
-        onDismissRequest = { artDialog = false },
-        title = { Text("Образ персонажа") },
+        onDismissRequest = { artDialog = false; studioAfterPick = false },
+        title = { Text(if (studioAfterPick) "Сначала выбери рисунок для персонажа" else "Образ персонажа") },
         text = { IllustrationGallery(c.appearance.illustrationId, onSelect = { id ->
             vm.setIllustration(id); artDialog = false
+            if (id == null) studioAfterPick = false
         }, modifier = Modifier.fillMaxWidth().height(440.dp)) },
         confirmButton = { TextButton(onClick = { artDialog = false }) { Text("Закрыть") } },
     )
