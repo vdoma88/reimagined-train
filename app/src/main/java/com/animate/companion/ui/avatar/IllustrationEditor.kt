@@ -94,15 +94,15 @@ internal fun IllustrationControls(style: IllustrationStyle, enabled: Boolean = t
 
     EditorSection("Кадр")
     EditorSlider("Масштаб", s.zoom, 0.8f..1.6f, enabled, "%.2f".format(s.zoom)) { onChange(s.copy(zoom = it)) }
-    EditorSlider("По горизонтали", s.offsetX, -0.25f..0.25f, enabled, "\${(s.offsetX * 100).roundToInt()}%") { onChange(s.copy(offsetX = it)) }
-    EditorSlider("По вертикали", s.offsetY, -0.25f..0.25f, enabled, "\${(s.offsetY * 100).roundToInt()}%") { onChange(s.copy(offsetY = it)) }
-    EditorSlider("Наклон", s.rotation, -8f..8f, enabled, "\${s.rotation.roundToInt()}°") { onChange(s.copy(rotation = it)) }
+    EditorSlider("По горизонтали", s.offsetX, -0.25f..0.25f, enabled, "${(s.offsetX * 100).roundToInt()}%") { onChange(s.copy(offsetX = it)) }
+    EditorSlider("По вертикали", s.offsetY, -0.25f..0.25f, enabled, "${(s.offsetY * 100).roundToInt()}%") { onChange(s.copy(offsetY = it)) }
+    EditorSlider("Наклон", s.rotation, -8f..8f, enabled, "${s.rotation.roundToInt()}°") { onChange(s.copy(rotation = it)) }
 
     EditorSection("Цвет")
-    EditorSlider("Насыщенность", s.saturation, 0f..1.6f, enabled, "\${(s.saturation * 100).roundToInt()}%") { onChange(s.copy(saturation = it)) }
+    EditorSlider("Насыщенность", s.saturation, 0f..1.6f, enabled, "${(s.saturation * 100).roundToInt()}%") { onChange(s.copy(saturation = it)) }
     EditorSlider("Теплота", s.warmth, -1f..1f, enabled, signedPercent(s.warmth)) { onChange(s.copy(warmth = it)) }
     EditorSlider("Яркость", s.brightness, -0.35f..0.35f, enabled, signedPercent(s.brightness / 0.35f)) { onChange(s.copy(brightness = it)) }
-    EditorSlider("Контраст", s.contrast, 0.7f..1.35f, enabled, "\${(s.contrast * 100).roundToInt()}%") { onChange(s.copy(contrast = it)) }
+    EditorSlider("Контраст", s.contrast, 0.7f..1.35f, enabled, "${(s.contrast * 100).roundToInt()}%") { onChange(s.copy(contrast = it)) }
 
     EditorSection("Отображение")
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -149,5 +149,5 @@ private fun EditorSlider(
 
 private fun signedPercent(value: Float): String {
     val percent = (value * 100).roundToInt()
-    return if (percent > 0) "+\$percent%" else "\$percent%"
+    return if (percent > 0) "+$percent%" else "$percent%"
 }
