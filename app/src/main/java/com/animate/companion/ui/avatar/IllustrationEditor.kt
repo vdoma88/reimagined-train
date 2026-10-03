@@ -256,6 +256,18 @@ internal fun IllustrationDetailControls(
 }
 
 @Composable
+private fun EditorSection(title: String) {
+    Spacer(Modifier.height(8.dp))
+    Text(
+        title,
+        style = MaterialTheme.typography.titleSmall,
+        color = Palette.Text,
+        fontWeight = FontWeight.SemiBold,
+    )
+    Spacer(Modifier.height(6.dp))
+}
+
+@Composable
 private fun LayerChoiceRow(
     options: List<IllustrationLayerAsset>,
     selectedId: String,
