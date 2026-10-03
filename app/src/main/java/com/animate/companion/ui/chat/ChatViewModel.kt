@@ -134,6 +134,15 @@ class ChatViewModel(
         then()
     }
 
+    suspend fun saveIllustrationStyle(draft: com.animate.companion.model.Appearance): Boolean {
+        val c = container.db.characters().get(characterId) ?: return false
+        // A concurrent change of source artwork must not be overwritten by an old editor.
+        if (c.appearance.illustrationId != draft.illustrationId) return false
+        container.db.characters().updateAppearance(characterId,
+            c.appearance.copy(illustrationStyle = draft.illustrationStyle.normalized()).toJson())
+        return true
+    }
+
     fun setIllustration(id: String?) = viewModelScope.launch {
         if (id != null && IllustratedCharacters.find(id) == null) return@launch
         try {
