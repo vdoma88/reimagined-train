@@ -88,6 +88,8 @@ import com.animate.companion.data.MessageEntity
 import com.animate.companion.model.Emotion
 import com.animate.companion.model.PersonaPresets
 import com.animate.companion.ui.avatar.AvatarView
+import com.animate.companion.ui.avatar.IllustrationGallery
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.animate.companion.ui.components.AvatarFrame
 import com.animate.companion.ui.components.GlassCard
 import com.animate.companion.ui.components.MangaStage
@@ -109,6 +111,7 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
     }
     var heroOpen by remember { mutableStateOf(true) }
     var menu by remember { mutableStateOf(false) }
+    var artDialog by remember { mutableStateOf(false) }
     var memoryDialog by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     var confirmClear by remember { mutableStateOf(false) }
@@ -138,6 +141,7 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                 Box {
                     IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, "Меню", tint = Palette.Text) }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                        DropdownMenuItem(text = { Text("Сменить образ") }, onClick = { menu = false; artDialog = true })
                         DropdownMenuItem(text = { Text("Память персонажа") }, onClick = { menu = false; memoryDialog = true })
                         DropdownMenuItem(text = { Text("Начать заново") }, onClick = { menu = false; confirmClear = true })
                         DropdownMenuItem(text = { Text("Настройки ИИ и звука") }, onClick = { menu = false; onSettings() })
@@ -207,6 +211,14 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
         }
     }
 
+    if (artDialog) AlertDialog(
+        onDismissRequest = { artDialog = false },
+        title = { Text("Образ персонажа") },
+        text = { IllustrationGallery(c.appearance.illustrationId, onSelect = { id ->
+            vm.setIllustration(id); artDialog = false
+        }, modifier = Modifier.fillMaxWidth().height(440.dp)) },
+        confirmButton = { TextButton(onClick = { artDialog = false }) { Text("Закрыть") } },
+    )
     if (memoryDialog) MemoryDialog(c.memory, onDismiss = { memoryDialog = false }) { vm.saveMemory(it); memoryDialog = false }
     if (confirmClear) ConfirmDialog(
         "Начать заново?",
@@ -224,6 +236,7 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
 
 @Composable
 internal fun Hero(c: CharacterEntity, emotion: Emotion, talking: Boolean, bubble: String?, onPoke: () -> Unit) {
+    var fullBody by rememberSaveable(c.id) { mutableStateOf(false) }
     val arch = PersonaPresets.archetype(c.archetypeId)
     val prof = PersonaPresets.profession(c.professionId)
     val dir = PersonaPresets.direction(c.directionId)
@@ -233,7 +246,7 @@ internal fun Hero(c: CharacterEntity, emotion: Emotion, talking: Boolean, bubble
                 .clickable(remember { MutableInteractionSource() }, null, onClick = onPoke),
         ) {
             MangaStage(emotion, Modifier.fillMaxSize())
-            AvatarView(c.appearance, c.genderEnum, Modifier.fillMaxSize(), emotion = emotion, talking = talking)
+            AvatarView(c.appearance, c.genderEnum, Modifier.fillMaxSize(), emotion = emotion, talking = talking, fullBody = fullBody)
             androidx.compose.animation.AnimatedVisibility(
                 visible = bubble != null,
                 enter = scaleIn() + fadeIn(),
@@ -252,6 +265,9 @@ internal fun Hero(c: CharacterEntity, emotion: Emotion, talking: Boolean, bubble
                 )
             }
         }
+        if (c.appearance.illustrationId != null) TextButton(
+            onClick = { fullBody = !fullBody }, modifier = Modifier.align(Alignment.BottomEnd),
+        ) { Text(if (fullBody) "Портрет" else "В полный рост") }
         Column(Modifier.align(Alignment.BottomStart).padding(start = 12.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             TagChip("${arch.emoji} ${arch.label}")
             TagChip("${prof.emoji} ${prof.label(c.genderEnum)}")

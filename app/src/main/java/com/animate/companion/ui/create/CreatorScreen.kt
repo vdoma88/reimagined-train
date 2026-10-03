@@ -82,6 +82,10 @@ import com.animate.companion.model.NameGenerator
 import com.animate.companion.model.PersonaPresets
 import com.animate.companion.model.Swatch
 import com.animate.companion.model.StudioLooks
+import com.animate.companion.model.IllustratedCharacters
+import com.animate.companion.ui.avatar.IllustrationGallery
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.saveable.rememberSaveable
 import com.animate.companion.ui.components.MangaStage
 import com.animate.companion.ui.avatar.AvatarView
 import com.animate.companion.ui.components.GlassCard
@@ -94,14 +98,14 @@ import kotlin.random.Random
 
 class CreatorViewModel : ViewModel() {
     var gender by mutableStateOf(Gender.FEMALE)
-    var appearance by mutableStateOf(Appearance.random(Gender.FEMALE))
+    var appearance by mutableStateOf(Appearance.random(Gender.FEMALE).copy(illustrationId = "classic"))
     var name by mutableStateOf(NameGenerator.generate(Gender.FEMALE))
     var note by mutableStateOf("")
     var archetype by mutableStateOf(PersonaPresets.archetypes.first().id)
     var profession by mutableStateOf(PersonaPresets.professions.random().id)
     var direction by mutableStateOf(PersonaPresets.directions.first().id)
     var step by mutableIntStateOf(0)
-    var category by mutableIntStateOf(Cat.LOOKS.ordinal)
+    var category by mutableIntStateOf(Cat.ILLUSTRATIONS.ordinal)
     val voiceSeed = Random.nextInt()
 
     fun draft() = CharacterEntity(
@@ -119,7 +123,7 @@ class CreatorViewModel : ViewModel() {
 private enum class Cat(val label: String, val headOnly: Boolean = true) {
     HAIR("✦ Причёска", false), BANGS("Чёлка"), HAIR_COLOR("Цвет волос"), EYES("♡ Глаза"), EYE_COLOR("Цвет глаз"),
     MOUTH("Рот"), FACE("Лицо"), SKIN("Кожа"), EARS("ᓚᘏᗢ Ушки"), ACCESSORY("🎀 Аксессуар"),
-    OUTFIT("✧ Одежда", false), OUTFIT_COLOR("Цвет одежды", false), EXTRAS("✨ Детали"), LOOKS("♡ Готовые образы", false),
+    OUTFIT("✧ Одежда", false), OUTFIT_COLOR("Цвет одежды", false), EXTRAS("✨ Детали"), LOOKS("♡ Готовые образы", false), ILLUSTRATIONS("Иллюстрации", false),
 }
 
 private val steps = listOf("Образ", "История", "Характер")
@@ -128,6 +132,7 @@ private val steps = listOf("Образ", "История", "Характер")
 fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long) -> Unit) {
     val vm: CreatorViewModel = viewModel()
     val scope = rememberCoroutineScope()
+    var fullBody by rememberSaveable { mutableStateOf(false) }
     var bubble by remember { mutableStateOf<String?>(null) }
     var previewEmotion by remember { mutableStateOf(Emotion.HAPPY) }
     var talking by remember { mutableStateOf(false) }
@@ -160,13 +165,20 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
                     Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Назад", tint = Palette.Text)
                 }
                 Column(Modifier.weight(1f)) {
-                    Text("Kawaii Studio ♡", style = MaterialTheme.typography.titleLarge, color = Palette.Text)
+                    Text("Character Studio", style = MaterialTheme.typography.titleLarge, color = Palette.Text)
                     Text("создай своего аниме-героя", style = MaterialTheme.typography.labelSmall, color = Palette.TextDim)
                 }
                 IconButton(onClick = {
                     container.sound.sfx(SfxType.DICE)
                     when (vm.step) {
-                        0 -> vm.appearance = Appearance.random(vm.gender)
+                        0 -> {
+                            if (vm.appearance.illustrationId != null) {
+                                val art = IllustratedCharacters.all.random()
+                                vm.appearance = vm.appearance.copy(illustrationId = art.id)
+                                if (vm.gender != art.gender) vm.name = NameGenerator.generate(art.gender)
+                                vm.gender = art.gender
+                            } else vm.appearance = Appearance.random(vm.gender)
+                        }
                         1 -> vm.name = NameGenerator.generate(vm.gender)
                         else -> {
                             vm.archetype = PersonaPresets.archetypes.random().id
@@ -187,7 +199,7 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
                         .clickable(remember { MutableInteractionSource() }, null) { voicePreview(listOf(Emotion.HAPPY, Emotion.SHY, Emotion.SURPRISED, Emotion.LOVE, Emotion.SMUG).random()) },
                 ) {
                     MangaStage(previewEmotion, Modifier.fillMaxSize())
-                    AvatarView(vm.appearance, vm.gender, Modifier.fillMaxSize(), emotion = previewEmotion, talking = talking)
+                    AvatarView(vm.appearance, vm.gender, Modifier.fillMaxSize(), emotion = previewEmotion, talking = talking, fullBody = fullBody)
                     androidx.compose.animation.AnimatedVisibility(
                         visible = bubble != null,
                         enter = scaleIn() + fadeIn(),
@@ -206,14 +218,19 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
                     }
                 }
                 Text(
-                    "♡ нажми на героя — он оживёт",
+                    if (vm.appearance.illustrationId != null) "Нажми, чтобы услышать персонажа" else "♡ нажми на героя — он оживёт",
                     style = MaterialTheme.typography.labelSmall,
                     color = Palette.TextDim,
                     modifier = Modifier.align(Alignment.BottomCenter),
                 )
             }
 
-            EmotionStrip(previewEmotion) { voicePreview(it) }
+            if (vm.appearance.illustrationId != null) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    TextButton(onClick = { fullBody = false }) { Text(if (!fullBody) "✓ Портрет" else "Портрет") }
+                    TextButton(onClick = { fullBody = true }) { Text(if (fullBody) "✓ В полный рост" else "В полный рост") }
+                }
+            } else EmotionStrip(previewEmotion) { voicePreview(it) }
             StepTabs(vm.step) { container.sound.sfx(SfxType.TAP); vm.step = it }
 
             Box(Modifier.weight(0.58f).fillMaxWidth()) {
@@ -278,7 +295,19 @@ internal fun StepTabs(step: Int, onSelect: (Int) -> Unit) {
 
 @Composable
 internal fun AppearanceStep(vm: CreatorViewModel, onTap: () -> Unit) {
-    val cats = listOf(Cat.LOOKS) + Cat.entries.filter { it != Cat.LOOKS }
+    if (vm.category == Cat.ILLUSTRATIONS.ordinal) {
+        IllustrationGallery(vm.appearance.illustrationId, onSelect = { id ->
+            onTap()
+            vm.appearance = vm.appearance.copy(illustrationId = id)
+            if (id == null) vm.category = Cat.LOOKS.ordinal
+            IllustratedCharacters.find(id)?.let { art ->
+                if (vm.gender != art.gender) vm.name = NameGenerator.generate(art.gender)
+                vm.gender = art.gender
+            }
+        }, modifier = Modifier.fillMaxSize())
+        return
+    }
+    val cats = listOf(Cat.ILLUSTRATIONS, Cat.LOOKS) + Cat.entries.filter { it != Cat.LOOKS && it != Cat.ILLUSTRATIONS }
     Column(Modifier.fillMaxSize()) {
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             itemsIndexed(cats) { i, c ->
@@ -297,7 +326,7 @@ internal fun AppearanceStep(vm: CreatorViewModel, onTap: () -> Unit) {
         }
         Spacer(Modifier.height(8.dp))
         val cat = Cat.entries[vm.category]
-        val a = vm.appearance
+        val a = vm.appearance.copy(illustrationId = null)
         when (cat) {
             Cat.LOOKS -> StudioLookGrid(vm, onTap)
             Cat.HAIR_COLOR -> SwatchGrid(AppearancePresets.hairColors, a.hairColor) { onTap(); vm.appearance = a.copy(hairColor = it) }

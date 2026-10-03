@@ -89,6 +89,9 @@ interface CharacterDao {
     @Update
     suspend fun update(c: CharacterEntity)
 
+    @Query("UPDATE characters SET appearanceJson = :appearanceJson WHERE id = :id")
+    suspend fun updateAppearance(id: Long, appearanceJson: String)
+
     @Query("DELETE FROM characters WHERE id = :id")
     suspend fun delete(id: Long)
 }

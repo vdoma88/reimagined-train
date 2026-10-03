@@ -121,14 +121,14 @@ private fun KeyBanner(onClick: () -> Unit) {
 
 @Composable
 private fun EmptyState(modifier: Modifier) {
-    val demo = remember { Appearance(hairColor = 0, hairStyle = 1, eyeColor = 3, ears = 1, accessory = 1, ahoge = true) }
+    val demo = remember { Appearance(illustrationId = "classic") }
     Column(modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         AvatarView(demo, Gender.FEMALE, Modifier.size(260.dp), emotion = Emotion.HAPPY)
         Spacer(Modifier.height(16.dp))
         Text("Здесь пока пусто~", style = MaterialTheme.typography.headlineMedium, color = Palette.Text)
         Spacer(Modifier.height(8.dp))
         Text(
-            "Собери своего персонажа из классических аниме-штампов, дай ему характер — и болтай сколько хочешь!",
+            "Выбери рисованный образ или создай свой, придумай характер — и начни новую историю.",
             color = Palette.TextDim,
             style = MaterialTheme.typography.bodyLarge,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
