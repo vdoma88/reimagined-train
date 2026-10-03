@@ -66,7 +66,7 @@ fun HomeScreen(container: AppContainer, onCreate: () -> Unit, onOpen: (Long) -> 
                         "AniMate",
                         style = MaterialTheme.typography.headlineLarge.merge(TextStyle(brush = Palette.accentWide)),
                     )
-                    Text("твои аниме-компаньоны", color = Palette.TextDim, style = MaterialTheme.typography.bodyMedium)
+                    Text("персонажи, истории и немного тайн", color = Palette.TextDim, style = MaterialTheme.typography.bodyMedium)
                 }
                 IconButton(onClick = { container.sound.sfx(SfxType.TAP); onSettings() }) {
                     Icon(Icons.Rounded.Settings, "Настройки", tint = Palette.Text)
@@ -75,15 +75,52 @@ fun HomeScreen(container: AppContainer, onCreate: () -> Unit, onOpen: (Long) -> 
 
             if (settings?.hasAnyKey == false) KeyBanner { container.sound.sfx(SfxType.TAP); onSettings() }
 
+            GlassCard(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)
+            ) {
+                Row(
+                    Modifier.fillMaxWidth().padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            "Твой мир",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = Palette.Text,
+                        )
+                        Text(
+                            "Герои, разговоры и истории, которые меняются вместе с тобой",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Palette.TextDim,
+                        )
+                    }
+                    Text("✦", style = MaterialTheme.typography.headlineMedium, color = Palette.Amber)
+                }
+            }
+
             val list = characters
             when {
                 list == null -> Spacer(Modifier.weight(1f))
                 list.isEmpty() -> EmptyState(Modifier.weight(1f))
                 else -> LazyColumn(
                     Modifier.weight(1f),
-                    contentPadding = PaddingValues(16.dp),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
+                    item {
+                        Text(
+                            "Герои рядом",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = Palette.Text,
+                            modifier = Modifier.padding(bottom = 2.dp),
+                        )
+                        Text(
+                            "Продолжи разговор или открой новую ветку истории",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = Palette.TextDim,
+                            modifier = Modifier.padding(bottom = 10.dp),
+                        )
+                    }
                     items(list, key = { it.id }) { c ->
                         CharacterRow(c) { container.sound.sfx(SfxType.TAP); onOpen(c.id) }
                     }
@@ -91,7 +128,7 @@ fun HomeScreen(container: AppContainer, onCreate: () -> Unit, onOpen: (Long) -> 
             }
 
             GradientButton(
-                "Создать персонажа",
+                "Новый герой",
                 onClick = { container.sound.sfx(SfxType.SPARKLE); onCreate() },
                 icon = Icons.Rounded.AutoAwesome,
                 modifier = Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp),
@@ -107,14 +144,14 @@ private fun KeyBanner(onClick: () -> Unit) {
             Text("🔑", style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("Подключи бесплатный ИИ", style = MaterialTheme.typography.titleSmall, color = Palette.Text)
+                Text("Разбуди разум персонажей", style = MaterialTheme.typography.titleSmall, color = Palette.Text)
                 Text(
-                    "Персонажам нужен «мозг». Бесплатный ключ Google Gemini получается за минуту, без карты.",
+                    "Чтобы персонажи отвечали и запоминали ваши истории, подключи бесплатный ключ Google Gemini — без карты.",
                     style = MaterialTheme.typography.bodySmall,
                     color = Palette.TextDim,
                 )
             }
-            Text("→", style = MaterialTheme.typography.titleLarge, color = Palette.Sakura)
+            Text("→", style = MaterialTheme.typography.titleLarge, color = Palette.Amber)
         }
     }
 }
@@ -125,10 +162,10 @@ private fun EmptyState(modifier: Modifier) {
     Column(modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         AvatarView(demo, Gender.FEMALE, Modifier.size(260.dp), emotion = Emotion.HAPPY)
         Spacer(Modifier.height(16.dp))
-        Text("Здесь пока пусто~", style = MaterialTheme.typography.headlineMedium, color = Palette.Text)
+        Text("Пока здесь тихо…", style = MaterialTheme.typography.headlineMedium, color = Palette.Text)
         Spacer(Modifier.height(8.dp))
         Text(
-            "Выбери рисованный образ или создай свой, придумай характер — и начни новую историю.",
+            "Создай героя, выбери его характер и открой свою первую историю. В этом лесу у каждого есть секрет.",
             color = Palette.TextDim,
             style = MaterialTheme.typography.bodyLarge,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
@@ -166,7 +203,7 @@ private fun CharacterRow(c: CharacterEntity, onClick: () -> Unit) {
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f),
                     )
-                    Icon(Icons.Rounded.Favorite, null, tint = Palette.Sakura, modifier = Modifier.size(14.dp))
+                    Icon(Icons.Rounded.Favorite, null, tint = Palette.Amber, modifier = Modifier.size(14.dp))
                     Text(" ${c.affection}", style = MaterialTheme.typography.labelSmall, color = Palette.Sakura)
                 }
             }

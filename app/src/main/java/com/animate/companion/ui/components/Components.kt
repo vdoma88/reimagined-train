@@ -42,45 +42,110 @@ import com.animate.companion.ui.theme.Palette
 import kotlin.math.sin
 import kotlin.random.Random
 
-/** Night gradient with slowly falling sakura petals. */
+/**
+ * Shared mystery-forest backdrop. Kept under the old function name to avoid screen churn.
+ * Uses lantern dust, stars and pine silhouettes instead of sakura petals.
+ */
 @Composable
-fun SakuraBackground(modifier: Modifier = Modifier, petals: Int = 14, content: @Composable BoxScope.() -> Unit) {
-    val seeds = remember { List(petals) { Random(it * 31 + 7) }.map { r -> FloatArray(5) { r.nextFloat() } } }
-    val t = rememberInfiniteTransition(label = "petals")
-    val time by t.animateFloat(0f, 1f, infiniteRepeatable(tween(26000, easing = LinearEasing)), label = "petalTime")
+fun SakuraBackground(
+    modifier: Modifier = Modifier,
+    petals: Int = 14,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    val particles = remember {
+        List(petals.coerceAtLeast(10)) { Random(it * 43 + 11) }
+            .map { r -> FloatArray(5) { r.nextFloat() } }
+    }
+    val t = rememberInfiniteTransition(label = "mysteryDust")
+    val time by t.animateFloat(
+        0f,
+        1f,
+        infiniteRepeatable(tween(28000, easing = LinearEasing)),
+        label = "mysteryDustTime",
+    )
+
     Box(modifier.fillMaxSize().background(Palette.background)) {
         Canvas(Modifier.fillMaxSize()) {
-            // Soft shoujo glows + subtle manga halftone dots.
-            drawCircle(Brush.radialGradient(listOf(Palette.Lavender.copy(alpha = 0.20f), Color.Transparent), Offset(size.width * 0.15f, size.height * 0.1f), size.width * 0.7f), size.width * 0.7f, Offset(size.width * 0.15f, size.height * 0.1f))
-            drawCircle(Brush.radialGradient(listOf(Palette.Sakura.copy(alpha = 0.16f), Color.Transparent), Offset(size.width * 0.9f, size.height * 0.75f), size.width * 0.8f), size.width * 0.8f, Offset(size.width * 0.9f, size.height * 0.75f))
-            val dot = 34.dp.toPx()
-            var yy = dot * 0.6f
+            drawCircle(
+                brush = Brush.radialGradient(
+                    listOf(Palette.Teal.copy(alpha = 0.16f), Color.Transparent),
+                    center = Offset(size.width * 0.14f, size.height * 0.08f),
+                    radius = size.width * 0.72f,
+                ),
+                radius = size.width * 0.72f,
+                center = Offset(size.width * 0.14f, size.height * 0.08f),
+            )
+            drawCircle(
+                brush = Brush.radialGradient(
+                    listOf(Palette.Amber.copy(alpha = 0.14f), Color.Transparent),
+                    center = Offset(size.width * 0.86f, size.height * 0.72f),
+                    radius = size.width * 0.78f,
+                ),
+                radius = size.width * 0.78f,
+                center = Offset(size.width * 0.86f, size.height * 0.72f),
+            )
+
+            // Quiet notebook-star field.
+            val grid = 42.dp.toPx()
+            var y = grid * 0.65f
             var row = 0
-            while (yy < size.height) {
-                var xx = if (row % 2 == 0) dot * 0.5f else dot
-                while (xx < size.width) {
-                    drawCircle(Palette.Cream.copy(alpha = 0.035f), 1.2.dp.toPx(), Offset(xx, yy))
-                    xx += dot
+            while (y < size.height * 0.72f) {
+                var x = if (row % 2 == 0) grid * 0.55f else grid
+                while (x < size.width) {
+                    drawCircle(
+                        color = Palette.Paper.copy(alpha = 0.045f),
+                        radius = 1.15.dp.toPx(),
+                        center = Offset(x, y),
+                    )
+                    x += grid
                 }
-                yy += dot
+                y += grid
                 row++
             }
-            seeds.forEach { s ->
-                val speed = 0.6f + s[0] * 0.8f
-                val prog = (time * speed + s[1]) % 1f
-                val x = size.width * s[2] + sin((prog * 6f + s[3] * 6f).toDouble()).toFloat() * 30.dp.toPx()
-                val y = -20f + prog * (size.height + 40f)
-                val r = (4f + s[4] * 5f) * density
-                rotate(prog * 720f * (if (s[3] > 0.5f) 1 else -1), Offset(x, y)) {
-                    val petal = Path().apply {
-                        moveTo(x, y - r)
-                        quadraticBezierTo(x + r, y, x, y + r)
-                        quadraticBezierTo(x - r, y, x, y - r)
+
+            // Slow lantern dust / fireflies.
+            particles.forEach { s ->
+                val speed = 0.4f + s[0] * 0.7f
+                val progress = (time * speed + s[1]) % 1f
+                val x = size.width * s[2] +
+                    sin((progress * 6f + s[3] * 7f).toDouble()).toFloat() * 22.dp.toPx()
+                val yPos = size.height - progress * (size.height + 40.dp.toPx())
+                val r = (1.8f + s[4] * 2.6f) * density
+                drawCircle(
+                    color = if (s[4] > 0.45f) Palette.Amber.copy(alpha = 0.24f + s[4] * 0.28f)
+                    else Palette.Teal.copy(alpha = 0.18f + s[4] * 0.22f),
+                    radius = r,
+                    center = Offset(x, yPos),
+                )
+            }
+
+            // Distant pine silhouettes.
+            fun pine(cx: Float, baseY: Float, h: Float, color: Color) {
+                val trunk = Path().apply {
+                    moveTo(cx - h * 0.025f, baseY)
+                    lineTo(cx + h * 0.025f, baseY)
+                    lineTo(cx + h * 0.018f, baseY - h * 0.28f)
+                    lineTo(cx - h * 0.018f, baseY - h * 0.28f)
+                    close()
+                }
+                drawPath(trunk, color)
+                listOf(0.22f, 0.40f, 0.58f, 0.76f).forEach { level ->
+                    val top = baseY - h * level
+                    val half = h * (0.11f + level * 0.08f)
+                    val tri = Path().apply {
+                        moveTo(cx, top - h * 0.22f)
+                        lineTo(cx - half, top + h * 0.08f)
+                        lineTo(cx + half, top + h * 0.08f)
                         close()
                     }
-                    drawPath(petal, Palette.Sakura.copy(alpha = 0.25f + s[4] * 0.25f))
+                    drawPath(tri, color)
                 }
             }
+
+            pine(size.width * 0.08f, size.height, size.height * 0.26f, Color(0xFF0B1714))
+            pine(size.width * 0.24f, size.height, size.height * 0.20f, Color(0xFF10201B))
+            pine(size.width * 0.78f, size.height, size.height * 0.22f, Color(0xFF10201B))
+            pine(size.width * 0.93f, size.height, size.height * 0.29f, Color(0xFF0B1714))
         }
         content()
     }
@@ -89,16 +154,29 @@ fun SakuraBackground(modifier: Modifier = Modifier, petals: Int = 14, content: @
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(24.dp),
+    shape: Shape = RoundedCornerShape(22.dp),
     selected: Boolean = false,
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    val border = if (selected) BorderStroke(2.dp, Palette.accent) else BorderStroke(1.dp, Palette.GlassBorder)
+    val border = if (selected) {
+        BorderStroke(2.dp, Palette.accent)
+    } else {
+        BorderStroke(1.dp, Palette.GlassBorder)
+    }
+
     Box(
         modifier
             .clip(shape)
-            .background(if (selected) Palette.Sakura.copy(alpha = 0.18f) else Palette.Glass)
+            .background(
+                if (selected) Brush.linearGradient(listOf(Palette.Amber.copy(alpha = 0.16f), Palette.Teal.copy(alpha = 0.08f)))
+                else Brush.verticalGradient(
+                    listOf(
+                        Palette.NightHigh.copy(alpha = 0.92f),
+                        Color(0xFF10211C).copy(alpha = 0.90f),
+                    )
+                )
+            )
             .border(border, shape)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
         content = content,
@@ -117,46 +195,81 @@ fun GradientButton(
     Box(
         modifier
             .height(height)
-            .clip(RoundedCornerShape(50))
-            .background(if (enabled) Palette.accent else Brush.linearGradient(listOf(Color.Gray, Color.DarkGray)))
+            .clip(RoundedCornerShape(18.dp))
+            .background(
+                if (enabled) Palette.accent
+                else Brush.linearGradient(listOf(Color(0xFF53615C), Color(0xFF35413D)))
+            )
+            .border(
+                BorderStroke(
+                    1.dp,
+                    if (enabled) Palette.Paper.copy(alpha = 0.26f) else Color.Transparent,
+                ),
+                RoundedCornerShape(18.dp),
+            )
             .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 24.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (icon != null) Icon(icon, null, tint = Color(0xFF2A0A1C))
-            Text(text, color = Color(0xFF2A0A1C), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            if (icon != null) Icon(icon, null, tint = Palette.Ink)
+            Text(
+                text,
+                color = Palette.Ink,
+                fontWeight = FontWeight.ExtraBold,
+                style = MaterialTheme.typography.titleMedium,
+            )
         }
     }
 }
 
 @Composable
-fun Pill(text: String, modifier: Modifier = Modifier, color: Color = Palette.Lavender) {
+fun Pill(
+    text: String,
+    modifier: Modifier = Modifier,
+    color: Color = Palette.Teal,
+) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(50),
-        color = color.copy(alpha = 0.18f),
-        border = BorderStroke(1.dp, color.copy(alpha = 0.4f)),
+        shape = RoundedCornerShape(12.dp),
+        color = color.copy(alpha = 0.14f),
+        border = BorderStroke(1.dp, color.copy(alpha = 0.34f)),
     ) {
         Text(
             text,
-            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
             style = MaterialTheme.typography.labelMedium,
             color = Palette.Text,
+            fontWeight = FontWeight.SemiBold,
         )
     }
 }
 
-/** Circular frame with a gradient ring, used behind avatars. */
+/** Badge-like frame: amber rim, deep forest core. */
 @Composable
-fun AvatarFrame(modifier: Modifier = Modifier, ring: Dp = 2.dp, content: @Composable BoxScope.() -> Unit) {
+fun AvatarFrame(
+    modifier: Modifier = Modifier,
+    ring: Dp = 3.dp,
+    content: @Composable BoxScope.() -> Unit,
+) {
     Box(
         modifier
-            .clip(RoundedCornerShape(50))
+            .clip(RoundedCornerShape(22.dp))
             .background(Palette.accentWide)
             .padding(ring)
-            .clip(RoundedCornerShape(50))
-            .background(Brush.verticalGradient(listOf(Color(0xFF5A3F75), Color(0xFF2A1D3C), Color(0xFF171225)))),
+            .clip(RoundedCornerShape(19.dp))
+            .background(
+                Brush.verticalGradient(
+                    listOf(
+                        Color(0xFF315A48),
+                        Color(0xFF1A332A),
+                        Color(0xFF0D1715),
+                    )
+                )
+            ),
         contentAlignment = Alignment.Center,
         content = content,
     )

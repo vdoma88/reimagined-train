@@ -1,27 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp" android:height="108dp"
-    android:viewportWidth="108" android:viewportHeight="108">
-    <!-- ears -->
-    <path android:fillColor="#FFFF7EB6" android:pathData="M33,46 L36,26 L50,38 Z" />
-    <path android:fillColor="#FFFF7EB6" android:pathData="M75,46 L72,26 L58,38 Z" />
-    <path android:fillColor="#FFFFC2DA" android:pathData="M37,41 L38.5,31 L46,37.5 Z" />
-    <path android:fillColor="#FFFFC2DA" android:pathData="M71,41 L69.5,31 L62,37.5 Z" />
-    <!-- head -->
-    <path android:fillColor="#FFFF7EB6" android:pathData="M54,34 C70,34 78,45 78,57 C78,71 67,80 54,80 C41,80 30,71 30,57 C30,45 38,34 54,34 Z" />
-    <!-- face -->
-    <path android:fillColor="#FFFFF1E8" android:pathData="M54,48 C66,48 72,55 72,62 C72,72 63,78 54,78 C45,78 36,72 36,62 C36,55 42,48 54,48 Z" />
-    <!-- bangs -->
-    <path android:fillColor="#FFFF7EB6" android:pathData="M36,58 C36,46 44,40 54,40 C64,40 72,46 72,58 L67,52 L63,58 L58,51 L54,57 L50,51 L45,58 L41,52 Z" />
-    <!-- eyes -->
-    <path android:fillColor="#FF2A1B3D" android:pathData="M44,60 C44,57 50,57 50,60 L50,66 C50,69 44,69 44,66 Z" />
-    <path android:fillColor="#FF2A1B3D" android:pathData="M58,60 C58,57 64,57 64,60 L64,66 C64,69 58,69 58,66 Z" />
-    <path android:fillColor="#FFA78BFA" android:pathData="M45,63 C45,61 49,61 49,63 L49,66 C49,68 45,68 45,66 Z" />
-    <path android:fillColor="#FFA78BFA" android:pathData="M59,63 C59,61 63,61 63,63 L63,66 C63,68 59,68 59,66 Z" />
-    <path android:fillColor="#FFFFFFFF" android:pathData="M45.5,60.5 a1.5,1.5 0 1,0 3,0 a1.5,1.5 0 1,0 -3,0" />
-    <path android:fillColor="#FFFFFFFF" android:pathData="M59.5,60.5 a1.5,1.5 0 1,0 3,0 a1.5,1.5 0 1,0 -3,0" />
-    <!-- mouth :3 -->
-    <path android:strokeColor="#FF2A1B3D" android:strokeWidth="1.2" android:strokeLineCap="round" android:pathData="M51,71 Q52.5,73 54,71 Q55.5,73 57,71" />
-    <!-- sparkle -->
-    <path android:fillColor="#FF7DD3FC" android:pathData="M80,30 Q80,35 85,35 Q80,35 80,40 Q80,35 75,35 Q80,35 80,30 Z" />
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- warm explorer badge -->
+    <path
+        android:fillColor="#FFF4E8C8"
+        android:pathData="M54,18 C74,18 90,34 90,54 C90,74 74,90 54,90 C34,90 18,74 18,54 C18,34 34,18 54,18 Z" />
+    <path
+        android:fillColor="#FF17352D"
+        android:pathData="M54,23 C71,23 85,37 85,54 C85,71 71,85 54,85 C37,85 23,71 23,54 C23,37 37,23 54,23 Z" />
+
+    <!-- pine silhouette -->
+    <path
+        android:fillColor="#FF58D7C4"
+        android:pathData="M54,27 L45,43 L49,43 L39,57 L46,57 L35,72 L50,72 L50,80 L58,80 L58,72 L73,72 L62,57 L69,57 L59,43 L63,43 Z" />
+
+    <!-- warm mystery star -->
+    <path
+        android:fillColor="#FFF4B860"
+        android:pathData="M76,29 L78,35 L84,37 L78,39 L76,45 L74,39 L68,37 L74,35 Z" />
+
+    <!-- small crescent -->
+    <path
+        android:fillColor="#FF9E8CFF"
+        android:pathData="M31,31 C38,25 46,26 50,31 C43,29 37,33 36,39 C35,44 38,48 43,50 C36,51 29,47 27,41 C25,37 27,33 31,31 Z" />
+
+    <!-- notebook-eye mark, original symbol -->
+    <path
+        android:fillColor="#FFF4E8C8"
+        android:pathData="M54,48 C61,48 67,52 71,57 C67,62 61,66 54,66 C47,66 41,62 37,57 C41,52 47,48 54,48 Z" />
+    <path
+        android:fillColor="#FF241B14"
+        android:pathData="M54,51 C58,51 61,54 61,57 C61,61 58,63 54,63 C50,63 47,61 47,57 C47,54 50,51 54,51 Z" />
+    <path
+        android:fillColor="#FFF4B860"
+        android:pathData="M54,53 C56,53 58,55 58,57 C58,59 56,61 54,61 C52,61 50,59 50,57 C50,55 52,53 54,53 Z" />
+
+    <!-- tiny trail dots -->
+    <path android:fillColor="#FFF4B860" android:pathData="M34,77 a2,2 0 1,0 4,0 a2,2 0 1,0 -4,0" />
+    <path android:fillColor="#FF58D7C4" android:pathData="M69,79 a1.6,1.6 0 1,0 3.2,0 a1.6,1.6 0 1,0 -3.2,0" />
 </vector>

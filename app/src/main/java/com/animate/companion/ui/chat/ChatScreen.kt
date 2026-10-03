@@ -138,11 +138,11 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                     Text(
                         if (vm.busy) "печатает…" else "${emotion.emoji} ${emotion.label}",
                         style = MaterialTheme.typography.labelMedium,
-                        color = if (vm.busy) Palette.Sakura else Palette.TextDim,
+                        color = if (vm.busy) Palette.Amber else Palette.TextDim,
                     )
                 }
-                Icon(Icons.Rounded.Favorite, null, tint = Palette.Sakura, modifier = Modifier.size(16.dp))
-                Text(" ${c.affection}", color = Palette.Sakura, style = MaterialTheme.typography.labelLarge)
+                Icon(Icons.Rounded.Favorite, null, tint = Palette.Amber, modifier = Modifier.size(16.dp))
+                Text(" ${c.affection}", color = Palette.Amber, style = MaterialTheme.typography.labelLarge)
                 IconButton(onClick = { heroOpen = !heroOpen }) {
                     Icon(if (heroOpen) Icons.Rounded.ExpandLess else Icons.Rounded.ExpandMore, "Показать персонажа", tint = Palette.Text)
                 }
@@ -150,19 +150,50 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                     IconButton(onClick = { menu = true }) { Icon(Icons.Rounded.MoreVert, "Меню", tint = Palette.Text) }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                         if (c.appearance.illustrationId != null) DropdownMenuItem(
-                            text = { Text("Редактировать образ") }, onClick = { menu = false; editArt = true })
+                            text = { Text("Открыть студию образа") }, onClick = { menu = false; editArt = true })
                         DropdownMenuItem(text = { Text("Сменить образ") }, onClick = { menu = false; artDialog = true })
-                        DropdownMenuItem(text = { Text("Память персонажа") }, onClick = { menu = false; memoryDialog = true })
+                        DropdownMenuItem(text = { Text("Записи и память") }, onClick = { menu = false; memoryDialog = true })
                         DropdownMenuItem(text = { Text("Начать заново") }, onClick = { menu = false; confirmClear = true })
-                        DropdownMenuItem(text = { Text("Настройки ИИ и звука") }, onClick = { menu = false; onSettings() })
+                        DropdownMenuItem(text = { Text("Настройки мира") }, onClick = { menu = false; onSettings() })
                         DropdownMenuItem(text = { Text("Удалить персонажа", color = MaterialTheme.colorScheme.error) }, onClick = { menu = false; confirmDelete = true })
                     }
                 }
             }
 
-            // Hero avatar
-            AnimatedVisibility(heroOpen, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
-                Hero(c, emotion, vm.talking, vm.bubble, onPoke = vm::poke)
+            // Character scene
+            AnimatedVisibility(
+                heroOpen,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut(),
+            ) {
+                GlassCard(
+                    Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Column {
+                        Row(
+                            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    "Сцена персонажа",
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = Palette.Amber,
+                                )
+                                Text(
+                                    "образ, эмоция и настроение меняются в реальном времени",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Palette.TextDim,
+                                )
+                            }
+                            Text(
+                                emotion.emoji,
+                                style = MaterialTheme.typography.headlineSmall,
+                            )
+                        }
+                        Hero(c, emotion, vm.talking, vm.bubble, onPoke = vm::poke)
+                    }
+                }
             }
 
             // Messages
@@ -198,14 +229,14 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                     value = vm.input,
                     onValueChange = { vm.input = it },
                     placeholder = { Text("Написать ${c.name.substringBefore(' ')}…", color = Palette.TextDim) },
-                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(26.dp)),
+                    modifier = Modifier.weight(1f).clip(RoundedCornerShape(18.dp)),
                     maxLines = 5,
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = Color(0x2EFFFFFF),
                         unfocusedContainerColor = Palette.Glass,
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent,
-                        cursorColor = Palette.Sakura,
+                        cursorColor = Palette.Amber,
                         focusedTextColor = Palette.Text,
                         unfocusedTextColor = Palette.Text,
                     ),
@@ -213,12 +244,12 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                 Spacer(Modifier.size(8.dp))
                 val canSend = vm.input.isNotBlank() && !vm.busy
                 Box(
-                    Modifier.size(54.dp).clip(CircleShape)
+                    Modifier.size(54.dp).clip(RoundedCornerShape(18.dp))
                         .background(if (canSend) Palette.accent else Brush.linearGradient(listOf(Color(0x33FFFFFF), Color(0x22FFFFFF))))
                         .clickable(enabled = canSend, onClick = vm::send),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.AutoMirrored.Rounded.Send, "Отправить", tint = if (canSend) Color(0xFF2A0A1C) else Palette.TextDim)
+                    Icon(Icons.AutoMirrored.Rounded.Send, "Отправить", tint = if (canSend) Palette.Ink else Palette.TextDim)
                 }
             }
         }
@@ -273,8 +304,8 @@ internal fun Hero(c: CharacterEntity, emotion: Emotion, talking: Boolean, bubble
                     bubble.orEmpty(),
                     modifier = Modifier
                         .clip(RoundedCornerShape(24.dp, 24.dp, 24.dp, 7.dp))
-                        .background(Color(0xFFFFF7FB))
-                        .border(1.dp, Palette.Sakura.copy(alpha = 0.58f), RoundedCornerShape(24.dp, 24.dp, 24.dp, 7.dp))
+                        .background(Palette.Paper)
+                        .border(1.dp, Palette.Amber.copy(alpha = 0.58f), RoundedCornerShape(24.dp, 24.dp, 24.dp, 7.dp))
                         .padding(horizontal = 14.dp, vertical = 8.dp),
                     color = Palette.Ink,
                     fontWeight = FontWeight.Bold,
@@ -296,7 +327,7 @@ internal fun Hero(c: CharacterEntity, emotion: Emotion, talking: Boolean, bubble
 private fun TagChip(text: String) {
     Text(
         text,
-        modifier = Modifier.clip(RoundedCornerShape(50)).background(Color(0x55120C28)).padding(horizontal = 10.dp, vertical = 4.dp),
+        modifier = Modifier.clip(RoundedCornerShape(50)).background(Color(0x6610211C)).padding(horizontal = 10.dp, vertical = 4.dp),
         color = Palette.Text,
         style = MaterialTheme.typography.labelSmall,
     )
@@ -324,17 +355,17 @@ internal fun MessageBubble(m: MessageEntity, isLastAssistant: Boolean, onDelete:
     Box(Modifier.fillMaxWidth(), contentAlignment = if (m.isUser) Alignment.CenterEnd else Alignment.CenterStart) {
         Box {
             Text(
-                styledText(m.text, if (m.isUser) Color(0xFF5B1E46) else Palette.Lavender),
+                styledText(m.text, if (m.isUser) Palette.Ink else Palette.Teal),
                 modifier = Modifier
                     .widthIn(max = 300.dp)
                     .clip(shape)
                     .background(
                         if (m.isUser) Palette.accent
-                        else Brush.linearGradient(listOf(Color(0x35FFF7FB), Color(0x20EEDCFF))),
+                        else Brush.linearGradient(listOf(Color(0x30243A33), Color(0x203ED0B4))),
                     )
                     .border(
                         1.dp,
-                        if (m.isUser) Palette.Sakura.copy(alpha = 0.45f) else Palette.Lavender.copy(alpha = 0.32f),
+                        if (m.isUser) Palette.Amber.copy(alpha = 0.45f) else Palette.Teal.copy(alpha = 0.32f),
                         shape,
                     )
                     .combinedClickable(onClick = {}, onLongClick = { menu = true })
@@ -345,7 +376,7 @@ internal fun MessageBubble(m: MessageEntity, isLastAssistant: Boolean, onDelete:
             )
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                 DropdownMenuItem(text = { Text("Копировать") }, onClick = { clipboard.setText(AnnotatedString(m.text)); menu = false })
-                if (isLastAssistant) DropdownMenuItem(text = { Text("Другой ответ") }, onClick = { menu = false; onRegenerate() })
+                if (isLastAssistant) DropdownMenuItem(text = { Text("Другой вариант") }, onClick = { menu = false; onRegenerate() })
                 DropdownMenuItem(text = { Text("Удалить") }, onClick = { menu = false; onDelete() })
             }
         }
@@ -365,7 +396,7 @@ internal fun TypingBubble() {
                 infiniteRepeatable(tween(380, delayMillis = i * 120), RepeatMode.Reverse),
                 label = "dot$i",
             )
-            Box(Modifier.offset(y = y.dp).size(8.dp).clip(CircleShape).background(Palette.Sakura))
+            Box(Modifier.offset(y = y.dp).size(8.dp).clip(CircleShape).background(Palette.Amber))
         }
     }
 }
@@ -374,7 +405,7 @@ internal fun TypingBubble() {
 internal fun ErrorCard(text: String, onRetry: () -> Unit, onSettings: () -> Unit, onDismiss: () -> Unit) {
     GlassCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(14.dp)) {
-            Text("Связь с ИИ прервалась 💦", color = Palette.Text, style = MaterialTheme.typography.titleSmall)
+            Text("Связь с персонажем прервалась", color = Palette.Text, style = MaterialTheme.typography.titleSmall)
             Text(text, color = Palette.TextDim, style = MaterialTheme.typography.bodySmall, maxLines = 6)
             Row(horizontalArrangement = Arrangement.End, modifier = Modifier.fillMaxWidth()) {
                 TextButton(onClick = onDismiss) { Text("Скрыть") }
@@ -419,11 +450,11 @@ private fun MemoryDialog(memory: String, onDismiss: () -> Unit, onSave: (String)
     var text by remember { mutableStateOf(memory) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Память персонажа") },
+        title = { Text("Записи и память") },
         text = {
             Column {
                 Text(
-                    "Сюда автоматически сжимаются старые сообщения. Можно поправить вручную — персонаж будет это помнить.",
+                    "Здесь хранится сжатая история важных разговоров. Можно поправить записи вручную — персонаж будет опираться на них дальше.",
                     style = MaterialTheme.typography.bodySmall,
                     color = Palette.TextDim,
                 )

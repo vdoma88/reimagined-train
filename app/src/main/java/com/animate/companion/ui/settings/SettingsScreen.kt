@@ -76,14 +76,14 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
                 Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
-                Section("О тебе") {
+                Section("Ты в этом мире") {
                     DebouncedField(settings.userName, "Как персонажам тебя называть?") { scope.launch { repo.setUserName(it) } }
                 }
 
                 AiSection(container, settings)
 
-                Section("Звук") {
-                    ToggleRow("Лофай-музыка", settings.musicEnabled) { scope.launch { repo.setMusicEnabled(it) } }
+                Section("Звук и атмосфера") {
+                    ToggleRow("Фоновая музыка", settings.musicEnabled) { scope.launch { repo.setMusicEnabled(it) } }
                     if (settings.musicEnabled) {
                         LofiTracks.all.forEachIndexed { i, t ->
                             Row(
@@ -97,12 +97,12 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
                         Text("Громкость музыки", color = Palette.TextDim, style = MaterialTheme.typography.labelMedium)
                         Slider(value = settings.musicVolume, onValueChange = { v -> scope.launch { repo.setMusicVolume(v) } }, colors = sliderColors())
                     }
-                    ToggleRow("Голос персонажа (ня~, кья!)", settings.voiceEnabled) { scope.launch { repo.setVoiceEnabled(it) } }
+                    ToggleRow("Голос персонажа", settings.voiceEnabled) { scope.launch { repo.setVoiceEnabled(it) } }
                     if (settings.voiceEnabled) {
                         Text("Громкость голоса", color = Palette.TextDim, style = MaterialTheme.typography.labelMedium)
                         Slider(value = settings.voiceVolume, onValueChange = { v -> scope.launch { repo.setVoiceVolume(v) } }, colors = sliderColors())
                     }
-                    ToggleRow("Звуки интерфейса", settings.sfxEnabled) { scope.launch { repo.setSfxEnabled(it) } }
+                    ToggleRow("Звуки интерфейса и окружения", settings.sfxEnabled) { scope.launch { repo.setSfxEnabled(it) } }
                 }
                 Spacer(Modifier.height(24.dp))
             }
@@ -114,7 +114,7 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
 internal fun Section(title: String, content: @Composable () -> Unit) {
     GlassCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(title, style = MaterialTheme.typography.titleMedium, color = Palette.Sakura)
+            Text(title, style = MaterialTheme.typography.titleMedium, color = Palette.Amber)
             content()
         }
     }
@@ -127,7 +127,7 @@ internal fun ToggleRow(label: String, value: Boolean, onChange: (Boolean) -> Uni
         Switch(
             checked = value,
             onCheckedChange = onChange,
-            colors = SwitchDefaults.colors(checkedTrackColor = Palette.Sakura, checkedThumbColor = Palette.Text),
+            colors = SwitchDefaults.colors(checkedTrackColor = Palette.Amber, checkedThumbColor = Palette.Text),
         )
     }
 }
@@ -172,7 +172,7 @@ internal fun SecretField(value: String, label: String, onChange: (String) -> Uni
 }
 
 @Composable
-internal fun sliderColors() = SliderDefaults.colors(thumbColor = Palette.Sakura, activeTrackColor = Palette.Sakura, inactiveTrackColor = Palette.GlassBorder)
+internal fun sliderColors() = SliderDefaults.colors(thumbColor = Palette.Amber, activeTrackColor = Palette.Amber, inactiveTrackColor = Palette.GlassBorder)
 
 @Composable
-internal fun radioColors() = RadioButtonDefaults.colors(selectedColor = Palette.Sakura, unselectedColor = Palette.TextDim)
+internal fun radioColors() = RadioButtonDefaults.colors(selectedColor = Palette.Amber, unselectedColor = Palette.TextDim)
