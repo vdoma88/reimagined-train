@@ -38,8 +38,14 @@ internal fun IllustratedAvatar(
     val settings = style.normalized()
     val colors = ColorMatrix().apply {
         setToSaturation(settings.saturation)
-        this[0, 4] = settings.warmth * 18f
-        this[2, 4] = -settings.warmth * 18f
+        val contrastOffset = (1f - settings.contrast) * 128f
+        val brightnessOffset = settings.brightness * 255f
+        for (row in 0..2) {
+            for (column in 0..3) this[row, column] = this[row, column] * settings.contrast
+            this[row, 4] = contrastOffset + brightnessOffset
+        }
+        this[0, 4] += settings.warmth * 18f
+        this[2, 4] -= settings.warmth * 18f
     }
     val resource = when (character.id) {
         "modern" -> R.drawable.character_modern
@@ -66,12 +72,14 @@ internal fun IllustratedAvatar(
         val height = (source.second.height * scale).roundToInt().coerceAtLeast(1)
         withTransform({
             translate(size.width * settings.offsetX, size.height * settings.offsetY)
+            rotate(settings.rotation, center)
             scale(if (settings.mirrored) -settings.zoom else settings.zoom, settings.zoom, center)
         }) {
-        drawImage(bitmap, srcOffset = source.first, srcSize = source.second,
-            dstOffset = IntOffset(((size.width - width) / 2f).roundToInt(),
-                ((size.height - height) / 2f + size.height * drift).roundToInt()),
-            dstSize = IntSize(width, height), filterQuality = FilterQuality.High, colorFilter = ColorFilter.colorMatrix(colors))
+            drawImage(bitmap, srcOffset = source.first, srcSize = source.second,
+                dstOffset = IntOffset(((size.width - width) / 2f).roundToInt(),
+                    ((size.height - height) / 2f + size.height * drift).roundToInt()),
+                dstSize = IntSize(width, height), filterQuality = FilterQuality.High,
+                colorFilter = ColorFilter.colorMatrix(colors))
         }
     }
 }
