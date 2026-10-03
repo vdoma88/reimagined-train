@@ -66,7 +66,7 @@ fun HomeScreen(container: AppContainer, onCreate: () -> Unit, onOpen: (Long) -> 
                         "AniMate",
                         style = MaterialTheme.typography.headlineLarge.merge(TextStyle(brush = Palette.accentWide)),
                     )
-                    Text("твои аниме-компаньоны", color = Palette.TextDim, style = MaterialTheme.typography.bodyMedium)
+                    Text("персонажи, истории и немного тайн", color = Palette.TextDim, style = MaterialTheme.typography.bodyMedium)
                 }
                 IconButton(onClick = { container.sound.sfx(SfxType.TAP); onSettings() }) {
                     Icon(Icons.Rounded.Settings, "Настройки", tint = Palette.Text)
@@ -107,9 +107,9 @@ private fun KeyBanner(onClick: () -> Unit) {
             Text("🔑", style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("Подключи бесплатный ИИ", style = MaterialTheme.typography.titleSmall, color = Palette.Text)
+                Text("Разбуди разум персонажей", style = MaterialTheme.typography.titleSmall, color = Palette.Text)
                 Text(
-                    "Персонажам нужен «мозг». Бесплатный ключ Google Gemini получается за минуту, без карты.",
+                    "Чтобы персонажи отвечали и запоминали ваши истории, подключи бесплатный ключ Google Gemini — без карты.",
                     style = MaterialTheme.typography.bodySmall,
                     color = Palette.TextDim,
                 )
@@ -125,10 +125,10 @@ private fun EmptyState(modifier: Modifier) {
     Column(modifier.fillMaxWidth().padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
         AvatarView(demo, Gender.FEMALE, Modifier.size(260.dp), emotion = Emotion.HAPPY)
         Spacer(Modifier.height(16.dp))
-        Text("Здесь пока пусто~", style = MaterialTheme.typography.headlineMedium, color = Palette.Text)
+        Text("Пока здесь тихо…", style = MaterialTheme.typography.headlineMedium, color = Palette.Text)
         Spacer(Modifier.height(8.dp))
         Text(
-            "Выбери рисованный образ или создай свой, придумай характер — и начни новую историю.",
+            "Создай героя, выбери его характер и открой свою первую историю. В этом лесу у каждого есть секрет.",
             color = Palette.TextDim,
             style = MaterialTheme.typography.bodyLarge,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
