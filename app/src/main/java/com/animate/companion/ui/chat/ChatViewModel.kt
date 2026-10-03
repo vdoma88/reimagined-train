@@ -198,10 +198,9 @@ class ChatViewModel(
 
     suspend fun saveIllustrationStyle(draft: com.animate.companion.model.Appearance): Boolean {
         val c = container.db.characters().get(characterId) ?: return false
-        // A concurrent change of source artwork must not be overwritten by an old editor.
-        if (c.appearance.illustrationId != draft.illustrationId) return false
-        container.db.characters().updateAppearance(characterId,
-            c.appearance.copy(illustrationStyle = draft.illustrationStyle.normalized()).toJson())
+        // Saves style and detail layers; refuses if the artwork changed while the editor was open.
+        val merged = com.animate.companion.model.Appearance.mergeStudioEdit(c.appearance, draft) ?: return false
+        container.db.characters().updateAppearance(characterId, merged.toJson())
         return true
     }
 
