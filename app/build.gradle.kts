@@ -17,8 +17,8 @@ android {
         applicationId = "com.animate.companion"
         minSdk = 26
         targetSdk = 35
-        versionCode = 6
-        versionName = "1.3.0"
+        versionCode = 7
+        versionName = "1.4.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // GitHub repository whose releases the in-app updater checks.
         buildConfigField("String", "UPDATE_REPO", "\"vdoma88/reimagined-train\"")
