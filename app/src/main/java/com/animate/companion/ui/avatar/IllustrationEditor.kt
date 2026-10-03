@@ -9,6 +9,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,7 +33,7 @@ import kotlin.math.roundToInt
 
 private enum class EditorTab(val title: String) {
     LOOK("Образ"),
-    DETAILS("Детали"),
+    DETAILS("Внешность"),
     COLOR("Цвет"),
     FRAME("Кадр"),
 }
@@ -46,11 +47,12 @@ fun IllustrationEditor(
     onSave: suspend (Appearance) -> Boolean,
 ) {
     var draftJson by rememberSaveable { mutableStateOf(initial.toJson()) }
-    var tabName by rememberSaveable { mutableStateOf(EditorTab.LOOK.name) }
+    var tabName by rememberSaveable { mutableStateOf(EditorTab.DETAILS.name) }
     var fullBody by rememberSaveable { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+    val previewHeight = (LocalConfiguration.current.screenHeightDp.dp * 0.34f).coerceIn(100.dp, 300.dp)
     val draft = Appearance.fromJson(draftJson)
     val tab = EditorTab.entries.firstOrNull { it.name == tabName } ?: EditorTab.LOOK
 
@@ -115,7 +117,7 @@ fun IllustrationEditor(
                     Box(
                         Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 220.dp, max = 330.dp)
+                            .height(previewHeight)
                             .clip(RoundedCornerShape(24.dp))
                             .background(Palette.Glass)
                     ) {
@@ -174,11 +176,7 @@ fun IllustrationEditor(
                             enabled = !saving,
                         ) { update(draft.copy(illustrationStyle = it.normalized())) }
 
-                        EditorTab.DETAILS -> IllustrationDetailControls(
-                            draft.illustrationId,
-                            draft.illustrationDetails,
-                            enabled = !saving,
-                        ) { update(draft.copy(illustrationDetails = it.normalized())) }
+                        EditorTab.DETAILS -> CharacterLookControls(draft, enabled = !saving) { update(it) }
 
                         EditorTab.COLOR -> IllustrationColorControls(
                             draft.illustrationStyle,
