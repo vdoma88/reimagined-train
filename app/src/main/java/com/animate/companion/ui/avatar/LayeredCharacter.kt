@@ -1,5 +1,6 @@
 package com.animate.companion.ui.avatar
 
+import android.content.Context
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -30,6 +31,24 @@ internal val clothPalette = listOf(0xFF344663,0xFF303543,0xFF647957,0xFFA86681,0
 
 private data class PaintedPath(val path: Path, val data: CharacterPath, val clip: Path?)
 
+/** Paths are read-only during drawing and shared by the editor, chat and thumbnails. */
+private object CharacterArtwork {
+    @Volatile private var cached: Map<String, List<PaintedPath>>? = null
+
+    fun load(context: Context): Map<String, List<PaintedPath>> = cached ?: synchronized(this) {
+        cached ?: run {
+            val data = context.applicationContext.assets.open("character_layers.json")
+                .bufferedReader().use { it.readText() }
+            Json.decodeFromString<Map<String, List<CharacterPath>>>(data).mapValues { (_, pieces) ->
+                pieces.map { piece ->
+                    PaintedPath(PathParser().parsePathString(piece.path).toPath(), piece,
+                        piece.clip?.let { PathParser().parsePathString(it).toPath() })
+                }
+            }
+        }.also { cached = it }
+    }
+}
+
 @Composable
 internal fun LayeredCharacter(
     look: CharacterLook, style: IllustrationStyle, modifier: Modifier,
@@ -37,12 +56,7 @@ internal fun LayeredCharacter(
     blink: Float, breath: Float, talking: Boolean,
 ) {
     val context = LocalContext.current
-    val layers = remember(context) {
-        val data = context.assets.open("character_layers.json").bufferedReader().use { it.readText() }
-        Json.decodeFromString<Map<String, List<CharacterPath>>>(data).mapValues { (_, pieces) ->
-            pieces.map { PaintedPath(PathParser().parsePathString(it.path).toPath(), it, it.clip?.let { clip -> PathParser().parsePathString(clip).toPath() }) }
-        }
-    }
+    val layers = remember(context) { CharacterArtwork.load(context) }
     val n = look.normalized()
     val s = style.normalized()
     val palette = remember(n) {
