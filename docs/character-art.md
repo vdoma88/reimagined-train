@@ -24,3 +24,14 @@ Older appearance JSON receives neutral defaults. Numeric controls are bounded be
 This is a presentation editor, not yet a layered character constructor. Hair, face,
 outfit and expression are part of the same bitmap. Independent editing requires registered
 layers and expression variants for each character; global colour controls are explicitly labelled.
+
+## Editable artwork revision
+
+The constructor asset `character_layers.json` now uses curved hair locks, layered irises and eyelids, softer face shading, anatomically separated fingers, curved blazer sleeves, fabric folds and stitched boots. All 14 hairstyles and 12 outfits remain independent and retain their saved IDs. Original flattened character artwork remains available in the gallery.
+
+Path records support `sy` (default 1) and `opacity` (default 1). Body, outfit and shoes share the same anchored transform so their seams stay aligned. The full-body viewport follows the new proportions; thumbnails include wide hairstyles. Blinking uses a registered curved eyelid layer rather than two straight lines.
+
+![Before and after the editable art revision](character-editor-before-after.png)
+
+`python tools/preview_character.py --output /tmp/characters.svg` validates layer keys, palette references and transforms, then produces a review sheet. This is an SVG approximation of the Android renderer, not an Android screenshot. Local review rendered all 168 hair/outfit combinations with an SVG engine. Android unit tests, Paparazzi previews and APK builds are checked by the repository's Android workflow.
+

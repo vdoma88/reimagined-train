@@ -1,5 +1,6 @@
 package com.animate.companion.ui.avatar
 
+import android.content.Context
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -20,6 +21,7 @@ internal data class CharacterPath(
     val path: String, val fill: String = "none", val stroke: String = "ink",
     val width: Float = 1.5f, val tx: Float = 0f, val ty: Float = 0f,
     val sx: Float = 1f, val clip: String? = null,
+    val sy: Float = 1f, val opacity: Float = 1f,
 )
 
 internal val hairPalette = listOf(0xFF654337,0xFF242733,0xFFAF5C32,0xFFC8A76D,0xFFE0DCE5,0xFFB45C83,0xFF756198,0xFF3C8589)
@@ -29,6 +31,24 @@ internal val clothPalette = listOf(0xFF344663,0xFF303543,0xFF647957,0xFFA86681,0
 
 private data class PaintedPath(val path: Path, val data: CharacterPath, val clip: Path?)
 
+/** Paths are read-only during drawing and shared by the editor, chat and thumbnails. */
+private object CharacterArtwork {
+    @Volatile private var cached: Map<String, List<PaintedPath>>? = null
+
+    fun load(context: Context): Map<String, List<PaintedPath>> = cached ?: synchronized(this) {
+        cached ?: run {
+            val data = context.applicationContext.assets.open("character_layers.json")
+                .bufferedReader().use { it.readText() }
+            Json.decodeFromString<Map<String, List<CharacterPath>>>(data).mapValues { (_, pieces) ->
+                pieces.map { piece ->
+                    PaintedPath(PathParser().parsePathString(piece.path).toPath(), piece,
+                        piece.clip?.let { PathParser().parsePathString(it).toPath() })
+                }
+            }
+        }.also { cached = it }
+    }
+}
+
 @Composable
 internal fun LayeredCharacter(
     look: CharacterLook, style: IllustrationStyle, modifier: Modifier,
@@ -36,12 +56,7 @@ internal fun LayeredCharacter(
     blink: Float, breath: Float, talking: Boolean,
 ) {
     val context = LocalContext.current
-    val layers = remember(context) {
-        val data = context.assets.open("character_layers.json").bufferedReader().use { it.readText() }
-        Json.decodeFromString<Map<String, List<CharacterPath>>>(data).mapValues { (_, pieces) ->
-            pieces.map { PaintedPath(PathParser().parsePathString(it.path).toPath(), it, it.clip?.let { clip -> PathParser().parsePathString(clip).toPath() }) }
-        }
-    }
+    val layers = remember(context) { CharacterArtwork.load(context) }
     val n = look.normalized()
     val s = style.normalized()
     val palette = remember(n) {
@@ -51,6 +66,8 @@ internal fun LayeredCharacter(
             "hairShadow" to lerp(hair, Color(0xFF181729), .4f), "hairLight" to lerp(hair, Color(0xFFFFE1C0), .25f),
             "cloth" to cloth, "clothShadow" to lerp(cloth, Color(0xFF151627), .3f),
             "clothLight" to lerp(cloth, Color.White, .2f), "iris" to Color(irisPalette[n.eyeColor]),
+            "irisShadow" to lerp(Color(irisPalette[n.eyeColor]), Color(0xFF17283E), .55f),
+            "irisLight" to lerp(Color(irisPalette[n.eyeColor]), Color(0xFFDCFFFF), .55f),
             "ink" to Color(0xFF292431), "paper" to Color(0xFFFFF8EC), "white" to Color.White,
             "gold" to Color(0xFFD8B976), "leather" to Color(0xFF755346),
             "accent" to Color(0xFFC7758D), "lip" to Color(0xFFB97677), "blush" to Color(0xFFE4A199))
@@ -65,8 +82,8 @@ internal fun LayeredCharacter(
     } }
     val paint = remember(matrix) { Paint().apply { colorFilter = ColorFilter.colorMatrix(matrix) } }
     Canvas(modifier.clipToBounds().semantics { contentDescription = "Редактируемый персонаж" }) {
-        val viewWidth = if (headOnly) 160f else 400f
-        val viewHeight = if (headOnly) 170f else if (fullBody) 940f else 410f
+        val viewWidth = if (headOnly) 210f else 400f
+        val viewHeight = if (headOnly) 205f else if (fullBody) 850f else 390f
         val k = minOf(size.width / viewWidth, size.height / viewHeight)
         drawContext.canvas.saveLayer(androidx.compose.ui.geometry.Rect(Offset.Zero, size), paint)
         try {
@@ -76,22 +93,27 @@ internal fun LayeredCharacter(
                 scale(if (s.mirrored) -s.zoom else s.zoom, s.zoom, center)
                 translate((size.width-viewWidth*k)/2f, (size.height-viewHeight*k)/2f)
                 scale(k,k,Offset.Zero)
-                translate(if (headOnly) -120f else 0f, (if (headOnly) -45f else 0f) + breath)
+                translate(if (headOnly) -95f else 0f, (if (headOnly) -35f else 0f) + breath)
             }) {
                 n.layers(emotion, talking).forEach { key ->
-                    if (blink > .5f && key.startsWith("eyes.")) {
-                        drawLine(palette.getValue("ink"), Offset(158f,138f), Offset(189f,138f), 2f, StrokeCap.Round)
-                        drawLine(palette.getValue("ink"), Offset(211f,138f), Offset(242f,138f), 2f, StrokeCap.Round)
-                    } else layers.getValue(key).forEach { piece ->
+                    val layerKey = if (blink > .5f && key.startsWith("eyes.")) "eyes.closed" else key
+                    layers.getValue(layerKey).forEach { piece ->
                         val d = piece.data
-                        withTransform({ translate(d.tx,d.ty); scale(d.sx,1f,Offset.Zero) }) {
+                        withTransform({ translate(d.tx,d.ty); scale(d.sx,d.sy,Offset.Zero) }) {
                             fun DrawScope.paintPart() {
-                            if (d.fill != "none") {
-                                val c = palette.getValue(d.fill)
-                                val shadow = when (d.fill) { "hair" -> palette.getValue("hairShadow"); "cloth" -> palette.getValue("clothShadow"); else -> c }
-                                drawPath(piece.path, Brush.linearGradient(listOf(c,shadow), piece.path.getBounds().topLeft, piece.path.getBounds().bottomRight))
-                            }
-                            if (d.stroke != "none") drawPath(piece.path, palette.getValue(d.stroke), style = Stroke(d.width, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                                if (d.fill != "none") {
+                                    val c = palette.getValue(d.fill)
+                                    val shadow = when (d.fill) {
+                                        "hair" -> palette.getValue("hairShadow")
+                                        "cloth" -> palette.getValue("clothShadow")
+                                        else -> null
+                                    }
+                                    if (shadow == null) drawPath(piece.path, c, alpha = d.opacity)
+                                    else drawPath(piece.path, Brush.linearGradient(listOf(c, shadow),
+                                        piece.path.getBounds().topLeft, piece.path.getBounds().bottomRight), alpha = d.opacity)
+                                }
+                                if (d.stroke != "none") drawPath(piece.path, palette.getValue(d.stroke),
+                                    alpha = d.opacity, style = Stroke(d.width, cap = StrokeCap.Round, join = StrokeJoin.Round))
                             }
                             val mask = piece.clip
                             if (mask == null) paintPart() else clipPath(mask) { paintPart() }
