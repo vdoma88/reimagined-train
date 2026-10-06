@@ -101,13 +101,17 @@ class CreatorViewModel : ViewModel() {
     var gender by mutableStateOf(Gender.FEMALE)
     var appearance by mutableStateOf(Appearance.random(Gender.FEMALE).copy(illustrationId = com.animate.companion.model.CartoonLook.STYLE_ID))
     var name by mutableStateOf(NameGenerator.generate(Gender.FEMALE))
-    var note by mutableStateOf("")
+    var note by mutableStateOf(com.animate.companion.model.CharacterNoteGenerator.generate())
     var archetype by mutableStateOf(PersonaPresets.archetypes.first().id)
     var profession by mutableStateOf(PersonaPresets.professions.random().id)
     var direction by mutableStateOf(PersonaPresets.directions.first().id)
     var step by mutableIntStateOf(0)
     var category by mutableIntStateOf(Cat.ILLUSTRATIONS.ordinal)
     val voiceSeed = Random.nextInt()
+
+    fun randomizeNote() {
+        note = com.animate.companion.model.CharacterNoteGenerator.generate(previous = note)
+    }
 
     fun draft() = CharacterEntity(
         name = name.trim().ifBlank { NameGenerator.generate(gender) },
@@ -183,11 +187,15 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
                                 vm.gender = art.gender
                             } else vm.appearance = Appearance.random(vm.gender)
                         }
-                        1 -> vm.name = NameGenerator.generate(vm.gender)
+                        1 -> {
+                            vm.name = NameGenerator.generate(vm.gender)
+                            vm.randomizeNote()
+                        }
                         else -> {
                             vm.archetype = PersonaPresets.archetypes.random().id
                             vm.profession = PersonaPresets.professions.random().id
                             vm.direction = PersonaPresets.directions.random().id
+                            vm.randomizeNote()
                         }
                     }
                 }) { Icon(Icons.Rounded.Casino, "Случайно", tint = Palette.Amber) }
@@ -497,6 +505,11 @@ internal fun IdentityStep(vm: CreatorViewModel, onDice: () -> Unit, onTap: () ->
             modifier = Modifier.padding(top = 6.dp, start = 4.dp),
         )
         SectionTitle("Пара слов о персонаже (необязательно)")
+        TextButton(onClick = { onDice(); vm.randomizeNote() }) {
+            Icon(Icons.Rounded.Casino, contentDescription = null, tint = Palette.Amber)
+            Spacer(Modifier.width(8.dp))
+            Text("Случайное описание", color = Palette.Amber)
+        }
         OutlinedTextField(
             value = vm.note,
             onValueChange = { vm.note = it.take(400) },
@@ -573,4 +586,3 @@ private fun ChoiceCard(emoji: String, title: String, subtitle: String, selected:
         }
     }
 }
-
