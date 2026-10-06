@@ -26,6 +26,9 @@ import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
+/** GitHub answered 404: there are no releases, or the repository is private. */
+class ReleasesUnavailable : IOException("releases not found")
+
 data class ReleaseInfo(
     val version: String,
     val title: String,
@@ -81,7 +84,10 @@ class UpdateManager(
             prefs.edit().putLong(KEY_LAST_CHECK, System.currentTimeMillis()).apply()
             val release = result.getOrNull()
             _state.value = when {
-                result.isFailure -> if (manual) UpdateState.Failed("Не удалось проверить обновления. Есть интернет?") else UpdateState.Idle
+                result.isFailure -> if (!manual) UpdateState.Idle else UpdateState.Failed(
+                    if (result.exceptionOrNull() is ReleasesUnavailable) "Страница обновлений недоступна. Попроси взрослого проверить, что репозиторий открыт."
+                    else "Не удалось проверить обновления. Есть интернет?",
+                )
                 release != null && isNewer(release.version, currentVersion) &&
                     (manual || prefs.getString(KEY_SKIPPED, null) != release.version) -> UpdateState.Available(release)
                 manual -> UpdateState.UpToDate
@@ -134,7 +140,8 @@ class UpdateManager(
             .header("Accept", "application/vnd.github+json")
             .build()
         http.newCall(req).execute().use { resp ->
-            if (resp.code == 404) return@withContext null // no releases yet
+            // 404 means "no releases" *or* a private repo; either way we cannot say the app is up to date.
+            if (resp.code == 404) throw ReleasesUnavailable()
             if (!resp.isSuccessful) throw IOException("HTTP ${resp.code}")
             parseRelease(resp.body?.string().orEmpty())
         }
