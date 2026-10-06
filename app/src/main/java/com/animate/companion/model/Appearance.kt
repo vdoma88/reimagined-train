@@ -38,11 +38,13 @@ data class Appearance(
     )
 
     /** Legacy IDs remain in stored JSON, but all displayed avatars use the new raster kit. */
-    fun resolvedCartoonLook(): CartoonLook = (cartoonLook ?: when (illustrationId) {
+    fun resolvedCartoonLook(gender: Gender? = null): CartoonLook = (cartoonLook ?: when (illustrationId) {
         "classic" -> CartoonLook(hair = 1, top = 3, bottom = 2)
         "modern" -> CartoonLook(hair = 4, top = 5, shoeStyle = 1)
         "adventure" -> CartoonLook(hair = 1, top = 2, bottom = 1, accessory = 1)
-        else -> CartoonLook()
+        else -> if (gender == null) CartoonLook() else CartoonLook.random(
+            Random(hairStyle + 31 * hairColor + 173 * faceShape + 997 * outfit), gender,
+        )
     }).normalized()
 
     fun toJson(): String = json.encodeToString(serializer(), this)
@@ -72,6 +74,7 @@ data class Appearance(
             val p = AppearancePresets
             val styles = p.hairStyles.indices.filter { gender in p.hairStyles[it].genders }
             return Appearance(
+                cartoonLook = CartoonLook.random(random, gender),
                 skinTone = random.nextInt(p.skinTones.size),
                 faceShape = random.nextInt(p.faceShapes.size),
                 hairStyle = styles.random(random),
@@ -97,8 +100,13 @@ data class Appearance(
 
 enum class Gender(val label: String, val emoji: String) {
     FEMALE("Девушка", "♀"),
-    MALE("Парень", "♂"),
-    NEUTRAL("Андрогин", "✦"),
+    MALE("Мужчина", "♂"),
+    // Legacy serialized value; never offered when creating a new character.
+    NEUTRAL("Девушка", "♀");
+
+    companion object {
+        val selectable = listOf(FEMALE, MALE)
+    }
 }
 
 /** Facial expression driven by the `[emo:...]` tag in replies. */

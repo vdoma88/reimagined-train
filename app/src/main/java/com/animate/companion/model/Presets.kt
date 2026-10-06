@@ -163,7 +163,8 @@ object AppearancePresets {
         Swatch("Горчичный", "горчичного цвета", 0xFFE0B04A),
     )
 
-    fun describe(a: Appearance, gender: Gender): String = a.resolvedCartoonLook().describe()
+    fun describe(a: Appearance, gender: Gender): String = if (gender == Gender.NEUTRAL)
+        a.resolvedCartoonLook().describe() else a.resolvedCartoonLook(gender).describe(gender)
 
 }
 

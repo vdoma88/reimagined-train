@@ -42,6 +42,7 @@ data class CharacterEntity(
     val lastEmotion: String = "neutral",
 ) {
     val genderEnum: Gender get() = runCatching { Gender.valueOf(gender) }.getOrDefault(Gender.FEMALE)
+        .let { if (it == Gender.NEUTRAL) Gender.FEMALE else it }
     val appearance: Appearance get() = Appearance.fromJson(appearanceJson)
 }
 

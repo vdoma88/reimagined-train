@@ -179,12 +179,13 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
                     when (vm.step) {
                         0 -> {
                             if (vm.appearance.illustrationId == com.animate.companion.model.CartoonLook.STYLE_ID) {
-                                vm.appearance = vm.appearance.copy(cartoonLook = com.animate.companion.model.CartoonLook.random())
+                                vm.appearance = vm.appearance.copy(cartoonLook = com.animate.companion.model.CartoonLook.random(gender = vm.gender))
                             } else if (vm.appearance.illustrationId != null) {
                                 val art = IllustratedCharacters.all.random()
                                 vm.appearance = vm.appearance.selectIllustration(art.id)
-                                if (vm.gender != art.gender) vm.name = NameGenerator.generate(art.gender)
-                                vm.gender = art.gender
+                                val gender = if (art.gender == Gender.NEUTRAL) Gender.FEMALE else art.gender
+                                if (vm.gender != gender) vm.name = NameGenerator.generate(gender)
+                                vm.gender = gender
                             } else vm.appearance = Appearance.random(vm.gender)
                         }
                         1 -> {
@@ -312,7 +313,7 @@ internal fun StepTabs(step: Int, onSelect: (Int) -> Unit) {
 @Composable
 internal fun AppearanceStep(vm: CreatorViewModel, onTap: () -> Unit) {
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
-        com.animate.companion.ui.avatar.CartoonLookControls(vm.appearance, enabled = true) {
+        com.animate.companion.ui.avatar.CartoonLookControls(vm.appearance, enabled = true, gender = vm.gender) {
             onTap()
             vm.appearance = it
         }
@@ -461,12 +462,13 @@ internal fun IdentityStep(vm: CreatorViewModel, onDice: () -> Unit, onTap: () ->
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
         SectionTitle("Пол")
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Gender.entries.forEach { g ->
+            Gender.selectable.forEach { g ->
                 GlassCard(Modifier.weight(1f), selected = vm.gender == g, onClick = {
                     onTap()
                     if (vm.gender != g) {
                         vm.gender = g
                         vm.name = NameGenerator.generate(g)
+                        vm.appearance = vm.appearance.copy(cartoonLook = com.animate.companion.model.CartoonLook.random(gender = g))
                         val style = AppearancePresets.hairStyles[vm.appearance.hairStyle]
                         if (g !in style.genders) {
                             vm.appearance = vm.appearance.copy(hairStyle = AppearancePresets.hairStyles.indexOfFirst { g in it.genders })

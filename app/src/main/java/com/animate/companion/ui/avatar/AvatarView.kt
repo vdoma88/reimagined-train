@@ -78,7 +78,7 @@ fun AvatarView(
     }
 
     val moving = animated && appearance.illustrationStyle.motion
-    CartoonAvatar(appearance.resolvedCartoonLook(), appearance.illustrationStyle, modifier,
+    CartoonAvatar(appearance.resolvedCartoonLook(gender), appearance.illustrationStyle, modifier,
         headOnly, fullBody, if (moving) blink else 0f, sin(breathPhase) * 1.5f,
-        moving && talking, moving && mouthOpen)
+        moving && talking, moving && mouthOpen, gender)
 }

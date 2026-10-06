@@ -84,7 +84,7 @@
     "x": 75,
     "y": 267,
     "width": 250,
-    "height": 140,
+    "height": 150,
     "sourceY": 0
   },
   "top.3": {
@@ -156,7 +156,7 @@
     "x": 72,
     "y": 6,
     "width": 270,
-    "height": 175,
+    "height": 158,
     "sourceY": 0
   },
   "hair.4": {
@@ -238,9 +238,89 @@
   },
   "beanie": {
     "file": "32_accessory_beanie.png",
-    "x": 70,
+    "x": 65,
     "y": 0,
-    "width": 260,
-    "height": 178
+    "width": 270,
+    "height": 145
+  },
+  "face.female.0": {
+    "file": "33_face_female_0.png",
+    "x": 60,
+    "y": 45,
+    "width": 280,
+    "height": 230,
+    "sourceY": 0
+  },
+  "face.female.1": {
+    "file": "34_face_female_1.png",
+    "x": 60,
+    "y": 45,
+    "width": 280,
+    "height": 230,
+    "sourceY": 0
+  },
+  "face.female.2": {
+    "file": "35_face_female_2.png",
+    "x": 60,
+    "y": 45,
+    "width": 280,
+    "height": 230,
+    "sourceY": 0
+  },
+  "face.male.0": {
+    "file": "36_face_male_0.png",
+    "x": 60,
+    "y": 45,
+    "width": 280,
+    "height": 230,
+    "sourceY": 0
+  },
+  "face.male.1": {
+    "file": "37_face_male_1.png",
+    "x": 60,
+    "y": 45,
+    "width": 280,
+    "height": 230,
+    "sourceY": 0
+  },
+  "face.male.2": {
+    "file": "38_face_male_2.png",
+    "x": 60,
+    "y": 45,
+    "width": 280,
+    "height": 230,
+    "sourceY": 0
+  },
+  "eyes.female.0": {
+    "file": "39_eyes_female_0.png",
+    "x": 118,
+    "y": 117,
+    "width": 164,
+    "height": 108,
+    "sourceY": 0
+  },
+  "eyes.female.1": {
+    "file": "40_eyes_female_1.png",
+    "x": 118,
+    "y": 117,
+    "width": 164,
+    "height": 108,
+    "sourceY": 0
+  },
+  "eyes.male.0": {
+    "file": "41_eyes_male_0.png",
+    "x": 118,
+    "y": 117,
+    "width": 164,
+    "height": 108,
+    "sourceY": 0
+  },
+  "eyes.male.1": {
+    "file": "42_eyes_male_1.png",
+    "x": 118,
+    "y": 117,
+    "width": 164,
+    "height": 108,
+    "sourceY": 0
   }
 }
