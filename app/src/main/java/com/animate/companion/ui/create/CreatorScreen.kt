@@ -99,7 +99,7 @@ import kotlin.random.Random
 
 class CreatorViewModel : ViewModel() {
     var gender by mutableStateOf(Gender.FEMALE)
-    var appearance by mutableStateOf(Appearance.random(Gender.FEMALE).copy(illustrationId = "classic"))
+    var appearance by mutableStateOf(Appearance.random(Gender.FEMALE).copy(illustrationId = com.animate.companion.model.CartoonLook.STYLE_ID))
     var name by mutableStateOf(NameGenerator.generate(Gender.FEMALE))
     var note by mutableStateOf("")
     var archetype by mutableStateOf(PersonaPresets.archetypes.first().id)
@@ -174,7 +174,9 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
                     container.sound.sfx(SfxType.DICE)
                     when (vm.step) {
                         0 -> {
-                            if (vm.appearance.illustrationId != null) {
+                            if (vm.appearance.illustrationId == com.animate.companion.model.CartoonLook.STYLE_ID) {
+                                vm.appearance = vm.appearance.copy(cartoonLook = com.animate.companion.model.CartoonLook.random())
+                            } else if (vm.appearance.illustrationId != null) {
                                 val art = IllustratedCharacters.all.random()
                                 vm.appearance = vm.appearance.selectIllustration(art.id)
                                 if (vm.gender != art.gender) vm.name = NameGenerator.generate(art.gender)
@@ -619,3 +621,4 @@ private fun ChoiceCard(emoji: String, title: String, subtitle: String, selected:
         }
     }
 }
+

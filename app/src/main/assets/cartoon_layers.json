@@ -1,0 +1,162 @@
+{
+  "body": {
+    "file": "01_body_base.png",
+    "x": 40,
+    "y": 270,
+    "width": 320,
+    "height": 326,
+    "sourceY": 140
+  },
+  "face": {
+    "file": "02_face_blank.png",
+    "x": 60,
+    "y": 45,
+    "width": 280,
+    "height": 230,
+    "sourceY": 0
+  },
+  "eyes.0": {
+    "file": "03_eyes_calm.png",
+    "x": 118,
+    "y": 117,
+    "width": 164,
+    "height": 108,
+    "sourceY": 0
+  },
+  "eyes.1": {
+    "file": "04_eyes_cheerful.png",
+    "x": 118,
+    "y": 117,
+    "width": 164,
+    "height": 108,
+    "sourceY": 0
+  },
+  "hair.0": {
+    "file": "05_hair_short_chestnut.png",
+    "x": 15,
+    "y": 15,
+    "width": 370,
+    "height": 270,
+    "sourceY": 0
+  },
+  "hair.1": {
+    "file": "06_hair_wavy_auburn.png",
+    "x": 20,
+    "y": 10,
+    "width": 360,
+    "height": 330,
+    "sourceY": 0
+  },
+  "hair.2": {
+    "file": "07_hair_curly_dark.png",
+    "x": 15,
+    "y": 25,
+    "width": 370,
+    "height": 290,
+    "sourceY": 0
+  },
+  "hair.3": {
+    "file": "08_hair_blond_ponytail.png",
+    "x": 20,
+    "y": 0,
+    "width": 380,
+    "height": 315,
+    "sourceY": 0
+  },
+  "top.0": {
+    "file": "09_top_teal_jacket.png",
+    "x": 75,
+    "y": 267,
+    "width": 250,
+    "height": 140,
+    "sourceY": 0
+  },
+  "top.1": {
+    "file": "10_top_red_sweater.png",
+    "x": 75,
+    "y": 267,
+    "width": 250,
+    "height": 140,
+    "sourceY": 0
+  },
+  "top.2": {
+    "file": "11_top_explorer_vest.png",
+    "x": 75,
+    "y": 267,
+    "width": 250,
+    "height": 140,
+    "sourceY": 0
+  },
+  "top.3": {
+    "file": "12_top_plaid_shirt.png",
+    "x": 75,
+    "y": 267,
+    "width": 250,
+    "height": 140,
+    "sourceY": 0
+  },
+  "bottom.0": {
+    "file": "13_bottom_jeans.png",
+    "x": 110,
+    "y": 409,
+    "width": 180,
+    "height": 146,
+    "sourceY": 0
+  },
+  "bottom.1": {
+    "file": "14_bottom_cargo_shorts.png",
+    "x": 110,
+    "y": 409,
+    "width": 180,
+    "height": 118,
+    "sourceY": 0
+  },
+  "bottom.2": {
+    "file": "15_bottom_burgundy_skirt.png",
+    "x": 102,
+    "y": 409,
+    "width": 196,
+    "height": 142,
+    "sourceY": 0
+  },
+  "boots": {
+    "file": "16_shoes_hiking_boots.png",
+    "x": 74,
+    "y": 501,
+    "width": 252,
+    "height": 92,
+    "sourceY": 0
+  },
+  "mouth.0": {
+    "file": "17_mouth_calm.png",
+    "x": 158,
+    "y": 241,
+    "width": 84,
+    "height": 17,
+    "sourceY": 0
+  },
+  "mouth.1": {
+    "file": "18_mouth_smile.png",
+    "x": 165,
+    "y": 230,
+    "width": 70,
+    "height": 39,
+    "sourceY": 0
+  },
+  "glasses": {
+    "file": "19_accessory_glasses.png",
+    "x": 108,
+    "y": 151,
+    "width": 184,
+    "height": 80,
+    "sourceY": 0
+  },
+  "cap": {
+    "file": "20_accessory_cap.png",
+    "x": 72,
+    "y": 6,
+    "width": 270,
+    "height": 175,
+    "sourceY": 0
+  }
+}

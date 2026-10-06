@@ -164,6 +164,7 @@ object AppearancePresets {
     )
 
     fun describe(a: Appearance, gender: Gender): String {
+        if (a.illustrationId == CartoonLook.STYLE_ID) return (a.cartoonLook ?: CartoonLook()).describe()
         IllustratedCharacters.find(a.illustrationId)?.let { return it.description }
         return buildList {
         add(faceShapes.getOrNull(a.faceShape)?.prompt)
@@ -306,3 +307,4 @@ object PersonaPresets {
     fun profession(id: String) = professions.firstOrNull { it.id == id } ?: professions.first()
     fun direction(id: String) = directions.firstOrNull { it.id == id } ?: directions.first()
 }
+

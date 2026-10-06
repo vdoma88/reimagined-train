@@ -9,6 +9,7 @@ import kotlin.random.Random
 data class Appearance(
     val illustrationId: String? = null,
     val characterLook: CharacterLook? = null,
+    val cartoonLook: CartoonLook? = null,
     val useCharacterLook: Boolean = false,
     val illustrationStyle: IllustrationStyle = IllustrationStyle(),
     val illustrationDetails: IllustrationDetails = IllustrationDetails(),
@@ -33,7 +34,7 @@ data class Appearance(
 ) {
     /** Gallery replacement starts with that artwork; toggling inside the editor retains its draft. */
     fun selectIllustration(id: String?): Appearance = if (id == illustrationId) this else copy(
-        illustrationId = id, useCharacterLook = false, characterLook = null,
+        illustrationId = id, useCharacterLook = false, characterLook = null, cartoonLook = null,
     )
 
     fun toJson(): String = json.encodeToString(serializer(), this)
@@ -49,6 +50,7 @@ data class Appearance(
             if (current.illustrationId != draft.illustrationId) return null
             return current.copy(
                 characterLook = draft.characterLook?.normalized(),
+                cartoonLook = draft.cartoonLook?.normalized(),
                 useCharacterLook = draft.useCharacterLook && draft.characterLook != null,
                 illustrationStyle = draft.illustrationStyle.normalized(),
                 illustrationDetails = draft.illustrationDetails.normalized(),
@@ -109,3 +111,4 @@ enum class Emotion(val tag: String, val label: String, val emoji: String) {
             entries.firstOrNull { it.tag.equals(tag?.trim(), ignoreCase = true) } ?: NEUTRAL
     }
 }
+

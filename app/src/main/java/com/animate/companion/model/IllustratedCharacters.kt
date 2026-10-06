@@ -11,6 +11,7 @@ data class IllustratedCharacter(
 /** Stable asset IDs persisted inside Appearance JSON. Null keeps the editable avatar. */
 object IllustratedCharacters {
     val all = listOf(
+        IllustratedCharacter(CartoonLook.STYLE_ID, "Лесные приключения", "Нарисованные слои · свободная сборка", Gender.NEUTRAL, CartoonLook().describe()),
         IllustratedCharacter("classic", "Классическое аниме", "Тёплая рисовка · мягкая светотень", Gender.FEMALE,
             "каштановые волнистые волосы с тёмно-синим бантом, карие глаза, кремовая блузка, тёмно-синий жакет и длинная плиссированная юбка, коричневые сапоги"),
         IllustratedCharacter("modern", "Современная манга", "Детальные пряди · городской стиль", Gender.MALE,
@@ -21,3 +22,4 @@ object IllustratedCharacters {
 
     fun find(id: String?): IllustratedCharacter? = all.firstOrNull { it.id == id }
 }
+
