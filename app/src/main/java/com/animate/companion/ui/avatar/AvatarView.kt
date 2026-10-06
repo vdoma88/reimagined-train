@@ -6,7 +6,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -15,12 +14,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
-import com.animate.companion.model.CartoonLook
 import com.animate.companion.model.Appearance
 import com.animate.companion.model.Emotion
 import com.animate.companion.model.Gender
-import com.animate.companion.model.IllustratedCharacters
 import kotlinx.coroutines.delay
 import kotlin.math.sin
 import kotlin.random.Random
@@ -40,16 +36,10 @@ fun AvatarView(
     headOnly: Boolean = false,
     fullBody: Boolean = false,
 ) {
-    val illustration = IllustratedCharacters.find(appearance.illustrationId)
-    val cartoon = appearance.illustrationId == CartoonLook.STYLE_ID
-    if (!cartoon && illustration != null && !(appearance.useCharacterLook && appearance.characterLook != null)) {
-        IllustratedAvatar(illustration, modifier, headOnly, fullBody, animated, appearance.illustrationStyle, appearance.illustrationDetails)
-        return
-    }
     var blink by remember { mutableFloatStateOf(0f) }
     var mouthOpen by remember { mutableStateOf(false) }
 
-    if (animated && ((!cartoon && !appearance.useCharacterLook) || appearance.illustrationStyle.motion)) {
+    if (animated && appearance.illustrationStyle.motion) {
         LaunchedEffect(Unit) {
             while (true) {
                 delay(Random.nextLong(1800, 4800))
@@ -76,7 +66,7 @@ fun AvatarView(
         }
     }
 
-    val breathPhase = if (animated && ((!cartoon && !appearance.useCharacterLook) || appearance.illustrationStyle.motion)) {
+    val breathPhase = if (animated && appearance.illustrationStyle.motion) {
         val t = rememberInfiniteTransition(label = "breath")
         t.animateFloat(
             0f, (2 * Math.PI).toFloat(),
@@ -87,27 +77,8 @@ fun AvatarView(
         0f
     }
 
-    if (cartoon) {
-        val moving = animated && appearance.illustrationStyle.motion
-        CartoonAvatar(appearance.cartoonLook ?: CartoonLook(), appearance.illustrationStyle, modifier,
-            headOnly, fullBody, if (moving) blink else 0f, sin(breathPhase) * 1.5f,
-            moving && talking, moving && mouthOpen)
-        return
-    }
-
-    if (illustration != null && appearance.useCharacterLook && appearance.characterLook != null) {
-        LayeredCharacter(appearance.characterLook, appearance.illustrationStyle, modifier,
-            headOnly, fullBody, emotion, if (animated && appearance.illustrationStyle.motion) blink else 0f,
-            sin(breathPhase) * 1.5f, animated && appearance.illustrationStyle.motion && mouthOpen)
-        return
-    }
-
-    Canvas(modifier.clipToBounds()) {
-        drawAvatar(
-            appearance, gender,
-            AvatarPose(emotion = emotion, blink = blink, breath = sin(breathPhase) * 0.7f, mouthOpen = mouthOpen),
-            headOnly = headOnly,
-        )
-    }
+    val moving = animated && appearance.illustrationStyle.motion
+    CartoonAvatar(appearance.resolvedCartoonLook(), appearance.illustrationStyle, modifier,
+        headOnly, fullBody, if (moving) blink else 0f, sin(breathPhase) * 1.5f,
+        moving && talking, moving && mouthOpen)
 }
-

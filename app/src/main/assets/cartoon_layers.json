@@ -158,5 +158,89 @@
     "width": 270,
     "height": 175,
     "sourceY": 0
+  },
+  "hair.4": {
+    "file": "21_hair_teal_streak.png",
+    "x": 25,
+    "y": 10,
+    "width": 350,
+    "height": 260
+  },
+  "hair.5": {
+    "file": "22_hair_auburn_bob.png",
+    "x": 20,
+    "y": 5,
+    "width": 360,
+    "height": 280
+  },
+  "hair.6": {
+    "file": "23_hair_red_braids.png",
+    "x": 27,
+    "y": 0,
+    "width": 346,
+    "height": 355
+  },
+  "hair.7": {
+    "file": "24_hair_silver_shag.png",
+    "x": 18,
+    "y": 0,
+    "width": 364,
+    "height": 280
+  },
+  "top.4": {
+    "file": "25_top_yellow_hoodie.png",
+    "x": 75,
+    "y": 267,
+    "width": 250,
+    "height": 140
+  },
+  "top.5": {
+    "file": "26_top_denim_jacket.png",
+    "x": 75,
+    "y": 267,
+    "width": 250,
+    "height": 140
+  },
+  "top.6": {
+    "file": "27_top_ghost_sweatshirt.png",
+    "x": 75,
+    "y": 267,
+    "width": 250,
+    "height": 140
+  },
+  "top.7": {
+    "file": "28_top_explorer_coat.png",
+    "x": 75,
+    "y": 267,
+    "width": 250,
+    "height": 140
+  },
+  "bottom.3": {
+    "file": "29_bottom_hiking_trousers.png",
+    "x": 110,
+    "y": 409,
+    "width": 180,
+    "height": 146
+  },
+  "bottom.4": {
+    "file": "30_bottom_navy_skirt.png",
+    "x": 102,
+    "y": 409,
+    "width": 196,
+    "height": 142
+  },
+  "sneakers": {
+    "file": "31_shoes_red_sneakers.png",
+    "x": 74,
+    "y": 500,
+    "width": 252,
+    "height": 102
+  },
+  "beanie": {
+    "file": "32_accessory_beanie.png",
+    "x": 70,
+    "y": 0,
+    "width": 260,
+    "height": 178
   }
 }

@@ -163,28 +163,8 @@ object AppearancePresets {
         Swatch("Горчичный", "горчичного цвета", 0xFFE0B04A),
     )
 
-    fun describe(a: Appearance, gender: Gender): String {
-        if (a.illustrationId == CartoonLook.STYLE_ID) return (a.cartoonLook ?: CartoonLook()).describe()
-        IllustratedCharacters.find(a.illustrationId)?.let { return it.description }
-        return buildList {
-        add(faceShapes.getOrNull(a.faceShape)?.prompt)
-        add(skinTones.getOrNull(a.skinTone)?.prompt)
-        add(hairColors.getOrNull(a.hairColor)?.prompt + ", " + hairStyles.getOrNull(a.hairStyle)?.prompt)
-        add(bangs.getOrNull(a.bangs)?.prompt)
-        if (a.ahoge) add("торчащая прядка-ахогэ")
-        add(eyeStyles.getOrNull(a.eyeStyle)?.prompt + ", " + eyeColors.getOrNull(a.eyeColor)?.prompt)
-        if (a.heterochromia) add("гетерохромия")
-        add(mouths.getOrNull(a.mouth)?.prompt)
-        if (a.fang) add("милый клычок")
-        add(ears.getOrNull(a.ears)?.prompt)
-        add(accessories.getOrNull(a.accessory)?.prompt)
-        add(outfits.getOrNull(a.outfit)?.prompt + " " + outfitColors.getOrNull(a.outfitColor)?.prompt)
-        if (a.blush) add("постоянный румянец")
-        if (a.beautyMark) add("родинка под глазом")
-        if (a.bandaid) add("пластырь на щеке")
-        add(if (gender == Gender.MALE) "юноша" else if (gender == Gender.FEMALE) "девушка" else "андрогинная внешность")
-        }.filterNot { it.isNullOrBlank() }.joinToString("; ")
-    }
+    fun describe(a: Appearance, gender: Gender): String = a.resolvedCartoonLook().describe()
+
 }
 
 /** Character archetype ("dere" types and other classic tropes). */

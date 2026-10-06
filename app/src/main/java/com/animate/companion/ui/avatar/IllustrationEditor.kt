@@ -176,9 +176,7 @@ fun IllustrationEditor(
                             enabled = !saving,
                         ) { update(draft.copy(illustrationStyle = it.normalized())) }
 
-                        EditorTab.DETAILS -> if (draft.illustrationId == com.animate.companion.model.CartoonLook.STYLE_ID) {
-                            CartoonLookControls(draft, enabled = !saving) { update(it) }
-                        } else CharacterLookControls(draft, enabled = !saving) { update(it) }
+                        EditorTab.DETAILS -> CartoonLookControls(draft, enabled = !saving) { update(it) }
 
                         EditorTab.COLOR -> IllustrationColorControls(
                             draft.illustrationStyle,

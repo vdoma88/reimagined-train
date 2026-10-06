@@ -37,6 +37,14 @@ data class Appearance(
         illustrationId = id, useCharacterLook = false, characterLook = null, cartoonLook = null,
     )
 
+    /** Legacy IDs remain in stored JSON, but all displayed avatars use the new raster kit. */
+    fun resolvedCartoonLook(): CartoonLook = (cartoonLook ?: when (illustrationId) {
+        "classic" -> CartoonLook(hair = 1, top = 3, bottom = 2)
+        "modern" -> CartoonLook(hair = 4, top = 5, shoeStyle = 1)
+        "adventure" -> CartoonLook(hair = 1, top = 2, bottom = 1, accessory = 1)
+        else -> CartoonLook()
+    }).normalized()
+
     fun toJson(): String = json.encodeToString(serializer(), this)
 
     companion object {

@@ -13,7 +13,7 @@ import com.animate.companion.ui.theme.Palette
 
 @Composable
 internal fun CartoonLookControls(appearance: Appearance, enabled: Boolean, onChange: (Appearance) -> Unit) {
-    val look = (appearance.cartoonLook ?: CartoonLook()).normalized()
+    val look = appearance.resolvedCartoonLook()
     fun update(value: CartoonLook) = onChange(appearance.copy(cartoonLook = value.normalized()))
     Text("Нарисованные слои", color = Palette.Text, style = MaterialTheme.typography.titleMedium)
     Text("Собери своего героя: все детали меняются независимо и сразу видны в превью.",
@@ -24,8 +24,10 @@ internal fun CartoonLookControls(appearance: Appearance, enabled: Boolean, onCha
     CartoonOptions("Рот", listOf("Лёгкая улыбка", "Широкая улыбка"), look.mouth, enabled) { update(look.copy(mouth = it)) }
     CartoonOptions("Верх", CartoonLook.topNames, look.top, enabled) { update(look.copy(top = it)) }
     CartoonOptions("Низ", CartoonLook.bottomNames, look.bottom, enabled) { update(look.copy(bottom = it)) }
-    CartoonOptions("Обувь", listOf("Босиком", "Ботинки"), if (look.boots) 1 else 0, enabled) { update(look.copy(boots = it == 1)) }
-    CartoonOptions("Аксессуары", listOf("Нет", "Очки", "Кепка", "Очки и кепка"), look.accessory, enabled) { update(look.copy(accessory = it)) }
+    CartoonOptions("Обувь", listOf("Босиком", "Ботинки", "Кеды"), if (look.boots) look.shoeStyle + 1 else 0, enabled) {
+        update(look.copy(boots = it > 0, shoeStyle = (it - 1).coerceAtLeast(0)))
+    }
+    CartoonOptions("Аксессуары", listOf("Нет", "Очки", "Кепка", "Очки и кепка", "Шапка", "Очки и шапка"), look.accessory, enabled) { update(look.copy(accessory = it)) }
     TextButton(enabled = enabled, onClick = { update(CartoonLook()) }) { Text("Сбросить внешность") }
 }
 

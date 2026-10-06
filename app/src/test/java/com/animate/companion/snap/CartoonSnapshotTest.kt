@@ -22,17 +22,17 @@ class CartoonSnapshotTest {
         paparazzi.snapshot("wardrobe") {
             AniMateTheme {
                 Column(Modifier.fillMaxSize().background(Color(0xFFFFF4E8))) {
-                    repeat(2) { row ->
-                        Row(Modifier.fillMaxWidth().height(290.dp)) {
+                    repeat(4) { row ->
+                        Row(Modifier.fillMaxWidth().height(155.dp)) {
                             repeat(2) { col ->
                                 val i = row * 2 + col
                                 val appearance = Appearance(illustrationId = CartoonLook.STYLE_ID,
                                     cartoonLook = CartoonLook(hair = i, face = i % 3, top = i,
-                                        bottom = i % 3, eyes = i % 2, mouth = i % 2, accessory = i))
+                                        bottom = i % 5, eyes = i % 2, mouth = i % 2, accessory = i % 6, shoeStyle = i % 2))
                                 Column(Modifier.weight(1f)) {
-                                    AvatarView(appearance, Gender.NEUTRAL, Modifier.fillMaxWidth().height(240.dp),
+                                    AvatarView(appearance, Gender.NEUTRAL, Modifier.fillMaxWidth().height(120.dp),
                                         animated = false, fullBody = true)
-                                    AvatarView(appearance, Gender.NEUTRAL, Modifier.size(44.dp), animated = false, headOnly = true)
+                                    AvatarView(appearance, Gender.NEUTRAL, Modifier.size(32.dp), animated = false, headOnly = true)
                                 }
                             }
                         }

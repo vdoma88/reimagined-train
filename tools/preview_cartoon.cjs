@@ -4,7 +4,7 @@ const sharp = require(process.env.CODEX_PRIMARY_RUNTIME_NODE_MODULES ? process.e
 const root = path.resolve(__dirname, '..');
 const specs = JSON.parse(fs.readFileSync(path.join(root,'app/src/main/assets/cartoon_layers.json')));
 async function render(look) {
- const keys = ['body',`bottom.${look.bottom||0}`, ...(look.boots===false?[]:['boots']),`top.${look.top||0}`,'face',`eyes.${look.eyes||0}`,`mouth.${look.mouth||0}`,`hair.${look.hair||0}`, ...(look.accessory===1||look.accessory===3?['glasses']:[]), ...(look.accessory===2||look.accessory===3?['cap']:[])];
+ const keys = ['body',`bottom.${look.bottom||0}`, ...(look.boots===false?[]:[look.shoeStyle===1?'sneakers':'boots']),`top.${look.top||0}`,'face',`eyes.${look.eyes||0}`,`mouth.${look.mouth||0}`,`hair.${look.hair||0}`, ...(look.accessory===1||look.accessory===3||look.accessory===5?['glasses']:[]), ...(look.accessory===2||look.accessory===3?['cap']:[]), ...(look.accessory===4||look.accessory===5?['beanie']:[])];
  const images=[];
  for(const key of keys){let s={...specs[key]};
   if(key==='face'&&look.face===1)Object.assign(s,{y:49,height:222});
@@ -19,8 +19,9 @@ async function render(look) {
 }
 (async()=>{
  const images=[];
- for(let i=0;i<4;i++)images.push({input:await render({hair:i,top:i,bottom:i%3,eyes:i%2,mouth:0,accessory:0}),left:i*400,top:0});
+ for(let i=0;i<8;i++)images.push({input:await render({hair:i,top:i,bottom:i%5,eyes:i%2,mouth:0,accessory:0,shoeStyle:i>=4?1:0}),left:(i%4)*400,top:Math.floor(i/4)*640});
  const target=process.argv[2]||path.join(root,'docs/cartoon-characters.png');
- await sharp({create:{width:1600,height:640,channels:4,background:'#f4f0eb'}}).composite(images).png({palette:true,quality:90}).toFile(target);
+ const sheet=await sharp({create:{width:1600,height:1280,channels:4,background:'#f4f0eb'}}).composite(images).png().toBuffer();
+ await sharp(sheet).resize(1200,960).png({palette:true,quality:85}).toFile(target);
  console.log(target);
 })();
