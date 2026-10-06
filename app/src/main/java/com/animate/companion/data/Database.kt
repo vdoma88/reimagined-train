@@ -12,6 +12,8 @@ import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.Update
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.animate.companion.model.Appearance
 import com.animate.companion.model.Gender
 import kotlinx.coroutines.flow.Flow
@@ -72,6 +74,53 @@ data class MessageEntity(
     }
 }
 
+/** A reminder or timer the user confirmed in chat; deleted once it has fired. */
+@Entity(
+    tableName = "reminders",
+    foreignKeys = [
+        ForeignKey(
+            entity = CharacterEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["characterId"],
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
+    indices = [Index("characterId")],
+)
+data class ReminderEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val characterId: Long,
+    /** [com.animate.companion.reminders.ReminderKind] name. */
+    val kind: String,
+    val text: String,
+    val triggerAt: Long,
+    val createdAt: Long = System.currentTimeMillis(),
+)
+
+@Dao
+interface ReminderDao {
+    @Query("SELECT * FROM reminders WHERE characterId = :characterId ORDER BY triggerAt ASC")
+    fun observe(characterId: Long): Flow<List<ReminderEntity>>
+
+    @Query("SELECT * FROM reminders WHERE characterId = :characterId ORDER BY triggerAt ASC")
+    suspend fun forCharacter(characterId: Long): List<ReminderEntity>
+
+    @Query("SELECT * FROM reminders ORDER BY triggerAt ASC")
+    suspend fun all(): List<ReminderEntity>
+
+    @Query("SELECT COUNT(*) FROM reminders")
+    suspend fun count(): Int
+
+    @Query("SELECT * FROM reminders WHERE id = :id")
+    suspend fun get(id: Long): ReminderEntity?
+
+    @Insert
+    suspend fun insert(r: ReminderEntity): Long
+
+    @Query("DELETE FROM reminders WHERE id = :id")
+    suspend fun delete(id: Long)
+}
+
 @Dao
 interface CharacterDao {
     @Query("SELECT * FROM characters ORDER BY lastMessageAt DESC")
@@ -120,13 +169,29 @@ interface MessageDao {
     suspend fun clear(characterId: Long)
 }
 
-@Database(entities = [CharacterEntity::class, MessageEntity::class], version = 1, exportSchema = true)
+@Database(entities = [CharacterEntity::class, MessageEntity::class, ReminderEntity::class], version = 2, exportSchema = true)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun characters(): CharacterDao
     abstract fun messages(): MessageDao
+    abstract fun reminders(): ReminderDao
 
     companion object {
+        /** 1 → 2: reminders table. Characters and messages are untouched. */
+        val MIGRATION_1_2 = object : Migration(1, 2) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `reminders` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`characterId` INTEGER NOT NULL, `kind` TEXT NOT NULL, `text` TEXT NOT NULL, " +
+                        "`triggerAt` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, " +
+                        "FOREIGN KEY(`characterId`) REFERENCES `characters`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_reminders_characterId` ON `reminders` (`characterId`)")
+            }
+        }
+
         fun create(context: Context): AppDatabase =
-            Room.databaseBuilder(context, AppDatabase::class.java, "animate.db").build()
+            Room.databaseBuilder(context, AppDatabase::class.java, "animate.db")
+                .addMigrations(MIGRATION_1_2)
+                .build()
     }
 }

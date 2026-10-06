@@ -6,8 +6,18 @@ import com.animate.companion.model.AppearancePresets
 import com.animate.companion.model.Emotion
 import com.animate.companion.model.Gender
 import com.animate.companion.model.PersonaPresets
+import com.animate.companion.reminders.ReminderRequest
+import com.animate.companion.reminders.ReminderTags
+import java.time.Instant
+import java.time.ZoneId
+import java.time.ZonedDateTime
 
-data class ParsedReply(val emotion: Emotion, val text: String)
+data class ParsedReply(
+    val emotion: Emotion,
+    val text: String,
+    /** Alarms and reminders the character proposes; the user confirms each one. */
+    val reminders: List<ReminderRequest> = emptyList(),
+)
 
 object PromptBuilder {
     /** Messages kept verbatim in the context; older ones are folded into the memory summary. */
@@ -30,6 +40,8 @@ object PromptBuilder {
         nowMillis: Long = System.currentTimeMillis(),
         sessionMinutes: Long = 0,
         concern: SafetyPolicy.Concern? = null,
+        reminders: List<Pair<String, Long>> = emptyList(),
+        zone: ZoneId = ZoneId.systemDefault(),
     ): String {
         val g = c.genderEnum
         val arch = PersonaPresets.archetype(c.archetypeId)
@@ -78,6 +90,8 @@ object PromptBuilder {
             appendLine("- ОБЯЗАТЕЛЬНО начинай каждый ответ с тега эмоции в формате [emo:тег], где тег — одно из: $emotions.")
             appendLine("Пример: [emo:happy] *отодвигает блокнот* Привет! У меня сегодня две новости: пирог удался, а компас опять показывает на холодильник. Как твой день?")
             appendLine()
+            append(ReminderTags.promptSection(ZonedDateTime.ofInstant(Instant.ofEpochMilli(nowMillis), zone), reminders))
+            appendLine()
             appendLine("# СИТУАЦИЯ")
             appendLine(SafetyPolicy.timeContext(nowMillis, sessionMinutes))
             if (concern != null) appendLine(SafetyPolicy.concernNote(concern))
@@ -95,10 +109,11 @@ object PromptBuilder {
         history: List<MessageEntity>,
         nowMillis: Long = System.currentTimeMillis(),
         sessionMinutes: Long = 0,
+        reminders: List<Pair<String, Long>> = emptyList(),
     ): List<ChatMessage> {
         val recent = history.filter { it.id > c.summarizedUntilId }.takeLast(CONTEXT_MESSAGES)
         val concern = history.lastOrNull()?.takeIf { it.isUser }?.let { SafetyPolicy.detect(it.text) }
-        val msgs = mutableListOf(ChatMessage("system", systemPrompt(c, userName, nowMillis, sessionMinutes, concern)))
+        val msgs = mutableListOf(ChatMessage("system", systemPrompt(c, userName, nowMillis, sessionMinutes, concern, reminders)))
         recent.forEach { m ->
             val content = if (m.isUser) m.text else "[emo:${m.emotion}] ${m.text}"
             msgs += ChatMessage(if (m.isUser) "user" else "assistant", content)
@@ -135,14 +150,17 @@ object PromptBuilder {
         )
     }
 
-    fun parseReply(raw: String): ParsedReply {
+    fun parseReply(raw: String, now: ZonedDateTime = ZonedDateTime.now()): ParsedReply {
         var text = thinkRegex.replace(raw, "").trim()
+        val (withoutTags, reminders) = ReminderTags.extract(text, now)
+        text = withoutTags
         val match = emoRegex.find(text)
         val emotion = match?.let { Emotion.fromTag(it.groupValues[1]) } ?: guessEmotion(text)
         if (match != null) text = text.substring(match.range.last + 1)
         text = anyEmoRegex.replace(text, "")
         text = text.trim().removeSurrounding("\"").trim()
-        return ParsedReply(emotion, text.ifBlank { "…" })
+        val fallback = if (reminders.isNotEmpty()) "Вот, предлагаю — нажми «Поставить», если всё верно." else "…"
+        return ParsedReply(emotion, text.ifBlank { fallback }, reminders)
     }
 
     private fun guessEmotion(text: String): Emotion {

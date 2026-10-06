@@ -18,6 +18,9 @@ import com.animate.companion.llm.SafetyPolicy
 import com.animate.companion.model.Emotion
 import com.animate.companion.model.IllustratedCharacters
 import kotlinx.coroutines.Job
+import androidx.compose.runtime.mutableStateListOf
+import com.animate.companion.data.ReminderEntity
+import com.animate.companion.reminders.ReminderRequest
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -58,6 +61,18 @@ class ChatViewModel(
 
     private var reactJob: Job? = null
 
+    /** Alarms/reminders the character just proposed; each waits for the user's tap. */
+    val proposals = mutableStateListOf<ReminderRequest>()
+
+    /** Reminders set with this character (for the ⋮ → «Напоминания» list). */
+    val reminders: StateFlow<List<ReminderEntity>> =
+        container.reminders.observe(characterId).stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** Short confirmation shown under the chat ("Напомню завтра в 08:00"). */
+    var notice by mutableStateOf<String?>(null)
+        private set
+    private var noticeJob: Job? = null
+
     /** Id of the message being read aloud ("msg-<id>"), drives the 🔊 buttons and lip-sync. */
     val speakingId: StateFlow<String?> = container.speaker.speakingId
 
@@ -91,6 +106,8 @@ class ChatViewModel(
 
     private fun react(reply: ParsedReply) {
         emotion = reply.emotion
+        proposals.clear()
+        proposals.addAll(reply.reminders)
         container.sound.sfx(SfxType.RECEIVE)
         reactJob?.cancel()
         reactJob = viewModelScope.launch {
@@ -212,6 +229,35 @@ class ChatViewModel(
         } catch (e: Exception) {
             if (e is kotlinx.coroutines.CancellationException) throw e
             error = "Не удалось сохранить образ. Попробуйте ещё раз."
+        }
+    }
+
+    fun acceptProposal(r: ReminderRequest) {
+        val name = character.value?.name ?: return
+        proposals.remove(r)
+        viewModelScope.launch {
+            val outcome = runCatching { container.reminders.add(characterId, r, name) }
+                .getOrElse { e ->
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    error = "Не получилось поставить напоминание."
+                    return@launch
+                }
+            showNotice(outcome.message)
+        }
+    }
+
+    fun dismissProposal(r: ReminderRequest) {
+        proposals.remove(r)
+    }
+
+    fun cancelReminder(id: Long) = viewModelScope.launch { container.reminders.cancel(id) }
+
+    private fun showNotice(text: String) {
+        notice = text
+        noticeJob?.cancel()
+        noticeJob = viewModelScope.launch {
+            delay(6000)
+            notice = null
         }
     }
 

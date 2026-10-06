@@ -55,6 +55,12 @@ class ChatRepository(
         character(id)?.let { db.characters().update(it.copy(memory = memory)) }
     }
 
+    /** Reminders already set with this character, so it can answer "what did I ask you to remind me?". */
+    private suspend fun activeReminders(characterId: Long): List<Pair<String, Long>> {
+        val now = System.currentTimeMillis()
+        return db.reminders().forCharacter(characterId).filter { it.triggerAt > now }.map { it.text to it.triggerAt }
+    }
+
     /** Sends a request through the provider chain, falling back on any failure. */
     private suspend fun complete(messages: List<ChatMessage>, maxTokens: Int = 700): String {
         val s = settings.current()
@@ -85,7 +91,7 @@ class ChatRepository(
         val c = character(characterId) ?: error("no character")
         val s = settings.current()
         val msgs = listOf(
-            ChatMessage("system", PromptBuilder.systemPrompt(c, s.userName, System.currentTimeMillis(), sessionMinutes(System.currentTimeMillis()))),
+            ChatMessage("system", PromptBuilder.systemPrompt(c, s.userName, System.currentTimeMillis(), sessionMinutes(System.currentTimeMillis()), reminders = activeReminders(characterId))),
             ChatMessage("user", PromptBuilder.greetingInstruction()),
         )
         val reply = runCatching { PromptBuilder.parseReply(complete(msgs)) }
@@ -105,7 +111,7 @@ class ChatRepository(
         val s = settings.current()
         val history = db.messages().all(characterId)
         val now = System.currentTimeMillis()
-        val context = PromptBuilder.buildContext(c, s.userName, history, now, sessionMinutes(now))
+        val context = PromptBuilder.buildContext(c, s.userName, history, now, sessionMinutes(now), activeReminders(characterId))
         val parsed = PromptBuilder.parseReply(complete(context))
         saveReply(c, parsed)
         appScope.launch { runCatching { summarizeIfNeeded(characterId) } }

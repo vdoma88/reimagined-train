@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import com.animate.companion.update.UpdateManager
 import com.animate.companion.audio.Speaker
+import com.animate.companion.reminders.Reminders
 
 /** Manual dependency container; small enough not to need a DI framework. */
 class AppContainer(app: android.content.Context) {
@@ -27,6 +28,7 @@ class AppContainer(app: android.content.Context) {
     val chat = ChatRepository(db, settings, llm, scope)
     val sound = SoundDirector(scope)
     val updates = UpdateManager(app, scope)
+    val reminders = Reminders(app, db)
 
     /** Created on first use: binding the TTS service is not free and tests never need it. */
     private val speakerLazy = lazy {
@@ -47,6 +49,8 @@ class AniMateApp : Application() {
         super.onCreate()
         container = AppContainer(this)
         container.settings.settings.onEach { container.sound.apply(it) }.launchIn(container.scope)
+        // Wake-ups are lost on force-stop; re-arming the pending ones is cheap and idempotent.
+        container.scope.launch(kotlinx.coroutines.Dispatchers.IO) { runCatching { container.reminders.rescheduleAll() } }
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {
                 container.sound.onForeground()
