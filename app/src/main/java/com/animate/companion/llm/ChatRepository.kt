@@ -5,6 +5,8 @@ import com.animate.companion.data.CharacterEntity
 import com.animate.companion.data.MessageEntity
 import com.animate.companion.data.SettingsRepository
 import com.animate.companion.model.Emotion
+import com.animate.companion.model.NameGenerator
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -28,8 +30,14 @@ class ChatRepository(
         return (now - sessionStart) / 60_000
     }
 
-    fun observeCharacters() = db.characters().observeAll()
-    fun observeCharacter(id: Long) = db.characters().observe(id)
+    private fun CharacterEntity.withCurrentName(): CharacterEntity = copy(
+        name = NameGenerator.refreshLegacyName(name, genderEnum, voiceSeed xor id.hashCode()),
+    )
+
+    private suspend fun character(id: Long): CharacterEntity? = db.characters().get(id)?.withCurrentName()
+
+    fun observeCharacters() = db.characters().observeAll().map { list -> list.map { it.withCurrentName() } }
+    fun observeCharacter(id: Long) = db.characters().observe(id).map { it?.withCurrentName() }
     fun observeMessages(id: Long) = db.messages().observe(id)
 
     suspend fun createCharacter(c: CharacterEntity): Long = db.characters().insert(c)
@@ -38,13 +46,13 @@ class ChatRepository(
 
     suspend fun clearHistory(id: Long) {
         db.messages().clear(id)
-        db.characters().get(id)?.let {
+        character(id)?.let {
             db.characters().update(it.copy(memory = "", summarizedUntilId = 0, lastMessagePreview = "", lastEmotion = "neutral"))
         }
     }
 
     suspend fun updateMemory(id: Long, memory: String) {
-        db.characters().get(id)?.let { db.characters().update(it.copy(memory = memory)) }
+        character(id)?.let { db.characters().update(it.copy(memory = memory)) }
     }
 
     /** Sends a request through the provider chain, falling back on any failure. */
@@ -74,7 +82,7 @@ class ChatRepository(
     }
 
     suspend fun greet(characterId: Long): ParsedReply {
-        val c = db.characters().get(characterId) ?: error("no character")
+        val c = character(characterId) ?: error("no character")
         val s = settings.current()
         val msgs = listOf(
             ChatMessage("system", PromptBuilder.systemPrompt(c, s.userName, System.currentTimeMillis(), sessionMinutes(System.currentTimeMillis()))),
@@ -93,7 +101,7 @@ class ChatRepository(
 
     /** Generates a reply to the current history (used after send and for retry/regenerate). */
     suspend fun reply(characterId: Long): ParsedReply {
-        val c = db.characters().get(characterId) ?: error("no character")
+        val c = character(characterId) ?: error("no character")
         val s = settings.current()
         val history = db.messages().all(characterId)
         val now = System.currentTimeMillis()
@@ -114,7 +122,7 @@ class ChatRepository(
         db.messages().insert(
             MessageEntity(characterId = c.id, role = MessageEntity.ROLE_ASSISTANT, text = reply.text, emotion = reply.emotion.tag),
         )
-        val fresh = db.characters().get(c.id) ?: return
+        val fresh = character(c.id) ?: return
         val bump = if (reply.emotion == Emotion.LOVE || reply.emotion == Emotion.SHY) 2 else 1
         db.characters().update(
             fresh.copy(
@@ -127,14 +135,14 @@ class ChatRepository(
     }
 
     private suspend fun summarizeIfNeeded(characterId: Long) = summarizeLock.withLock {
-        val c = db.characters().get(characterId) ?: return@withLock
+        val c = character(characterId) ?: return@withLock
         val pending = db.messages().after(characterId, c.summarizedUntilId)
         if (pending.size < PromptBuilder.SUMMARIZE_THRESHOLD) return@withLock
         val chunk = pending.dropLast(PromptBuilder.CONTEXT_MESSAGES / 2)
         if (chunk.isEmpty()) return@withLock
         val s = settings.current()
         val memory = complete(PromptBuilder.summaryPrompt(c, s.userName, chunk), maxTokens = 900).trim()
-        val fresh = db.characters().get(characterId) ?: return@withLock
+        val fresh = character(characterId) ?: return@withLock
         db.characters().update(fresh.copy(memory = memory.take(2000), summarizedUntilId = chunk.last().id))
     }
 }
@@ -150,15 +158,16 @@ object FallbackLines {
     }
 
     private fun greeting(c: CharacterEntity, glad: String): ParsedReply = when (c.archetypeId) {
-        "tsundere" -> ParsedReply(Emotion.ANGRY, "*отворачивается* Х-хмф! Я ${c.name}. Н-не думай, что я $glad знакомству… Ну? Чего молчишь?")
-        "kuudere" -> ParsedReply(Emotion.NEUTRAL, "${c.name}. …Приятно познакомиться. О чём хочешь поговорить?")
-        "dandere" -> ParsedReply(Emotion.SHY, "*прячется за рукавом* А-ано… я ${c.name}… Мы… можем поговорить?")
-        "genki" -> ParsedReply(Emotion.HAPPY, "*подпрыгивает* Йахо-о! Я ${c.name}! Давай дружить! Что будем делать?!")
-        "himedere" -> ParsedReply(Emotion.SMUG, "О-хо-хо! Перед тобой ${c.name}. Можешь считать себя счастливчиком. Представься же!")
-        "chuuni" -> ParsedReply(Emotion.SMUG, "*закрывает глаз ладонью* Печать ослабла… Я — ${c.name}, носитель Тёмного Пламени. А кто ты, смертный?")
-        "yandere" -> ParsedReply(Emotion.HAPPY, "*драматично прижимает ладони к щекам* Ах, новое знакомство! Я ${c.name}~ Расскажи, чем ты сегодня занимался?")
-        "lazy" -> ParsedReply(Emotion.THINKING, "*зевает* Ммм… я ${c.name}. Привет. Расскажи что-нибудь интересное, ладно?")
-        "onee" -> ParsedReply(Emotion.HAPPY, "Ара-ара, новое лицо~ Я ${c.name}. Устал(а)? Присаживайся, поболтаем.")
-        else -> ParsedReply(Emotion.HAPPY, "*машет рукой* Привет! Я ${c.name}! Очень $glad познакомиться~ Как тебя зовут?")
+        "tsundere" -> ParsedReply(Emotion.SMUG, "*проверяет фонарик* Я ${c.name}. Если вывеска обещает настоящего снежного человека, сначала проверь, кто сидит внутри костюма. Что тебя привело в наш городок?")
+        "kuudere" -> ParsedReply(Emotion.NEUTRAL, "Я ${c.name}. На карте у нас один мост, а на открытках — два. Пока считаю это ошибкой печати. Как проходит твой день?")
+        "deredere" -> ParsedReply(Emotion.HAPPY, "*машет ярким блокнотом* Привет! Я ${c.name}. Сегодня делаю значки для друзей — один получился похожим на сердитую вафлю. Чем ты любишь заниматься?")
+        "dandere" -> ParsedReply(Emotion.SHY, "*закрывает старую карту* Привет, я ${c.name}. Нашёлся план городка с закусочной прямо посреди озера. Может, у печатника был трудный день. Как тебя зовут?")
+        "genki" -> ParsedReply(Emotion.HAPPY, "*ставит рюкзак у двери* Я ${c.name}! План на сегодня: прогулка, пирог и выяснить, зачем фестивалю семнадцать резиновых уток. Какое у тебя настроение?")
+        "himedere" -> ParsedReply(Emotion.SMUG, "*поправляет самодельную звезду на куртке* Я ${c.name}, будущая легенда Кедрового Перевала. Пока мне доверили только плакат фестиваля. Чем ты увлекаешься?")
+        "chuuni" -> ParsedReply(Emotion.THINKING, "*убирает приёмник* Привет! Я ${c.name}. Радио передало три свиста. Секретный код? Или чайник соседа? Проверим когда-нибудь. О чём хочешь поговорить?")
+        "yandere" -> ParsedReply(Emotion.SURPRISED, "*торжественно разводит руками* Новое знакомство! Я ${c.name}. Сегодняшняя драма: последний кусок пирога исчез. Подозреваемый — мой аппетит. Как твой день?")
+        "lazy" -> ParsedReply(Emotion.THINKING, "*отодвигает коробку с деталями* Привет, я ${c.name}. Изобретаю будильник, который уговаривает ещё поспать. Кажется, слишком успешно. Чем займёмся?")
+        "onee" -> ParsedReply(Emotion.HAPPY, "Привет, я ${c.name}. В закусочной нашлось тихое место и какао. Сегодняшняя загадка может подождать. Хочешь поболтать или нужна помощь с чем-нибудь?")
+        else -> ParsedReply(Emotion.HAPPY, "*машет рукой* Привет! Я ${c.name}, $glad знакомству. Добро пожаловать в Кедровый Перевал — у нас даже афиши иногда с сюрпризом. Как тебя зовут?")
     }
 }
