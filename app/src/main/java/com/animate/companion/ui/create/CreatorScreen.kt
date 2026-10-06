@@ -168,7 +168,7 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
                 }
                 Column(Modifier.weight(1f)) {
                     Text("Character Studio", style = MaterialTheme.typography.titleLarge, color = Palette.Text)
-                    Text("создай своего аниме-героя", style = MaterialTheme.typography.labelSmall, color = Palette.TextDim)
+                    Text("создай героя лесного городка", style = MaterialTheme.typography.labelSmall, color = Palette.TextDim)
                 }
                 IconButton(onClick = {
                     container.sound.sfx(SfxType.DICE)
