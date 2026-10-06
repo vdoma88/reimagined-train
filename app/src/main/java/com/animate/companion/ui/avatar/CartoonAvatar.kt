@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
+import com.animate.companion.model.Gender
 import com.animate.companion.model.CartoonLook
 import com.animate.companion.model.CartoonSpriteSpec
 import com.animate.companion.model.IllustrationStyle
@@ -47,7 +48,7 @@ internal object CartoonArtwork {
 internal fun CartoonAvatar(
     look: CartoonLook, style: IllustrationStyle, modifier: Modifier,
     headOnly: Boolean, fullBody: Boolean, blink: Float, breath: Float,
-    speaking: Boolean, mouthOpen: Boolean,
+    speaking: Boolean, mouthOpen: Boolean, gender: Gender = Gender.FEMALE,
 ) {
     val context = LocalContext.current
     val sprites = remember { CartoonArtwork.load(context) }
@@ -81,15 +82,21 @@ internal fun CartoonAvatar(
             c.rotate(s.rotation)
             c.scale(if (s.mirrored) -scale else scale, scale)
             c.translate(-200f, -viewHeight / 2f + breath)
-            for (key in n.layers(speaking, mouthOpen)) {
+            for (key in n.layers(speaking, mouthOpen, gender)) {
                 val sprite = sprites.getValue(key)
-                var spec = sprite.spec
-                if (key == "face") spec = when (n.face) {
-                    1 -> spec.copy(y = 49f, height = 222f)
-                    2 -> spec.copy(x = 63f, y = 43f, width = 274f, height = 234f)
-                    else -> spec
-                }
+                val spec = sprite.spec
                 val saved = c.save()
+                if (key == "body" || key.startsWith("top.") || key.startsWith("bottom.") ||
+                    key == "boots" || key == "sneakers") {
+                    c.translate(200f, 267f)
+                    c.scale(n.bodyScaleX(gender), n.bodyScaleY(gender))
+                    c.translate(-200f, -267f)
+                } else {
+                    c.translate(200f, 267f)
+                    c.scale(n.headScaleX(gender), n.headScaleY(gender))
+                    c.translate(-200f, -267f)
+                }
+                val bitmapClip = c.save()
                 // The base kit has a modesty garment. Hide it beneath the selected trousers/skirt.
                 if (key == "body") c.clipOutRect(130f, 403f, 279f, 469f)
                 if (key.startsWith("eyes.") && blink > 0.5f) {
@@ -97,11 +104,12 @@ internal fun CartoonAvatar(
                 }
                 c.drawBitmap(sprite.bitmap, Rect(0, spec.sourceY, sprite.bitmap.width, sprite.bitmap.height),
                     RectF(spec.x, spec.y, spec.x + spec.width, spec.y + spec.height), imagePaint)
-                c.restoreToCount(saved)
+                c.restoreToCount(bitmapClip)
                 if (key.startsWith("eyes.") && blink > 0.5f) {
                     c.drawArc(RectF(126f, 175f, 184f, 205f), 0f, 180f, false, ink)
                     c.drawArc(RectF(215f, 175f, 274f, 205f), 0f, 180f, false, ink)
                 }
+                c.restoreToCount(saved)
             }
             c.restoreToCount(layer)
         }

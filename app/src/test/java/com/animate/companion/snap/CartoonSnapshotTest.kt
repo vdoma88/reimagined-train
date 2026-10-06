@@ -30,9 +30,10 @@ class CartoonSnapshotTest {
                                     cartoonLook = CartoonLook(hair = i, face = i % 3, top = i,
                                         bottom = i % 5, eyes = i % 2, mouth = i % 2, accessory = i % 6, shoeStyle = i % 2))
                                 Column(Modifier.weight(1f)) {
-                                    AvatarView(appearance, Gender.NEUTRAL, Modifier.fillMaxWidth().height(120.dp),
+                                    val gender = if (row < 2) Gender.FEMALE else Gender.MALE
+                                    AvatarView(appearance, gender, Modifier.fillMaxWidth().height(120.dp),
                                         animated = false, fullBody = true)
-                                    AvatarView(appearance, Gender.NEUTRAL, Modifier.size(32.dp), animated = false, headOnly = true)
+                                    AvatarView(appearance, gender, Modifier.size(32.dp), animated = false, headOnly = true)
                                 }
                             }
                         }

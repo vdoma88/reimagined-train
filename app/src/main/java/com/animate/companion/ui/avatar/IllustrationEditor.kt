@@ -176,7 +176,7 @@ fun IllustrationEditor(
                             enabled = !saving,
                         ) { update(draft.copy(illustrationStyle = it.normalized())) }
 
-                        EditorTab.DETAILS -> CartoonLookControls(draft, enabled = !saving) { update(it) }
+                        EditorTab.DETAILS -> CartoonLookControls(draft, enabled = !saving, onChange = { update(it) }, gender = gender)
 
                         EditorTab.COLOR -> IllustrationColorControls(
                             draft.illustrationStyle,
