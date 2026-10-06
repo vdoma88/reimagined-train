@@ -25,32 +25,32 @@ data class LofiTrack(
     val scale: IntArray,
     val rain: Boolean,
     val seed: Int,
+    /** Original eighth-note melody; -1 is a rest. */
+    val melody: IntArray = intArrayOf(),
 )
 
+/** Original mystery-adventure themes; stable indices preserve saved music settings. */
 object LofiTracks {
     val all = listOf(
-        LofiTrack(
-            "Сакура под дождём", 72f,
-            listOf(intArrayOf(53, 57, 60, 64), intArrayOf(52, 55, 59, 62), intArrayOf(50, 53, 57, 60), intArrayOf(48, 52, 55, 59)),
-            intArrayOf(41, 40, 38, 36),
-            intArrayOf(72, 74, 76, 79, 81, 84), rain = true, seed = 11,
-        ),
-        LofiTrack(
-            "Ночной Токио", 68f,
-            listOf(intArrayOf(57, 60, 64, 67, 71), intArrayOf(50, 53, 57, 60, 64), intArrayOf(55, 59, 62, 65, 69), intArrayOf(48, 52, 55, 59, 62)),
-            intArrayOf(45, 38, 43, 36),
-            intArrayOf(69, 72, 74, 76, 79, 81), rain = false, seed = 23,
-        ),
-        LofiTrack(
-            "Кафе у станции", 80f,
-            listOf(intArrayOf(51, 55, 58, 62), intArrayOf(48, 51, 55, 58), intArrayOf(53, 56, 60, 63), intArrayOf(50, 53, 56, 60)),
-            intArrayOf(39, 36, 41, 46),
-            intArrayOf(70, 72, 75, 77, 79, 82), rain = false, seed = 37,
-        ),
+        LofiTrack("Тропа к загадкам", 96f,
+            listOf(intArrayOf(47,54,59,62), intArrayOf(43,50,55,59), intArrayOf(40,47,52,55), intArrayOf(42,49,54,58)),
+            intArrayOf(35,31,28,30), intArrayOf(71,74,76,78,81), rain = true, seed = 101,
+            melody = intArrayOf(71,-1,74,78,76,-1,74,71, 69,-1,71,74,76,-1,74,69,
+                67,71,74,-1,76,74,71,-1, 70,-1,73,78,76,73,70,-1)),
+        LofiTrack("Чердачный дневник", 82f,
+            listOf(intArrayOf(50,57,62,65), intArrayOf(46,53,58,62), intArrayOf(43,50,55,58), intArrayOf(45,52,57,61)),
+            intArrayOf(38,34,31,33), intArrayOf(74,76,77,79,81), rain = true, seed = 211,
+            melody = intArrayOf(74,-1,77,81,-1,79,77,-1, 74,77,82,-1,81,77,74,-1,
+                79,-1,82,81,79,-1,77,74, 73,-1,76,81,79,76,73,-1)),
+        LofiTrack("Летний лагерь", 94f,
+            listOf(intArrayOf(52,59,64,67), intArrayOf(48,55,60,64), intArrayOf(45,52,57,60), intArrayOf(47,54,59,63)),
+            intArrayOf(40,36,33,35), intArrayOf(76,78,79,81,83), rain = false, seed = 307,
+            melody = intArrayOf(76,79,-1,83,81,79,76,-1, 76,79,84,-1,83,79,76,-1,
+                81,-1,84,83,81,79,76,-1, 78,83,87,-1,83,78,75,-1)),
     )
 }
 
-/** Renders seamless procedural lo-fi loops (Rhodes-like keys, bass, swung drums, vinyl). */
+/** Renders original forest-adventure loops: plucked strings, flute, bells and wooden percussion. */
 object LofiComposer {
     private fun midiHz(n: Int) = 440f * 2f.pow((n - 69) / 12f)
 
@@ -79,15 +79,12 @@ object LofiComposer {
             val f = midiHz(note)
             val detune = 1f + (rnd.nextFloat() - 0.5f) * 0.004f
             add(start, hold + 0.6f, pan) { t ->
-                val att = (t / 0.006f).coerceAtMost(1f)
-                val rel = if (t > hold) exp(-(t - hold) / 0.15f) else 1f
-                val env = att * exp(-t / 1.6f) * rel
-                val index = 1.4f * exp(-t / 0.35f)
+                val att = (t / 0.003f).coerceAtMost(1f)
+                val rel = if (t > hold) exp(-(t - hold) / 0.09f) else 1f
                 val ph = TWO_PI * f * detune * t
-                val body = sin(ph + index * sin(ph))
-                val tine = 0.12f * sin(ph * 7f) * exp(-t / 0.05f)
-                val trem = 1f + 0.12f * sin(TWO_PI * 4.5f * t)
-                (body + tine) * env * trem * vel * 0.16f
+                val string = sin(ph) + 0.32f * sin(2f * ph) * exp(-t / 0.16f) +
+                    0.18f * sin(3f * ph) * exp(-t / 0.10f)
+                string * att * exp(-t / 0.38f) * rel * vel * 0.15f
             }
         }
 
@@ -136,72 +133,64 @@ object LofiComposer {
             }
         }
 
-        val swing = beat * 0.17f
-        for (bar in 0 until bars) {
-            val b0 = bar * 4 * beat
-            val chord = track.chords[bar % track.chords.size]
-            val lastBar = bar == bars - 1
-            // Keys: a slightly strummed hit on 1, a softer stab on the "and" of 2.
-            chord.forEachIndexed { i, note ->
-                keys(b0 + i * 0.012f, note, 0.9f - i * 0.05f, beat * 2.2f, (i - chord.size / 2f) * 0.15f)
-                if (!lastBar || rnd.nextBoolean()) {
-                    keys(b0 + beat * 2.5f + swing + i * 0.01f, note, 0.5f, beat * 1.2f, (i - chord.size / 2f) * 0.15f)
-                }
-            }
-            val root = track.bassRoots[bar % track.bassRoots.size]
-            bass(b0, root, beat * 1.6f)
-            bass(b0 + beat * 2.5f + swing, if (rnd.nextBoolean()) root else root + 7, beat * 1.2f)
-
-            kick(b0, 1f)
-            kick(b0 + beat * 2.5f + swing, 0.8f)
-            if (rnd.nextFloat() < 0.4f) kick(b0 + beat * 1.5f + swing, 0.55f)
-            snare(b0 + beat, 0.9f)
-            snare(b0 + beat * 3, if (lastBar) 1f else 0.9f)
-            if (lastBar) snare(b0 + beat * 3.5f + swing, 0.4f)
-            for (e in 0 until 8) {
-                val off = if (e % 2 == 1) swing else 0f
-                hat(b0 + e * beat / 2 + off, if (e % 2 == 0) 0.9f else 0.55f + rnd.nextFloat() * 0.2f)
-            }
-            // Sparse pentatonic melody.
-            for (step in 0 until 8) {
-                if (rnd.nextFloat() < 0.28f) {
-                    val off = if (step % 2 == 1) swing else 0f
-                    bell(b0 + step * beat / 2 + off, track.scale.random(rnd), 0.6f + rnd.nextFloat() * 0.4f)
-                }
+        fun flute(start: Float, note: Int, vel: Float) {
+            val f = midiHz(note)
+            val hold = beat * 0.42f
+            add(start, hold + 0.15f, -0.12f) { t ->
+                val env = (t / 0.025f).coerceAtMost(1f) *
+                    (if (t > hold) exp(-(t - hold) / 0.05f) else 1f)
+                val phase = TWO_PI * f * t + 0.045f * sin(TWO_PI * 5f * t)
+                (sin(phase) + 0.12f * sin(2f * phase)) * env * vel * 0.16f
             }
         }
 
-        // Vinyl hiss, crackle and (optionally) rain.
-        val hiss = OnePoleLowPass(3000f)
-        val rainBp = BandPass(2500f, 0.5f)
-        for (i in 0 until n) {
-            var v = hiss.process(noise.next()) * 0.015f
-            if (rnd.nextFloat() < 6f / SAMPLE_RATE) {
-                val amp = 0.08f + rnd.nextFloat() * 0.18f
-                for (k in 0 until 40) {
-                    val idx = (i + k) % n
-                    val c = noise.next() * amp * exp(-k / 6f)
-                    l[idx] += c; r[idx] += c
+        fun wood(start: Float, vel: Float) {
+            add(start, 0.1f, 0.22f) { t ->
+                (sin(TWO_PI * 720f * t) + 0.3f * sin(TWO_PI * 1140f * t)) *
+                    exp(-t / 0.021f) * vel * 0.12f
+            }
+        }
+
+        for (bar in 0 until bars) {
+            val b0 = bar * 4 * beat
+            val chord = track.chords[bar % track.chords.size]
+            // Light finger-picked arpeggio rather than an electric-piano chord pad.
+            for (step in 0 until 8) {
+                val note = chord[step % chord.size]
+                keys(b0 + step * beat / 2f, note, if (step % 2 == 0) 0.75f else 0.45f,
+                    beat * 0.4f, if (step % 2 == 0) -0.2f else 0.2f)
+                wood(b0 + step * beat / 2f, if (step % 2 == 0) 0.4f else 0.18f)
+                if (track.melody.isNotEmpty()) {
+                    val lead = track.melody[(bar * 8 + step) % track.melody.size]
+                    if (lead >= 0) flute(b0 + step * beat / 2f, lead, if (bar < 4) 0.85f else 0.7f)
                 }
             }
-            if (track.rain) {
-                v += rainBp.process(noise.next()) * 0.03f
-                if (rnd.nextFloat() < 25f / SAMPLE_RATE) {
-                    val amp = 0.03f + rnd.nextFloat() * 0.05f
-                    val f = 2000f + rnd.nextFloat() * 3000f
-                    for (k in 0 until 200) {
-                        val idx = (i + k) % n
-                        val d = sin(TWO_PI * f * k / SAMPLE_RATE) * amp * exp(-k / 40f)
-                        l[idx] += d * 0.7f; r[idx] += d
-                    }
-                }
+            val root = track.bassRoots[bar % track.bassRoots.size]
+            bass(b0, root, beat * 1.3f)
+            bass(b0 + beat * 2f, root + 7, beat * 1.1f)
+            kick(b0, 0.45f)
+            kick(b0 + beat * 2f, 0.3f)
+            snare(b0 + beat, 0.35f)
+            snare(b0 + beat * 3f, 0.3f)
+            hat(b0 + beat * 1.5f, 0.2f)
+            hat(b0 + beat * 3.5f, 0.15f)
+            if (bar % 2 == 0) bell(b0 + beat * 3.5f, chord.last() + 24, 0.45f)
+        }
+
+        // Very quiet forest air. No old vinyl crackle or anime café texture.
+        if (track.rain) {
+            val wind = OnePoleLowPass(750f)
+            for (i in 0 until n) {
+                val v = wind.process(noise.next()) * 0.006f
+                l[i] += v; r[i] += v
             }
-            l[i] += v; r[i] += v
         }
 
         // Warm low-pass on the master bus, then interleave.
         val lpL = OnePoleLowPass(4200f)
         val lpR = OnePoleLowPass(4200f)
+        // Prime the filters with the wrapped tail to avoid a startup click on every loop.
+        for (i in maxOf(0, n - 2048) until n) { lpL.process(l[i]); lpR.process(r[i]) }
         val out = FloatArray(n * 2)
         for (i in 0 until n) {
             out[2 * i] = lpL.process(l[i])
@@ -316,3 +305,4 @@ class LofiPlayer(private val scope: CoroutineScope) {
             .build()
     }
 }
+

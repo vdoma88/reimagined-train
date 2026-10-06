@@ -303,58 +303,10 @@ internal fun StepTabs(step: Int, onSelect: (Int) -> Unit) {
 
 @Composable
 internal fun AppearanceStep(vm: CreatorViewModel, onTap: () -> Unit) {
-    if (vm.category == Cat.ILLUSTRATIONS.ordinal) {
-        IllustrationGallery(vm.appearance.illustrationId, onSelect = { id ->
+    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
+        com.animate.companion.ui.avatar.CartoonLookControls(vm.appearance, enabled = true) {
             onTap()
-            vm.appearance = vm.appearance.selectIllustration(id)
-            if (id == null) vm.category = Cat.LOOKS.ordinal
-            IllustratedCharacters.find(id)?.let { art ->
-                if (vm.gender != art.gender) vm.name = NameGenerator.generate(art.gender)
-                vm.gender = art.gender
-            }
-        }, modifier = Modifier.fillMaxSize())
-        return
-    }
-    val cats = listOf(Cat.ILLUSTRATIONS, Cat.LOOKS) + Cat.entries.filter { it != Cat.LOOKS && it != Cat.ILLUSTRATIONS }
-    Column(Modifier.fillMaxSize()) {
-        LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            itemsIndexed(cats) { i, c ->
-                val sel = c.ordinal == vm.category
-                Text(
-                    c.label,
-                    modifier = Modifier.clip(RoundedCornerShape(50))
-                        .background(if (sel) Palette.Amber.copy(alpha = 0.25f) else Palette.Glass)
-                        .border(1.dp, if (sel) Palette.Amber else Palette.GlassBorder, RoundedCornerShape(50))
-                        .clickable { onTap(); vm.category = c.ordinal }
-                        .padding(horizontal = 14.dp, vertical = 8.dp),
-                    color = Palette.Text,
-                    style = MaterialTheme.typography.labelLarge,
-                )
-            }
-        }
-        Spacer(Modifier.height(8.dp))
-        val cat = Cat.entries[vm.category]
-        val a = vm.appearance.copy(illustrationId = null)
-        when (cat) {
-            Cat.LOOKS -> StudioLookGrid(vm, onTap)
-            Cat.HAIR_COLOR -> SwatchGrid(AppearancePresets.hairColors, a.hairColor) { onTap(); vm.appearance = a.copy(hairColor = it) }
-            Cat.EYE_COLOR -> SwatchGrid(AppearancePresets.eyeColors, a.eyeColor) { onTap(); vm.appearance = a.copy(eyeColor = it) }
-            Cat.SKIN -> SwatchGrid(AppearancePresets.skinTones, a.skinTone) { onTap(); vm.appearance = a.copy(skinTone = it) }
-            Cat.OUTFIT_COLOR -> SwatchGrid(AppearancePresets.outfitColors, a.outfitColor) { onTap(); vm.appearance = a.copy(outfitColor = it) }
-            Cat.EXTRAS -> ExtrasGrid(a) { onTap(); vm.appearance = it }
-            else -> {
-                val (labels, current, apply) = when (cat) {
-                    Cat.HAIR -> Triple(AppearancePresets.hairStyles.map { it.label }, a.hairStyle) { i: Int -> a.copy(hairStyle = i) }
-                    Cat.BANGS -> Triple(AppearancePresets.bangs.map { it.label }, a.bangs) { i: Int -> a.copy(bangs = i) }
-                    Cat.EYES -> Triple(AppearancePresets.eyeStyles.map { it.label }, a.eyeStyle) { i: Int -> a.copy(eyeStyle = i) }
-                    Cat.MOUTH -> Triple(AppearancePresets.mouths.map { it.label }, a.mouth) { i: Int -> a.copy(mouth = i) }
-                    Cat.FACE -> Triple(AppearancePresets.faceShapes.map { it.label }, a.faceShape) { i: Int -> a.copy(faceShape = i) }
-                    Cat.EARS -> Triple(AppearancePresets.ears.map { it.label }, a.ears) { i: Int -> a.copy(ears = i) }
-                    Cat.ACCESSORY -> Triple(AppearancePresets.accessories.map { it.label }, a.accessory) { i: Int -> a.copy(accessory = i) }
-                    else -> Triple(AppearancePresets.outfits.map { it.label }, a.outfit) { i: Int -> a.copy(outfit = i) }
-                }
-                OptionGrid(labels, current, vm.gender, cat.headOnly, apply) { onTap(); vm.appearance = it }
-            }
+            vm.appearance = it
         }
     }
 }

@@ -85,6 +85,7 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
                 Section("Звук и атмосфера") {
                     ToggleRow("Фоновая музыка", settings.musicEnabled) { scope.launch { repo.setMusicEnabled(it) } }
                     if (settings.musicEnabled) {
+                        Text("Загадочный лес · флейта, струны и колокольчики", color = Palette.TextDim, style = MaterialTheme.typography.bodySmall)
                         LofiTracks.all.forEachIndexed { i, t ->
                             Row(
                                 Modifier.fillMaxWidth().clickable { scope.launch { repo.setMusicTrack(i) } },
@@ -178,3 +179,4 @@ internal fun sliderColors() = SliderDefaults.colors(thumbColor = Palette.Amber, 
 
 @Composable
 internal fun radioColors() = RadioButtonDefaults.colors(selectedColor = Palette.Amber, unselectedColor = Palette.TextDim)
+
