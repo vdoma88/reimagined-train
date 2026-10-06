@@ -26,7 +26,7 @@ fun IllustrationGallery(selectedId: String?, onSelect: (String?) -> Unit, modifi
         contentPadding = PaddingValues(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item(span = { GridItemSpan(maxLineSpan) }) {
-            Text("Выбери цельный образ: классическое аниме, современная манга или мульт-приключение.",
+            Text("Собери героя из нарисованных слоёв в «Лесных приключениях» или выбери готовый образ.",
                 color = Palette.TextDim, style = MaterialTheme.typography.bodySmall)
         }
         items(IllustratedCharacters.all, key = { it.id }) { art ->
@@ -50,3 +50,4 @@ fun IllustrationGallery(selectedId: String?, onSelect: (String?) -> Unit, modifi
         }
     }
 }
+

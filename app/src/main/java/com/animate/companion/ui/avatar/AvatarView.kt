@@ -16,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import com.animate.companion.model.CartoonLook
 import com.animate.companion.model.Appearance
 import com.animate.companion.model.Emotion
 import com.animate.companion.model.Gender
@@ -40,14 +41,15 @@ fun AvatarView(
     fullBody: Boolean = false,
 ) {
     val illustration = IllustratedCharacters.find(appearance.illustrationId)
-    if (illustration != null && !(appearance.useCharacterLook && appearance.characterLook != null)) {
+    val cartoon = appearance.illustrationId == CartoonLook.STYLE_ID
+    if (!cartoon && illustration != null && !(appearance.useCharacterLook && appearance.characterLook != null)) {
         IllustratedAvatar(illustration, modifier, headOnly, fullBody, animated, appearance.illustrationStyle, appearance.illustrationDetails)
         return
     }
     var blink by remember { mutableFloatStateOf(0f) }
     var mouthOpen by remember { mutableStateOf(false) }
 
-    if (animated && (!appearance.useCharacterLook || appearance.illustrationStyle.motion)) {
+    if (animated && ((!cartoon && !appearance.useCharacterLook) || appearance.illustrationStyle.motion)) {
         LaunchedEffect(Unit) {
             while (true) {
                 delay(Random.nextLong(1800, 4800))
@@ -74,7 +76,7 @@ fun AvatarView(
         }
     }
 
-    val breathPhase = if (animated && (!appearance.useCharacterLook || appearance.illustrationStyle.motion)) {
+    val breathPhase = if (animated && ((!cartoon && !appearance.useCharacterLook) || appearance.illustrationStyle.motion)) {
         val t = rememberInfiniteTransition(label = "breath")
         t.animateFloat(
             0f, (2 * Math.PI).toFloat(),
@@ -83,6 +85,14 @@ fun AvatarView(
         ).value
     } else {
         0f
+    }
+
+    if (cartoon) {
+        val moving = animated && appearance.illustrationStyle.motion
+        CartoonAvatar(appearance.cartoonLook ?: CartoonLook(), appearance.illustrationStyle, modifier,
+            headOnly, fullBody, if (moving) blink else 0f, sin(breathPhase) * 1.5f,
+            moving && talking, moving && mouthOpen)
+        return
     }
 
     if (illustration != null && appearance.useCharacterLook && appearance.characterLook != null) {
@@ -100,3 +110,4 @@ fun AvatarView(
         )
     }
 }
+

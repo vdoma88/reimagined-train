@@ -176,7 +176,9 @@ fun IllustrationEditor(
                             enabled = !saving,
                         ) { update(draft.copy(illustrationStyle = it.normalized())) }
 
-                        EditorTab.DETAILS -> CharacterLookControls(draft, enabled = !saving) { update(it) }
+                        EditorTab.DETAILS -> if (draft.illustrationId == com.animate.companion.model.CartoonLook.STYLE_ID) {
+                            CartoonLookControls(draft, enabled = !saving) { update(it) }
+                        } else CharacterLookControls(draft, enabled = !saving) { update(it) }
 
                         EditorTab.COLOR -> IllustrationColorControls(
                             draft.illustrationStyle,
@@ -426,3 +428,4 @@ private fun signedPercent(value: Float): String {
     val percent = (value * 100).roundToInt()
     return if (percent > 0) "+$percent%" else "$percent%"
 }
+
