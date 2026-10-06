@@ -2,7 +2,7 @@
   "body": {
     "file": "01_body_base.png",
     "x": 40,
-    "y": 270,
+    "y": 267,
     "width": 320,
     "height": 326,
     "sourceY": 140
@@ -98,7 +98,7 @@
   "bottom.0": {
     "file": "13_bottom_jeans.png",
     "x": 110,
-    "y": 409,
+    "y": 400,
     "width": 180,
     "height": 146,
     "sourceY": 0
@@ -106,7 +106,7 @@
   "bottom.1": {
     "file": "14_bottom_cargo_shorts.png",
     "x": 110,
-    "y": 409,
+    "y": 400,
     "width": 180,
     "height": 118,
     "sourceY": 0
@@ -114,7 +114,7 @@
   "bottom.2": {
     "file": "15_bottom_burgundy_skirt.png",
     "x": 102,
-    "y": 409,
+    "y": 400,
     "width": 196,
     "height": 142,
     "sourceY": 0
@@ -218,14 +218,14 @@
   "bottom.3": {
     "file": "29_bottom_hiking_trousers.png",
     "x": 110,
-    "y": 409,
+    "y": 400,
     "width": 180,
     "height": 146
   },
   "bottom.4": {
     "file": "30_bottom_navy_skirt.png",
     "x": 102,
-    "y": 409,
+    "y": 400,
     "width": 196,
     "height": 142
   },
