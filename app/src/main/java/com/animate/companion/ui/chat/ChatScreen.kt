@@ -1,7 +1,13 @@
 package com.animate.companion.ui.chat
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -130,6 +136,25 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
     var memoryDialog by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     var confirmClear by remember { mutableStateOf(false) }
+    var remindersDialog by remember { mutableStateOf(false) }
+    val reminders by vm.reminders.collectAsStateWithLifecycle()
+    // Android 13+: reminders need the notification permission; ask when the first one is confirmed.
+    var pendingProposal by remember { mutableStateOf<com.animate.companion.reminders.ReminderRequest?>(null) }
+    val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+        pendingProposal?.let(vm::acceptProposal)
+        pendingProposal = null
+    }
+    val context = LocalContext.current
+    fun accept(r: com.animate.companion.reminders.ReminderRequest) {
+        val needsPermission = Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+        if (needsPermission) {
+            pendingProposal = r
+            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        } else {
+            vm.acceptProposal(r)
+        }
+    }
     val emotion = vm.emotion ?: Emotion.fromTag(c.lastEmotion)
 
     SakuraBackground(petals = 8) {
@@ -165,6 +190,10 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                             },
                         )
                         DropdownMenuItem(text = { Text("Сменить образ") }, onClick = { menu = false; artDialog = true })
+                        DropdownMenuItem(
+                            text = { Text(if (reminders.isEmpty()) "Напоминания" else "Напоминания (${reminders.size})") },
+                            onClick = { menu = false; remindersDialog = true },
+                        )
                         DropdownMenuItem(text = { Text("Записи и память") }, onClick = { menu = false; memoryDialog = true })
                         DropdownMenuItem(text = { Text("Начать заново") }, onClick = { menu = false; confirmClear = true })
                         DropdownMenuItem(text = { Text("Настройки мира") }, onClick = { menu = false; onSettings() })
@@ -211,7 +240,8 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
 
             // Messages
             val listState = rememberLazyListState()
-            val total = messages.size + (if (vm.busy) 1 else 0) + (if (vm.error != null) 1 else 0) + (if (vm.concern != null) 1 else 0)
+            val total = messages.size + (if (vm.busy) 1 else 0) + (if (vm.error != null) 1 else 0) + (if (vm.concern != null) 1 else 0) +
+                vm.proposals.size + (if (vm.notice != null) 1 else 0)
             LaunchedEffect(total) { if (total > 0) listState.animateScrollToItem(total - 1) }
             LazyColumn(
                 state = listState,
@@ -229,6 +259,10 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                         onSpeak = { vm.toggleSpeech(m) },
                     )
                 }
+                items(vm.proposals.toList(), key = { "proposal-${it.kind}-${it.triggerAt}-${it.text}" }) { r ->
+                    ReminderProposalCard(r, onAccept = { accept(r) }, onDismiss = { vm.dismissProposal(r) })
+                }
+                vm.notice?.let { text -> item(key = "notice") { NoticeCard(text) } }
                 vm.concern?.let { concern ->
                     item(key = "help") { HelpCard(concern, onDismiss = vm::dismissConcern) }
                 }
@@ -288,6 +322,13 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
             if (id == null) studioAfterPick = false
         }, modifier = Modifier.fillMaxWidth().height(440.dp)) },
         confirmButton = { TextButton(onClick = { artDialog = false }) { Text("Закрыть") } },
+    )
+    if (remindersDialog) RemindersDialog(
+        reminders = reminders,
+        exactAllowed = container.reminders.canScheduleExact(),
+        notificationsAllowed = container.reminders.notificationsAllowed(),
+        onCancel = { vm.cancelReminder(it) },
+        onDismiss = { remindersDialog = false },
     )
     if (memoryDialog) MemoryDialog(c.memory, onDismiss = { memoryDialog = false }) { vm.saveMemory(it); memoryDialog = false }
     if (confirmClear) ConfirmDialog(
