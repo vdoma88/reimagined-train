@@ -24,8 +24,10 @@ data class CartoonLook(
     fun layers(speaking: Boolean = false, mouthOpen: Boolean = false, gender: Gender? = null): List<String> {
         val n = normalized()
         return buildList {
-            add("body"); add("bottom.${n.bottom}")
+            add("body")
             if (n.boots) add(if (n.shoeStyle == 1) "sneakers" else "boots")
+            // Trouser cuffs and skirt hems belong in front of the shoe shafts.
+            add("bottom.${n.bottom}")
             add("top.${n.top}")
             val family = if (gender == Gender.MALE) "male" else "female"
             add(if (gender == null) "face" else "face.$family.${n.face}")

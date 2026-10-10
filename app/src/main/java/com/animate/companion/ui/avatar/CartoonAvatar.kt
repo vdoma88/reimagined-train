@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
 import com.animate.companion.model.Gender
+import com.animate.companion.model.CartoonRig
 import com.animate.companion.model.CartoonLook
 import com.animate.companion.model.CartoonSpriteSpec
 import com.animate.companion.model.IllustrationStyle
@@ -73,32 +74,30 @@ internal fun CartoonAvatar(
         strokeWidth = 3.5f; strokeCap = Paint.Cap.ROUND; this.style = Paint.Style.STROKE
     } }
     Canvas(modifier.clipToBounds()) {
-        val viewHeight = if (headOnly) 320f else if (fullBody) 640f else 440f
-        val scale = min(size.width / 400f, size.height / viewHeight) * s.zoom
+        val viewHeight = CartoonRig.frameHeight(headOnly, fullBody)
+        val scale = min(size.width / CartoonRig.FRAME_WIDTH, size.height / viewHeight) * s.zoom
         drawIntoCanvas { canvas ->
             val c = canvas.nativeCanvas
             val layer = c.saveLayer(RectF(0f, 0f, size.width, size.height), filterPaint)
             c.translate(size.width / 2f + s.offsetX * size.width, size.height / 2f + s.offsetY * size.height)
             c.rotate(s.rotation)
             c.scale(if (s.mirrored) -scale else scale, scale)
-            c.translate(-200f, -viewHeight / 2f + breath)
+            c.translate(-CartoonRig.NECK_X, -viewHeight / 2f - CartoonRig.FRAME_TOP + breath)
             for (key in n.layers(speaking, mouthOpen, gender)) {
                 val sprite = sprites.getValue(key)
                 val spec = sprite.spec
                 val saved = c.save()
-                if (key == "body" || key.startsWith("top.") || key.startsWith("bottom.") ||
-                    key == "boots" || key == "sneakers") {
-                    c.translate(200f, 267f)
-                    c.scale(n.bodyScaleX(gender), n.bodyScaleY(gender))
-                    c.translate(-200f, -267f)
-                } else {
-                    c.translate(200f, 267f)
-                    c.scale(n.headScaleX(gender), n.headScaleY(gender))
-                    c.translate(-200f, -267f)
-                }
+                // Use the same transformed destination as the geometry regression checks.
+                val box = CartoonRig.bounds(key, spec, n, gender)
+                val sx = (box.right - box.left) / spec.width
+                val sy = (box.bottom - box.top) / spec.height
+                c.translate(box.left, box.top)
+                c.scale(sx, sy)
+                c.translate(-spec.x, -spec.y)
                 val bitmapClip = c.save()
-                // The base kit has a modesty garment. Hide it beneath the selected trousers/skirt.
-                if (key == "body") c.clipOutRect(130f, 403f, 279f, 469f)
+                // Mask only the base shorts, not the wrists or the first exposed thigh pixels.
+                // The selected waistband overlaps the top hem in this same body coordinate space.
+                if (key == "body") c.clipOutRect(136f, 403f, 268f, 462f)
                 if (key.startsWith("eyes.") && blink > 0.5f) {
                     c.clipRect(spec.x, spec.y, spec.x + spec.width, spec.y + 27f)
                 }

@@ -68,7 +68,7 @@
     "x": 75,
     "y": 267,
     "width": 250,
-    "height": 140,
+    "height": 144,
     "sourceY": 0
   },
   "top.1": {
@@ -76,7 +76,7 @@
     "x": 75,
     "y": 267,
     "width": 250,
-    "height": 140,
+    "height": 144,
     "sourceY": 0
   },
   "top.2": {
@@ -92,31 +92,31 @@
     "x": 75,
     "y": 267,
     "width": 250,
-    "height": 140,
+    "height": 144,
     "sourceY": 0
   },
   "bottom.0": {
     "file": "13_bottom_jeans.png",
     "x": 110,
-    "y": 400,
+    "y": 382,
     "width": 180,
-    "height": 146,
+    "height": 164,
     "sourceY": 0
   },
   "bottom.1": {
     "file": "14_bottom_cargo_shorts.png",
     "x": 110,
-    "y": 400,
+    "y": 380,
     "width": 180,
-    "height": 118,
+    "height": 138,
     "sourceY": 0
   },
   "bottom.2": {
     "file": "15_bottom_burgundy_skirt.png",
     "x": 102,
-    "y": 400,
+    "y": 382,
     "width": 196,
-    "height": 142,
+    "height": 160,
     "sourceY": 0
   },
   "boots": {
@@ -192,42 +192,42 @@
     "x": 75,
     "y": 267,
     "width": 250,
-    "height": 140
+    "height": 144
   },
   "top.5": {
     "file": "26_top_denim_jacket.png",
     "x": 75,
     "y": 267,
     "width": 250,
-    "height": 140
+    "height": 144
   },
   "top.6": {
     "file": "27_top_ghost_sweatshirt.png",
     "x": 75,
     "y": 267,
     "width": 250,
-    "height": 140
+    "height": 144
   },
   "top.7": {
     "file": "28_top_explorer_coat.png",
     "x": 75,
     "y": 267,
     "width": 250,
-    "height": 140
+    "height": 144
   },
   "bottom.3": {
     "file": "29_bottom_hiking_trousers.png",
     "x": 110,
-    "y": 400,
+    "y": 382,
     "width": 180,
-    "height": 146
+    "height": 164
   },
   "bottom.4": {
     "file": "30_bottom_navy_skirt.png",
     "x": 102,
-    "y": 400,
+    "y": 382,
     "width": 196,
-    "height": 142
+    "height": 160
   },
   "sneakers": {
     "file": "31_shoes_red_sneakers.png",
