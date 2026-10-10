@@ -5,9 +5,12 @@ import kotlinx.serialization.json.Json
 import org.junit.Assert.*
 import org.junit.Test
 import java.io.File
-import javax.imageio.ImageIO
+import android.graphics.BitmapFactory
+import app.cash.paparazzi.Paparazzi
+import org.junit.Rule
 
 class CartoonFitTest {
+    @get:Rule val paparazzi = Paparazzi()
     private val assets = File("src/main/assets").takeIf { it.exists() } ?: File("app/src/main/assets")
     private val specs = Json.decodeFromString<Map<String, CartoonSpriteSpec>>(File(assets, "cartoon_layers.json").readText())
 
@@ -36,7 +39,7 @@ class CartoonFitTest {
             val image = images.getValue(key)
             val sx = ((x - s.x) / s.width * image.width).toInt()
             val sy = (s.sourceY + (y - s.y) / s.height * (image.height - s.sourceY)).toInt()
-            return if (x < s.x || y < s.y || x >= s.x+s.width || y >= s.y+s.height || sx !in 0 until image.width || sy !in 0 until image.height) 0 else image.getRGB(sx,sy) ushr 24
+            return if (x < s.x || y < s.y || x >= s.x+s.width || y >= s.y+s.height || sx !in 0 until image.width || sy !in 0 until image.height) 0 else image.getPixel(sx,sy) ushr 24
         }
         for (top in CartoonLook.topNames.indices) for (bottom in CartoonLook.bottomNames.indices) {
             for (x in listOf(188, 200, 212)) {
@@ -45,5 +48,5 @@ class CartoonFitTest {
             }
         }
     }
-    private val images by lazy { specs.mapValues { (_, s) -> ImageIO.read(File(assets, "cartoon/${s.file}")) } }
+    private val images by lazy { specs.mapValues { (_, s) -> requireNotNull(BitmapFactory.decodeFile(File(assets, "cartoon/${s.file}").absolutePath)) } }
 }
