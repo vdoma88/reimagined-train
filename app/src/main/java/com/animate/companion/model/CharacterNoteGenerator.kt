@@ -35,11 +35,25 @@ object CharacterNoteGenerator {
         "мечтает найти друзей для настольных приключений", "хочет разгадать загадку старого дневника",
     )
 
-    /** Avoid repeating the current description when the dice is tapped. */
+    // Narrative perks are part of the editable character description and reach the prompt as data.
+    val perks = listOf(
+        "запоминает необычные звуки", "быстро замечает повторяющиеся детали",
+        "умеет успокаивать друзей шуткой", "находит неожиданные применения обычным вещам",
+        "терпеливо разбирается в запутанных записях", "рисует понятные схемы и карты",
+        "замечает, когда кому-то нужна поддержка", "придумывает смешные прозвища предметам",
+        "слышит фальшивые ноты", "умеет объяснить сложное на простом примере",
+        "помнит интересные городские истории", "видит смешное в мелких неудачах",
+        "подбирает музыку под настроение", "находит общее между непохожими идеями",
+        "запоминает узоры и символы", "умеет составить запасной план",
+    )
+
+    /** Avoid repeating the current complete description when the dice is tapped. */
     fun generate(previous: String = "", random: Random = Random.Default): String {
         val hobby = hobbies.random(random)
         val habit = habits.random(random)
-        val dream = dreams.filter { "$hobby, $habit, $it." != previous }.random(random)
-        return "$hobby, $habit, $dream."
+        val dream = dreams.random(random)
+        val prefix = "$hobby, $habit, $dream. Особенность: "
+        val available = perks.filter { prefix + it + "." != previous }
+        return prefix + available.random(random) + "."
     }
 }

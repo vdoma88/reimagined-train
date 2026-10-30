@@ -32,7 +32,7 @@ class DistinctCharactersTest {
             assertTrue(looks.distinct().size > 90)
             assertEquals(setOf(0, 1, 2), looks.map { it.face }.toSet())
             assertEquals(setOf(0, 1, 2), looks.map { it.build }.toSet())
-            if (gender == Gender.MALE) assertTrue(looks.all { it.hair in listOf(0, 2, 4, 7) && it.bottom in listOf(0, 1, 3) })
+            if (gender == Gender.MALE) assertTrue(looks.all { it.hair in listOf(0, 2, 4, 7, 8) && it.bottom in listOf(0, 1, 3) })
         }
         val old = Appearance(hairStyle = 3, hairColor = 4)
         assertEquals(old.resolvedCartoonLook(Gender.MALE), old.resolvedCartoonLook(Gender.MALE))

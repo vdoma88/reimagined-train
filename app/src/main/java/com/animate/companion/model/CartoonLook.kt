@@ -64,15 +64,15 @@ data class CartoonLook(
     companion object {
         const val STYLE_ID = "woodland"
         fun random(random: Random = Random.Default, gender: Gender = Gender.FEMALE) = CartoonLook(
-            hair = (if (gender == Gender.MALE) listOf(0, 2, 4, 7) else listOf(1, 3, 5, 6)).random(random), face = random.nextInt(3), eyes = random.nextInt(2),
+            hair = (if (gender == Gender.MALE) listOf(0, 2, 4, 7, 8) else listOf(1, 3, 5, 6, 9)).random(random), face = random.nextInt(3), eyes = random.nextInt(2),
             mouth = random.nextInt(2), top = random.nextInt(topNames.size), bottom = (if (gender == Gender.MALE) listOf(0, 1, 3) else bottomNames.indices.toList()).random(random),
             boots = true, accessory = random.nextInt(6), shoeStyle = random.nextInt(2), build = random.nextInt(3),
         )
         val femaleFaceNames = listOf("Сердечком", "Круглое", "Удлинённое")
         val maleFaceNames = listOf("Квадратная челюсть", "Угловатое", "Широкое")
         val buildNames = listOf("Стройное", "Коренастое", "Высокое")
-        val hairNames = listOf("Короткие каштановые", "Рыжие волны", "Тёмные кудри", "Светлый хвост", "Чёрные с бирюзовой прядью", "Рыжее каре", "Две косы", "Серебристые лохмы")
-        val topNames = listOf("Бирюзовая куртка", "Красный свитер", "Жилет исследователя", "Клетчатая рубашка", "Жёлтое худи", "Джинсовая куртка", "Свитшот с призраком", "Пальто исследователя")
+        val hairNames = listOf("Короткие каштановые", "Рыжие волны", "Тёмные кудри", "Светлый хвост", "Чёрные с бирюзовой прядью", "Рыжее каре", "Две косы", "Серебристые лохмы", "Индиго и мята", "Медовые волны")
+        val topNames = listOf("Бирюзовая куртка", "Красный свитер", "Жилет исследователя", "Клетчатая рубашка", "Жёлтое худи", "Джинсовая куртка", "Свитшот с призраком", "Пальто исследователя", "Звёздный бомбер", "Шалфейный кардиган")
         val bottomNames = listOf("Джинсы", "Шорты карго", "Бордовая юбка", "Походные брюки", "Синяя юбка")
     }
 }

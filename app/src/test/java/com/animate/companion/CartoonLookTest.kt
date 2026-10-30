@@ -25,7 +25,7 @@ class CartoonLookTest {
         assertEquals("classic", legacy.illustrationId)
         assertEquals(7, legacy.hairColor)
         val look = CartoonLook(hair = 99, eyes = -9, top = -1, bottom = 999, accessory = 99).normalized()
-        assertEquals(7, look.hair)
+        assertEquals(CartoonLook.hairNames.lastIndex, look.hair)
         assertEquals(0, look.eyes)
         assertEquals(0, look.top)
         assertEquals(4, look.bottom)

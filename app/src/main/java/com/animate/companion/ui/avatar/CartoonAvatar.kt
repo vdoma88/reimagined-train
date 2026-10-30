@@ -35,8 +35,13 @@ internal object CartoonArtwork {
                 Json.decodeFromString<Map<String, CartoonSpriteSpec>>(it.readText())
             }
             specs.mapValues { (_, spec) ->
+                // Generated source artwork is much larger than any display size; decode it at half
+                // resolution while preserving the original transparent PNG in the asset catalog.
+                val largeArt = spec.file.startsWith("43_") || spec.file.startsWith("44_") ||
+                    spec.file.startsWith("45_") || spec.file.startsWith("46_")
+                val options = BitmapFactory.Options().apply { inSampleSize = if (largeArt) 2 else 1 }
                 val bitmap = context.assets.open("cartoon/${spec.file}").use {
-                    requireNotNull(BitmapFactory.decodeStream(it)) { "Cannot decode ${spec.file}" }
+                    requireNotNull(BitmapFactory.decodeStream(it, null, options)) { "Cannot decode ${spec.file}" }
                 }
                 require(spec.sourceY in 0 until bitmap.height)
                 Sprite(spec, bitmap)
@@ -111,8 +116,15 @@ internal fun CartoonAvatar(
                 }
                 if (key.startsWith("mouth.") && speaking) {
                     val amount = mouthProgress.coerceIn(0f, 1f)
-                    drawSprite(sprites.getValue("mouth.0"), ((1f - amount) * 255).toInt())
-                    drawSprite(sprites.getValue("mouth.1"), (amount * 255).toInt())
+                    if (amount < 0.02f) {
+                        drawSprite(sprites.getValue("mouth.0"), 255)
+                    } else {
+                        // Morph one mouth instead of overlaying two outlines, which ghosts at half-open.
+                        val mouthFrame = c.save()
+                        c.scale(1f, 0.22f + 0.78f * amount, 200f, 251f)
+                        drawSprite(sprites.getValue("mouth.1"), 255)
+                        c.restoreToCount(mouthFrame)
+                    }
                 } else {
                     drawSprite(sprite, 255)
                 }

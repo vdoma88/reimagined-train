@@ -102,7 +102,7 @@ class CreatorViewModel : ViewModel() {
     var appearance by mutableStateOf(Appearance.random(Gender.FEMALE).copy(illustrationId = com.animate.companion.model.CartoonLook.STYLE_ID))
     var name by mutableStateOf(NameGenerator.generate(Gender.FEMALE))
     var note by mutableStateOf(com.animate.companion.model.CharacterNoteGenerator.generate())
-    var archetype by mutableStateOf(PersonaPresets.archetypes.first().id)
+    var archetype by mutableStateOf(PersonaPresets.archetypes.random().id)
     var profession by mutableStateOf(PersonaPresets.professions.random().id)
     var direction by mutableStateOf(PersonaPresets.directions.first().id)
     var step by mutableIntStateOf(0)

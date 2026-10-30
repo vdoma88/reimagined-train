@@ -322,5 +322,33 @@
     "width": 164,
     "height": 108,
     "sourceY": 0
+  },
+  "hair.8": {
+    "file": "43_hair_indigo_mint.png",
+    "x": 15,
+    "y": 15,
+    "width": 370,
+    "height": 270
+  },
+  "hair.9": {
+    "file": "44_hair_honey_waves.png",
+    "x": 20,
+    "y": 10,
+    "width": 360,
+    "height": 330
+  },
+  "top.8": {
+    "file": "45_top_plum_stars.png",
+    "x": 75,
+    "y": 267,
+    "width": 250,
+    "height": 160
+  },
+  "top.9": {
+    "file": "46_top_sage_cardigan.png",
+    "x": 75,
+    "y": 267,
+    "width": 250,
+    "height": 160
   }
 }
