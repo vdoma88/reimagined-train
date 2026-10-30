@@ -47,6 +47,22 @@ object CharacterNoteGenerator {
         "запоминает узоры и символы", "умеет составить запасной план",
     )
 
+    /** Replace only the generated feature; preserve the rest of the creator's description. */
+    fun randomizePerk(note: String, random: Random = Random.Default): String {
+        val marker = "Особенность: "
+        val start = note.indexOf(marker)
+        val current = if (start >= 0) note.substring(start + marker.length).substringBefore('.').trim() else ""
+        val choices = perks.filter { it != current }
+        val feature = marker + choices.random(random) + "."
+        val prefix = if (start >= 0) note.substring(0, start).trimEnd() else note.trimEnd()
+        val suffix = if (start >= 0) note.substring(start + marker.length).substringAfter('.', "").trimStart() else ""
+        val separator = if (prefix.isNotEmpty() && !prefix.endsWith(" ")) " " else ""
+        val ending = if (suffix.isNotEmpty()) " $suffix" else ""
+        val result = prefix + separator + feature + ending
+        // Never discard user-written text just to fit an automatically generated feature.
+        return if (result.length <= 400) result else note
+    }
+
     /** Avoid repeating the current complete description when the dice is tapped. */
     fun generate(previous: String = "", random: Random = Random.Default): String {
         val hobby = hobbies.random(random)

@@ -8,6 +8,16 @@ import org.junit.Test
 import kotlin.random.Random
 
 class ExpandedCastTest {
+    @Test fun perkCanChangeWithoutReplacingTheUsersDescription() {
+        val original = "Любит карты. Особенность: быстро замечает повторяющиеся детали. Собирает значки."
+        val next = CharacterNoteGenerator.randomizePerk(original, Random(3))
+        assertTrue(next.startsWith("Любит карты."))
+        assertTrue(next.endsWith("Собирает значки."))
+        assertFalse(next.contains("быстро замечает повторяющиеся детали"))
+        assertTrue(CharacterNoteGenerator.perks.any { next.contains(it) })
+        val full = "x".repeat(400)
+        assertEquals(full, CharacterNoteGenerator.randomizePerk(full, Random(1)))
+    }
     @Test fun presetsPreserveFaceAndBodyAndUseValidParts() {
         val base = CartoonLook(face = 2, eyes = 1, build = 2, mouth = 1)
         assertEquals(8, CartoonLooks.all.size)
