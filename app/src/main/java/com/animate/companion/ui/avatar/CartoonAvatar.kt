@@ -169,9 +169,14 @@ internal fun CartoonAvatar(
                 }
                 if (key.startsWith("top.") && n.pin > 0) {
                     // Draw in the garment coordinate system, so every body build keeps the pin attached.
+                    val pinFrame = c.save()
+                    // Keep the pin on the chest, clear of long hair and shoulder seams.
+                    c.translate(-20f, 35f)
+                    c.scale(1.15f, 1.15f, 244f, 305f)
                     c.drawPath(pinShape, pinFill); c.drawPath(pinShape, pinOutline)
                     if (n.pin == 2) c.drawLine(239f, 310f, 250f, 299f, pinOutline)
                     if (n.pin == 3) { c.drawLine(244f, 299f, 244f, 311f, pinOutline); c.drawLine(238f, 305f, 250f, 305f, pinOutline) }
+                    c.restoreToCount(pinFrame)
                 }
                 imagePaint.alpha = 255
                 c.restoreToCount(bitmapClip)
