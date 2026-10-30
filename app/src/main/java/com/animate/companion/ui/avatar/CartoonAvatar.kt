@@ -89,7 +89,7 @@ internal fun CartoonAvatar(
         else -> android.graphics.Color.rgb(102, 164, 176)
     } } }
     val pinOutline = remember { Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = android.graphics.Color.rgb(63, 43, 35); style = Paint.Style.STROKE; strokeWidth = 2f
+        color = android.graphics.Color.rgb(63, 43, 35); this.style = Paint.Style.STROKE; strokeWidth = 2f
     } }
     val pinShape = remember(n.pin) { Path().apply {
         val x = 244f; val y = 305f
