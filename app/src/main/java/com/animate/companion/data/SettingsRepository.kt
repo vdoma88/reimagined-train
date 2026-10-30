@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore(name = "settings")
 
+data class CharacterVoiceSettings(val voiceId: String = "", val pitch: Float = 1f, val rate: Float = 1f)
+
 data class AppSettings(
     val userName: String = "",
     val provider: Provider = Provider.GEMINI,
@@ -51,6 +53,23 @@ data class AppSettings(
 }
 
 class SettingsRepository(private val context: Context) {
+    private fun characterVoiceKey(id: Long) = stringPreferencesKey("character_voice_$id")
+    private fun characterPitchKey(id: Long) = floatPreferencesKey("character_pitch_$id")
+    private fun characterRateKey(id: Long) = floatPreferencesKey("character_rate_$id")
+
+    fun characterVoice(id: Long): Flow<CharacterVoiceSettings> = context.dataStore.data.map {
+        CharacterVoiceSettings(it[characterVoiceKey(id)].orEmpty(), it[characterPitchKey(id)] ?: 1f, it[characterRateKey(id)] ?: 1f)
+    }
+
+    suspend fun setCharacterVoice(id: Long, voice: CharacterVoiceSettings) = context.dataStore.edit {
+        it[characterVoiceKey(id)] = voice.voiceId
+        it[characterPitchKey(id)] = voice.pitch.coerceIn(0.7f, 1.3f)
+        it[characterRateKey(id)] = voice.rate.coerceIn(0.7f, 1.3f)
+    }
+
+    suspend fun clearCharacterVoice(id: Long) = context.dataStore.edit {
+        it.remove(characterVoiceKey(id)); it.remove(characterPitchKey(id)); it.remove(characterRateKey(id))
+    }
     private object K {
         val userName = stringPreferencesKey("user_name")
         val provider = stringPreferencesKey("provider")

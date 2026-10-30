@@ -70,6 +70,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.Slider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -98,6 +99,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.animate.companion.AppContainer
 import com.animate.companion.data.CharacterEntity
 import com.animate.companion.data.MessageEntity
+import com.animate.companion.data.CharacterVoiceSettings
 import com.animate.companion.llm.SafetyPolicy
 import com.animate.companion.model.Emotion
 import com.animate.companion.model.PersonaPresets
@@ -134,6 +136,9 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
     var artDialog by remember { mutableStateOf(false) }
     var studioAfterPick by remember { mutableStateOf(false) }
     var memoryDialog by remember { mutableStateOf(false) }
+    var voiceDialog by remember { mutableStateOf(false) }
+    val voiceSettings by vm.voiceSettings.collectAsStateWithLifecycle()
+    val availableVoices by container.speaker.voices.collectAsStateWithLifecycle()
     var confirmDelete by remember { mutableStateOf(false) }
     var confirmClear by remember { mutableStateOf(false) }
     var remindersDialog by remember { mutableStateOf(false) }
@@ -195,6 +200,7 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                             onClick = { menu = false; remindersDialog = true },
                         )
                         DropdownMenuItem(text = { Text("Записи и память") }, onClick = { menu = false; memoryDialog = true })
+                        DropdownMenuItem(text = { Text("Голос персонажа") }, onClick = { menu = false; container.speaker.refresh(); voiceDialog = true })
                         DropdownMenuItem(text = { Text("Начать заново") }, onClick = { menu = false; confirmClear = true })
                         DropdownMenuItem(text = { Text("Настройки мира") }, onClick = { menu = false; onSettings() })
                         DropdownMenuItem(text = { Text("Удалить персонажа", color = MaterialTheme.colorScheme.error) }, onClick = { menu = false; confirmDelete = true })
@@ -331,6 +337,9 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
         onDismiss = { remindersDialog = false },
     )
     if (memoryDialog) MemoryDialog(c.memory, onDismiss = { memoryDialog = false }) { vm.saveMemory(it); memoryDialog = false }
+    if (voiceDialog) CharacterVoiceDialog(voiceSettings, availableVoices.map { it.id },
+        onPreview = vm::previewVoice, onDismiss = { vm.stopSpeech(); voiceDialog = false },
+        onSave = { vm.saveVoice(it); vm.stopSpeech(); voiceDialog = false })
     if (confirmClear) ConfirmDialog(
         "Начать заново?",
         "История и память ${c.name} будут стёрты. Персонаж поприветствует тебя снова.",
@@ -525,6 +534,39 @@ internal fun HelpCard(concern: SafetyPolicy.Concern, onDismiss: () -> Unit) {
             }
         }
     }
+}
+
+@Composable
+private fun CharacterVoiceDialog(initial: CharacterVoiceSettings, voices: List<String>, onPreview: (CharacterVoiceSettings) -> Unit, onDismiss: () -> Unit, onSave: (CharacterVoiceSettings) -> Unit) {
+    var draft by remember { mutableStateOf(initial) }
+    var menu by remember { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Голос персонажа") },
+        text = {
+            Column {
+                Text("Выбери установленный голос и настрой звучание. Изменения относятся к этому герою.")
+                Box {
+                    TextButton(onClick = { menu = true }) {
+                        Text(if (draft.voiceId.isEmpty()) "Общий голос устройства" else if (draft.voiceId in voices) "Голос ${voices.indexOf(draft.voiceId) + 1}" else "Голос недоступен")
+                    }
+                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                        DropdownMenuItem(text = { Text("Общий голос устройства") }, onClick = { draft = draft.copy(voiceId = ""); menu = false })
+                        voices.forEachIndexed { index, id ->
+                            DropdownMenuItem(text = { Text("Голос ${index + 1} · $id", maxLines = 1) }, onClick = { draft = draft.copy(voiceId = id); menu = false })
+                        }
+                    }
+                }
+                Text("Высота: ${"%.1f".format(draft.pitch)}×")
+                Slider(value = draft.pitch, onValueChange = { draft = draft.copy(pitch = it) }, valueRange = 0.7f..1.3f)
+                Text("Скорость: ${"%.1f".format(draft.rate)}×")
+                Slider(value = draft.rate, onValueChange = { draft = draft.copy(rate = it) }, valueRange = 0.7f..1.3f)
+                TextButton(onClick = { onPreview(draft) }) { Text("▶ Прослушать") }
+            }
+        },
+        confirmButton = { TextButton(onClick = { onSave(draft) }) { Text("Сохранить") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } },
+    )
 }
 
 @Composable
