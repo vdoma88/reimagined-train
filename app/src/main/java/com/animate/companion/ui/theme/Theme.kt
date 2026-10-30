@@ -15,16 +15,16 @@ import androidx.compose.ui.unit.sp
  * Legacy names are intentionally kept so existing screens inherit the redesign without churn.
  */
 object Palette {
-    val Night = Color(0xFF101A18)
-    val NightHigh = Color(0xFF182622)
-    val Glass = Color(0x243ED0B4)
-    val GlassBorder = Color(0x5577D7C5)
+    val Night = Color(0xFF0E1917)
+    val NightHigh = Color(0xFF1A2D27)
+    val Glass = Color(0x2639584B)
+    val GlassBorder = Color(0x447BAF91)
 
     // Legacy semantic aliases now mapped to the new system.
-    val Sakura = Color(0xFFF4B860)      // lantern amber
+    val Sakura = Color(0xFFFFC77B)      // lantern amber
     val Lavender = Color(0xFF9E8CFF)    // strange-night violet
-    val Sky = Color(0xFF58D7C4)         // mystery teal
-    val Peach = Color(0xFFD9885B)       // campfire clay
+    val Sky = Color(0xFF8FD8B4)         // mystery teal
+    val Peach = Color(0xFFF09170)       // campfire clay
     val Cream = Color(0xFFF4E8C8)       // notebook paper
     val Ink = Color(0xFF241B14)         // ink brown
     val Text = Color(0xFFFFF6DD)
@@ -37,8 +37,8 @@ object Palette {
     val Paper = Cream
     val Danger = Color(0xFFE86A5A)
 
-    val accent = Brush.linearGradient(listOf(Amber, Color(0xFFF0D07A), Teal))
-    val accentWide = Brush.linearGradient(listOf(Amber, Teal, Lavender))
+    val accent = Brush.linearGradient(listOf(Color(0xFFFFDC98), Amber, Color(0xFFECA866)))
+    val accentWide = Brush.linearGradient(listOf(Amber, Color(0xFFA6D6A7), Teal))
     val background = Brush.verticalGradient(
         listOf(Color(0xFF17352D), Color(0xFF12251F), Night, Color(0xFF09100F)),
     )

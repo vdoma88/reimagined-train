@@ -52,7 +52,7 @@ fun SakuraBackground(
     petals: Int = 14,
     content: @Composable BoxScope.() -> Unit,
 ) {
-    val particles = remember {
+    val particles = remember(petals) {
         List(petals.coerceAtLeast(10)) { Random(it * 43 + 11) }
             .map { r -> FloatArray(5) { r.nextFloat() } }
     }
@@ -154,13 +154,13 @@ fun SakuraBackground(
 @Composable
 fun GlassCard(
     modifier: Modifier = Modifier,
-    shape: Shape = RoundedCornerShape(22.dp),
+    shape: Shape = RoundedCornerShape(24.dp),
     selected: Boolean = false,
     onClick: (() -> Unit)? = null,
     content: @Composable BoxScope.() -> Unit,
 ) {
     val border = if (selected) {
-        BorderStroke(2.dp, Palette.accent)
+        BorderStroke(1.5.dp, Palette.accent)
     } else {
         BorderStroke(1.dp, Palette.GlassBorder)
     }
@@ -169,11 +169,11 @@ fun GlassCard(
         modifier
             .clip(shape)
             .background(
-                if (selected) Brush.linearGradient(listOf(Palette.Amber.copy(alpha = 0.16f), Palette.Teal.copy(alpha = 0.08f)))
+                if (selected) Brush.linearGradient(listOf(Palette.Amber.copy(alpha = 0.18f), Palette.Pine.copy(alpha = 0.20f)))
                 else Brush.verticalGradient(
                     listOf(
-                        Palette.NightHigh.copy(alpha = 0.92f),
-                        Color(0xFF10211C).copy(alpha = 0.90f),
+                        Palette.NightHigh.copy(alpha = 0.97f),
+                        Color(0xFF101F1B).copy(alpha = 0.97f),
                     )
                 )
             )
@@ -195,7 +195,7 @@ fun GradientButton(
     Box(
         modifier
             .height(height)
-            .clip(RoundedCornerShape(18.dp))
+            .clip(RoundedCornerShape(20.dp))
             .background(
                 if (enabled) Palette.accent
                 else Brush.linearGradient(listOf(Color(0xFF53615C), Color(0xFF35413D)))
@@ -205,7 +205,7 @@ fun GradientButton(
                     1.dp,
                     if (enabled) Palette.Paper.copy(alpha = 0.26f) else Color.Transparent,
                 ),
-                RoundedCornerShape(18.dp),
+                RoundedCornerShape(20.dp),
             )
             .clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 24.dp),

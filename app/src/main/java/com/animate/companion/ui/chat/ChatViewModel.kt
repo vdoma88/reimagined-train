@@ -9,6 +9,7 @@ import com.animate.companion.AppContainer
 import com.animate.companion.audio.SfxType
 import com.animate.companion.data.CharacterEntity
 import com.animate.companion.data.MessageEntity
+import com.animate.companion.data.CharacterVoiceSettings
 import com.animate.companion.audio.SpeakerStatus
 import com.animate.companion.audio.SpeechText
 import com.animate.companion.llm.ParsedReply
@@ -75,6 +76,23 @@ class ChatViewModel(
 
     /** Id of the message being read aloud ("msg-<id>"), drives the 🔊 buttons and lip-sync. */
     val speakingId: StateFlow<String?> = container.speaker.speakingId
+    val voiceSettings = container.settings.characterVoice(characterId).stateIn(viewModelScope, SharingStarted.Eagerly, CharacterVoiceSettings())
+
+    fun saveVoice(voice: CharacterVoiceSettings) = viewModelScope.launch { container.settings.setCharacterVoice(characterId, voice) }
+
+    private fun voiceFor(c: CharacterEntity, settings: com.animate.companion.data.AppSettings, custom: CharacterVoiceSettings): com.animate.companion.audio.SpeechVoice {
+        val arch = PersonaPresets.archetype(c.archetypeId)
+        val base = SpeechText.voiceFor(c.genderEnum, c.archetypeId, arch.voicePitch, c.voiceSeed, settings.speechRate)
+        return base.copy(pitch = (base.pitch * custom.pitch).coerceIn(0.5f, 2f),
+            rate = (base.rate * custom.rate).coerceIn(0.5f, 2f),
+            deviceVoiceId = custom.voiceId.ifEmpty { settings.speechVoiceId })
+    }
+
+    fun previewVoice(custom: CharacterVoiceSettings) = viewModelScope.launch {
+        val c = character.value ?: return@launch
+        val greeting = if (c.genderEnum == com.animate.companion.model.Gender.MALE) "Привет! Рад нашей встрече." else "Привет! Рада нашей встрече."
+        if (!container.speaker.speak(greeting, voiceFor(c, container.settings.current(), custom), "voice-preview")) error = speechProblem()
+    }
 
     init {
         viewModelScope.launch {
@@ -113,7 +131,9 @@ class ChatViewModel(
         reactJob = viewModelScope.launch {
             val c = character.value ?: return@launch
             delay(250)
-            bubble = container.sound.voice(c, reply.emotion)
+            bubble = container.sound.voice(c, reply.emotion, suppressForSpeech =
+                container.settings.current().speechEnabled && container.speaker.status.value == SpeakerStatus.READY &&
+                    SpeechText.clean(reply.text).isNotBlank())
             val spoken = readAloud(c, reply.text, latestReplyId(reply.text), afterInterjection = bubble != null)
             if (!spoken) {
                 reactionTalking = true
@@ -134,8 +154,7 @@ class ChatViewModel(
         val s = container.settings.current()
         if (!s.speechEnabled) return false
         if (afterInterjection) delay(450)
-        val arch = PersonaPresets.archetype(c.archetypeId)
-        val voice = SpeechText.voiceFor(c.genderEnum, c.archetypeId, arch.voicePitch, c.voiceSeed, s.speechRate)
+        val voice = voiceFor(c, s, container.settings.characterVoice(characterId).first())
         return container.speaker.speak(SpeechText.clean(text), voice, "msg-${messageId ?: 0}")
     }
 
@@ -149,8 +168,7 @@ class ChatViewModel(
         viewModelScope.launch {
             emotion = Emotion.fromTag(m.emotion)
             val s = container.settings.current()
-            val arch = PersonaPresets.archetype(c.archetypeId)
-            val voice = SpeechText.voiceFor(c.genderEnum, c.archetypeId, arch.voicePitch, c.voiceSeed, s.speechRate)
+            val voice = voiceFor(c, s, container.settings.characterVoice(characterId).first())
             val text = SpeechText.clean(m.text)
             if (text.isBlank()) return@launch // only *actions*: nothing to read, not an error
             if (!container.speaker.speak(text, voice, "msg-${m.id}")) {
@@ -177,6 +195,14 @@ class ChatViewModel(
         input = ""
         container.speaker.stop()
         SafetyPolicy.detect(text)?.let { concern = it }
+        container.sound.sfx(SfxType.SEND)
+        viewModelScope.launch { perform { repo.send(characterId, text) } }
+    }
+
+    fun startStory(scene: com.animate.companion.model.StoryScene, choice: String) {
+        if (busy) return
+        val text = com.animate.companion.model.StoryScenes.message(scene, choice)
+        container.speaker.stop()
         container.sound.sfx(SfxType.SEND)
         viewModelScope.launch { perform { repo.send(characterId, text) } }
     }
@@ -210,6 +236,7 @@ class ChatViewModel(
 
     fun deleteCharacter(then: () -> Unit) = viewModelScope.launch {
         repo.deleteCharacter(characterId)
+        container.settings.clearCharacterVoice(characterId)
         then()
     }
 

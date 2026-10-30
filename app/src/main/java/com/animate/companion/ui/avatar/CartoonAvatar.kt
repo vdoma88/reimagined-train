@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.Rect
 import android.graphics.RectF
 import androidx.compose.foundation.Canvas
@@ -17,6 +18,7 @@ import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
 import com.animate.companion.model.Gender
+import com.animate.companion.model.CartoonRig
 import com.animate.companion.model.CartoonLook
 import com.animate.companion.model.CartoonSpriteSpec
 import com.animate.companion.model.IllustrationStyle
@@ -34,8 +36,13 @@ internal object CartoonArtwork {
                 Json.decodeFromString<Map<String, CartoonSpriteSpec>>(it.readText())
             }
             specs.mapValues { (_, spec) ->
+                // Generated source artwork is much larger than any display size; decode it at half
+                // resolution while preserving the original transparent PNG in the asset catalog.
+                val largeArt = spec.file.startsWith("43_") || spec.file.startsWith("44_") ||
+                    spec.file.startsWith("45_") || spec.file.startsWith("46_")
+                val options = BitmapFactory.Options().apply { inSampleSize = if (largeArt) 2 else 1 }
                 val bitmap = context.assets.open("cartoon/${spec.file}").use {
-                    requireNotNull(BitmapFactory.decodeStream(it)) { "Cannot decode ${spec.file}" }
+                    requireNotNull(BitmapFactory.decodeStream(it, null, options)) { "Cannot decode ${spec.file}" }
                 }
                 require(spec.sourceY in 0 until bitmap.height)
                 Sprite(spec, bitmap)
@@ -49,6 +56,7 @@ internal fun CartoonAvatar(
     look: CartoonLook, style: IllustrationStyle, modifier: Modifier,
     headOnly: Boolean, fullBody: Boolean, blink: Float, breath: Float,
     speaking: Boolean, mouthOpen: Boolean, gender: Gender = Gender.FEMALE,
+    mouthProgress: Float = if (mouthOpen) 1f else 0f,
 ) {
     val context = LocalContext.current
     val sprites = remember { CartoonArtwork.load(context) }
@@ -72,42 +80,111 @@ internal fun CartoonAvatar(
         color = android.graphics.Color.rgb(47, 29, 23)
         strokeWidth = 3.5f; strokeCap = Paint.Cap.ROUND; this.style = Paint.Style.STROKE
     } }
+    val honeyHairBack = remember { Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.rgb(122, 62, 27)
+    } }
+    val pinFill = remember(n.pin) { Paint(Paint.ANTI_ALIAS_FLAG).apply { color = when (n.pin) {
+        1 -> android.graphics.Color.rgb(242, 188, 80)
+        2 -> android.graphics.Color.rgb(125, 173, 129)
+        else -> android.graphics.Color.rgb(102, 164, 176)
+    } } }
+    val pinOutline = remember { Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.rgb(63, 43, 35); this.style = Paint.Style.STROKE; strokeWidth = 2f
+    } }
+    val pinShape = remember(n.pin) { Path().apply {
+        val x = 244f; val y = 305f
+        when (n.pin) {
+            1 -> {
+                for (i in 0 until 10) {
+                    val angle = -Math.PI / 2 + i * Math.PI / 5
+                    val radius = if (i % 2 == 0) 11.0 else 5.0
+                    val px = x + (kotlin.math.cos(angle) * radius).toFloat()
+                    val py = y + (kotlin.math.sin(angle) * radius).toFloat()
+                    if (i == 0) moveTo(px, py) else lineTo(px, py)
+                }
+                close()
+            }
+            2 -> { moveTo(x - 8, y + 6); cubicTo(x - 12, y - 5, x + 2, y - 12, x + 9, y - 10); cubicTo(x + 12, y + 1, x + 2, y + 10, x - 8, y + 6); close() }
+            else -> addCircle(x, y, 9f, Path.Direction.CW)
+        }
+    } }
     Canvas(modifier.clipToBounds()) {
-        val viewHeight = if (headOnly) 320f else if (fullBody) 640f else 440f
-        val scale = min(size.width / 400f, size.height / viewHeight) * s.zoom
+        val viewHeight = CartoonRig.frameHeight(headOnly, fullBody)
+        val scale = min(size.width / CartoonRig.FRAME_WIDTH, size.height / viewHeight) * s.zoom
         drawIntoCanvas { canvas ->
             val c = canvas.nativeCanvas
             val layer = c.saveLayer(RectF(0f, 0f, size.width, size.height), filterPaint)
             c.translate(size.width / 2f + s.offsetX * size.width, size.height / 2f + s.offsetY * size.height)
             c.rotate(s.rotation)
             c.scale(if (s.mirrored) -scale else scale, scale)
-            c.translate(-200f, -viewHeight / 2f + breath)
-            for (key in n.layers(speaking, mouthOpen, gender)) {
+            c.translate(-CartoonRig.NECK_X, -viewHeight / 2f - CartoonRig.FRAME_TOP + breath)
+            // The long wavy cut leaves space below the tapered jaw. A back-hair layer
+            // fills that gap behind the face and body, sharing the head's rig transform.
+            if (n.hair == 9) {
+                val hairFrame = c.save()
+                c.translate(CartoonRig.NECK_X, CartoonRig.NECK_Y)
+                c.scale(n.headScaleX(gender), n.headScaleY(gender))
+                c.translate(-CartoonRig.NECK_X, -CartoonRig.NECK_Y)
+                c.drawOval(RectF(105f, 140f, 295f, 305f), honeyHairBack)
+                c.restoreToCount(hairFrame)
+            }
+            for (key in n.layers(speaking, if (speaking) false else mouthOpen, gender)) {
                 val sprite = sprites.getValue(key)
                 val spec = sprite.spec
                 val saved = c.save()
-                if (key == "body" || key.startsWith("top.") || key.startsWith("bottom.") ||
-                    key == "boots" || key == "sneakers") {
-                    c.translate(200f, 267f)
-                    c.scale(n.bodyScaleX(gender), n.bodyScaleY(gender))
-                    c.translate(-200f, -267f)
-                } else {
-                    c.translate(200f, 267f)
-                    c.scale(n.headScaleX(gender), n.headScaleY(gender))
-                    c.translate(-200f, -267f)
-                }
+                // Use the same transformed destination as the geometry regression checks.
+                val box = CartoonRig.bounds(key, spec, n, gender)
+                val sx = (box.right - box.left) / spec.width
+                val sy = (box.bottom - box.top) / spec.height
+                c.translate(box.left, box.top)
+                c.scale(sx, sy)
+                c.translate(-spec.x, -spec.y)
                 val bitmapClip = c.save()
-                // The base kit has a modesty garment. Hide it beneath the selected trousers/skirt.
-                if (key == "body") c.clipOutRect(130f, 403f, 279f, 469f)
-                if (key.startsWith("eyes.") && blink > 0.5f) {
-                    c.clipRect(spec.x, spec.y, spec.x + spec.width, spec.y + 27f)
+                // Mask only the base shorts, not the wrists or the first exposed thigh pixels.
+                // The selected waistband overlaps the top hem in this same body coordinate space.
+                if (key == "body") c.clipOutRect(136f, 403f, 268f, 462f)
+                if (key.startsWith("eyes.") && blink > 0f) {
+                    val visibleHeight = 27f + (spec.height - 27f) * (1f - blink.coerceIn(0f, 1f))
+                    c.clipRect(spec.x, spec.y, spec.x + spec.width, spec.y + visibleHeight)
                 }
-                c.drawBitmap(sprite.bitmap, Rect(0, spec.sourceY, sprite.bitmap.width, sprite.bitmap.height),
-                    RectF(spec.x, spec.y, spec.x + spec.width, spec.y + spec.height), imagePaint)
+                fun drawSprite(part: CartoonArtwork.Sprite, alpha: Int) {
+                    val item = part.spec
+                    imagePaint.alpha = alpha.coerceIn(0, 255)
+                    c.drawBitmap(part.bitmap, Rect(0, item.sourceY, part.bitmap.width, part.bitmap.height),
+                        RectF(item.x, item.y, item.x + item.width, item.y + item.height), imagePaint)
+                }
+                if (key.startsWith("mouth.") && speaking) {
+                    val amount = mouthProgress.coerceIn(0f, 1f)
+                    if (amount < 0.02f) {
+                        drawSprite(sprites.getValue("mouth.0"), 255)
+                    } else {
+                        // Morph one mouth instead of overlaying two outlines, which ghosts at half-open.
+                        val mouthFrame = c.save()
+                        c.scale(1f, 0.22f + 0.78f * amount, 200f, 251f)
+                        drawSprite(sprites.getValue("mouth.1"), 255)
+                        c.restoreToCount(mouthFrame)
+                    }
+                } else {
+                    drawSprite(sprite, 255)
+                }
+                if (key.startsWith("top.") && n.pin > 0) {
+                    // Draw in the garment coordinate system, so every body build keeps the pin attached.
+                    val pinFrame = c.save()
+                    // Keep the pin on the chest, clear of long hair and shoulder seams.
+                    c.translate(-20f, 35f)
+                    c.scale(1.15f, 1.15f, 244f, 305f)
+                    c.drawPath(pinShape, pinFill); c.drawPath(pinShape, pinOutline)
+                    if (n.pin == 2) c.drawLine(239f, 310f, 250f, 299f, pinOutline)
+                    if (n.pin == 3) { c.drawLine(244f, 299f, 244f, 311f, pinOutline); c.drawLine(238f, 305f, 250f, 305f, pinOutline) }
+                    c.restoreToCount(pinFrame)
+                }
+                imagePaint.alpha = 255
                 c.restoreToCount(bitmapClip)
-                if (key.startsWith("eyes.") && blink > 0.5f) {
+                if (key.startsWith("eyes.") && blink > 0f) {
+                    ink.alpha = (blink.coerceIn(0f, 1f) * 255).toInt()
                     c.drawArc(RectF(126f, 175f, 184f, 205f), 0f, 180f, false, ink)
                     c.drawArc(RectF(215f, 175f, 274f, 205f), 0f, 180f, false, ink)
+                    ink.alpha = 255
                 }
                 c.restoreToCount(saved)
             }

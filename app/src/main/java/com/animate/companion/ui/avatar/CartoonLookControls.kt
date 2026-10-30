@@ -1,6 +1,12 @@
 package com.animate.companion.ui.avatar
 
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Casino
+import com.animate.companion.model.CartoonLooks
+import com.animate.companion.ui.components.GlassCard
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.*
@@ -19,6 +25,27 @@ internal fun CartoonLookControls(appearance: Appearance, enabled: Boolean, gende
     Text("Нарисованные слои", color = Palette.Text, style = MaterialTheme.typography.titleMedium)
     Text("Собери своего героя: все детали меняются независимо и сразу видны в превью.",
         color = Palette.TextDim, style = MaterialTheme.typography.bodySmall)
+    Spacer(Modifier.height(8.dp))
+    Text("Готовые образы", color = Palette.Text, style = MaterialTheme.typography.titleSmall)
+    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        CartoonLooks.all.forEach { preset ->
+            val preview = preset.applyTo(look)
+            GlassCard(modifier = Modifier.width(116.dp), selected = look == preview,
+                onClick = if (enabled) ({ update(preview) }) else null) {
+                Column(Modifier.padding(8.dp)) {
+                    AvatarView(appearance.copy(cartoonLook = preview), gender,
+                        Modifier.fillMaxWidth().height(112.dp), animated = false, fullBody = true)
+                    Text(preset.title, color = Palette.Text, style = MaterialTheme.typography.labelSmall,
+                        minLines = 2, maxLines = 2)
+                }
+            }
+        }
+    }
+    TextButton(enabled = enabled, onClick = { update(CartoonLook.random(gender = gender)) }) {
+        Icon(Icons.Rounded.Casino, contentDescription = null)
+        Spacer(Modifier.width(6.dp))
+        Text("Случайный образ")
+    }
     CartoonOptions("Телосложение", CartoonLook.buildNames, look.build, enabled) { update(look.copy(build = it)) }
     CartoonOptions("Причёска", CartoonLook.hairNames, look.hair, enabled) { update(look.copy(hair = it)) }
     CartoonOptions("Лицо", if (gender == Gender.MALE) CartoonLook.maleFaceNames else CartoonLook.femaleFaceNames, look.face, enabled) { update(look.copy(face = it)) }
@@ -30,6 +57,7 @@ internal fun CartoonLookControls(appearance: Appearance, enabled: Boolean, gende
         update(look.copy(boots = it > 0, shoeStyle = (it - 1).coerceAtLeast(0)))
     }
     CartoonOptions("Аксессуары", listOf("Нет", "Очки", "Кепка", "Очки и кепка", "Шапка", "Очки и шапка"), look.accessory, enabled) { update(look.copy(accessory = it)) }
+    CartoonOptions("Значок на одежде", CartoonLook.pinNames, look.pin, enabled) { update(look.copy(pin = it)) }
     TextButton(enabled = enabled, onClick = { update(CartoonLook(hair = if (gender == Gender.MALE) 0 else 1)) }) { Text("Сбросить внешность") }
 }
 

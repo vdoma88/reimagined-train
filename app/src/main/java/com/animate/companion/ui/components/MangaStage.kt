@@ -1,5 +1,8 @@
 package com.animate.companion.ui.components
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.runtime.getValue
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -21,18 +24,19 @@ fun MangaStage(emotion: Emotion, modifier: Modifier = Modifier) {
         Emotion.ANGRY, Emotion.SURPRISED -> Palette.Peach
         else -> Palette.Lavender
     }
+    val sceneColor by animateColorAsState(accent, animationSpec = tween(700), label = "sceneMood")
     Canvas(modifier) {
         val unit = size.minDimension / 100f
         if (unit <= 0f) return@Canvas
         val center = Offset(size.width / 2f, size.height * 0.49f)
-        drawCircle(Brush.radialGradient(listOf(accent.copy(alpha = 0.25f), Color.Transparent), center, 48f * unit), 48f * unit, center)
-        drawCircle(accent.copy(alpha = 0.22f), 37f * unit, center, style = Stroke(0.5f * unit))
-        drawArc(accent.copy(alpha = 0.4f), 205f, 112f, false,
+        drawCircle(Brush.radialGradient(listOf(sceneColor.copy(alpha = 0.20f), Color.Transparent), center, 48f * unit), 48f * unit, center)
+        drawCircle(sceneColor.copy(alpha = 0.22f), 37f * unit, center, style = Stroke(0.5f * unit))
+        drawArc(sceneColor.copy(alpha = 0.4f), 205f, 112f, false,
             center - Offset(41f * unit, 41f * unit), Size(82f * unit, 82f * unit), style = Stroke(0.8f * unit))
         // Sparse halftone panels frame the silhouette without covering the face.
         for (side in listOf(-1f, 1f)) {
             for (row in 0..5) for (column in 0..2) {
-                drawCircle(accent.copy(alpha = 0.14f), 0.45f * unit,
+                drawCircle(sceneColor.copy(alpha = 0.14f), 0.45f * unit,
                     center + Offset(side * (34f + column * 4f) * unit, (row * 5f - 10f) * unit))
             }
         }
@@ -46,9 +50,9 @@ fun MangaStage(emotion: Emotion, modifier: Modifier = Modifier) {
                 lineTo(c.x, c.y + r); lineTo(c.x - r * 0.3f, c.y + r * 0.3f)
                 lineTo(c.x - r, c.y); lineTo(c.x - r * 0.3f, c.y - r * 0.3f); close()
             }
-            drawPath(star, accent.copy(alpha = 0.75f))
+            drawPath(star, sceneColor.copy(alpha = 0.58f))
         }
-        drawOval(accent.copy(alpha = 0.12f),
+        drawOval(sceneColor.copy(alpha = 0.12f),
             Offset(center.x - 28f * unit, size.height - 7f * unit), Size(56f * unit, 5f * unit))
     }
 }

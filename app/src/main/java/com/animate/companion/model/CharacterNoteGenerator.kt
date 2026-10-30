@@ -35,11 +35,41 @@ object CharacterNoteGenerator {
         "мечтает найти друзей для настольных приключений", "хочет разгадать загадку старого дневника",
     )
 
-    /** Avoid repeating the current description when the dice is tapped. */
+    // Narrative perks are part of the editable character description and reach the prompt as data.
+    val perks = listOf(
+        "запоминает необычные звуки", "быстро замечает повторяющиеся детали",
+        "умеет успокаивать друзей шуткой", "находит неожиданные применения обычным вещам",
+        "терпеливо разбирается в запутанных записях", "рисует понятные схемы и карты",
+        "замечает, когда кому-то нужна поддержка", "придумывает смешные прозвища предметам",
+        "слышит фальшивые ноты", "умеет объяснить сложное на простом примере",
+        "помнит интересные городские истории", "видит смешное в мелких неудачах",
+        "подбирает музыку под настроение", "находит общее между непохожими идеями",
+        "запоминает узоры и символы", "умеет составить запасной план",
+    )
+
+    /** Replace only the generated feature; preserve the rest of the creator's description. */
+    fun randomizePerk(note: String, random: Random = Random.Default): String {
+        val marker = "Особенность: "
+        val start = note.indexOf(marker)
+        val current = if (start >= 0) note.substring(start + marker.length).substringBefore('.').trim() else ""
+        val choices = perks.filter { it != current }
+        val feature = marker + choices.random(random) + "."
+        val prefix = if (start >= 0) note.substring(0, start).trimEnd() else note.trimEnd()
+        val suffix = if (start >= 0) note.substring(start + marker.length).substringAfter('.', "").trimStart() else ""
+        val separator = if (prefix.isNotEmpty() && !prefix.endsWith(" ")) " " else ""
+        val ending = if (suffix.isNotEmpty()) " $suffix" else ""
+        val result = prefix + separator + feature + ending
+        // Never discard user-written text just to fit an automatically generated feature.
+        return if (result.length <= 400) result else note
+    }
+
+    /** Avoid repeating the current complete description when the dice is tapped. */
     fun generate(previous: String = "", random: Random = Random.Default): String {
         val hobby = hobbies.random(random)
         val habit = habits.random(random)
-        val dream = dreams.filter { "$hobby, $habit, $it." != previous }.random(random)
-        return "$hobby, $habit, $dream."
+        val dream = dreams.random(random)
+        val prefix = "$hobby, $habit, $dream. Особенность: "
+        val available = perks.filter { prefix + it + "." != previous }
+        return prefix + available.random(random) + "."
     }
 }

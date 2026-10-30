@@ -102,7 +102,7 @@ class CreatorViewModel : ViewModel() {
     var appearance by mutableStateOf(Appearance.random(Gender.FEMALE).copy(illustrationId = com.animate.companion.model.CartoonLook.STYLE_ID))
     var name by mutableStateOf(NameGenerator.generate(Gender.FEMALE))
     var note by mutableStateOf(com.animate.companion.model.CharacterNoteGenerator.generate())
-    var archetype by mutableStateOf(PersonaPresets.archetypes.first().id)
+    var archetype by mutableStateOf(PersonaPresets.archetypes.random().id)
     var profession by mutableStateOf(PersonaPresets.professions.random().id)
     var direction by mutableStateOf(PersonaPresets.directions.first().id)
     var step by mutableIntStateOf(0)
@@ -111,6 +111,10 @@ class CreatorViewModel : ViewModel() {
 
     fun randomizeNote() {
         note = com.animate.companion.model.CharacterNoteGenerator.generate(previous = note)
+    }
+
+    fun randomizePerk() {
+        note = com.animate.companion.model.CharacterNoteGenerator.randomizePerk(note)
     }
 
     fun draft() = CharacterEntity(
@@ -244,7 +248,8 @@ fun CreatorScreen(container: AppContainer, onBack: () -> Unit, onCreated: (Long)
                     TextButton(onClick = { fullBody = true }) { Text(if (fullBody) "✓ В полный рост" else "В полный рост") }
                 }
                 TextButton(onClick = { editArt = true }, modifier = Modifier.align(Alignment.CenterHorizontally)) { Text("Редактировать образ") }
-            } else EmotionStrip(previewEmotion) { voicePreview(it) }
+            }
+            EmotionStrip(previewEmotion) { voicePreview(it) }
             StepTabs(vm.step) { container.sound.sfx(SfxType.TAP); vm.step = it }
 
             Box(Modifier.weight(0.58f).fillMaxWidth()) {
@@ -520,6 +525,12 @@ internal fun IdentityStep(vm: CreatorViewModel, onDice: () -> Unit, onTap: () ->
             shape = RoundedCornerShape(18.dp),
             colors = fieldColors(),
         )
+        TextButton(onClick = { onDice(); vm.randomizePerk() }) {
+            Icon(Icons.Rounded.Casino, contentDescription = null, tint = Palette.Amber)
+            Spacer(Modifier.width(8.dp))
+            Text("Сменить только особенность", color = Palette.Amber)
+        }
+        Text("Особенность подсказывает герою, как проявлять себя в разговоре.", color = Palette.TextDim, style = MaterialTheme.typography.bodySmall)
         Spacer(Modifier.height(12.dp))
     }
 }
@@ -552,6 +563,12 @@ internal fun PersonaStep(vm: CreatorViewModel, onTap: () -> Unit) {
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         item(span = { GridItemSpan(2) }) { SectionTitle("Характер") }
+        item(span = { GridItemSpan(2) }) {
+            TextButton(onClick = {
+                onTap()
+                vm.archetype = PersonaPresets.archetypes.filter { it.id != vm.archetype }.random().id
+            }) { Text("🎲 Другой случайный характер", color = Palette.Amber) }
+        }
         itemsIndexed(PersonaPresets.archetypes) { _, a ->
             ChoiceCard(a.emoji, a.label, a.short, vm.archetype == a.id) { onTap(); vm.archetype = a.id }
         }

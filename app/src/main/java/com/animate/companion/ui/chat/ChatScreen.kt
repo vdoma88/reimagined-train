@@ -26,6 +26,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,6 +40,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
@@ -70,6 +73,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.Slider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -98,6 +102,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.animate.companion.AppContainer
 import com.animate.companion.data.CharacterEntity
 import com.animate.companion.data.MessageEntity
+import com.animate.companion.data.CharacterVoiceSettings
 import com.animate.companion.llm.SafetyPolicy
 import com.animate.companion.model.Emotion
 import com.animate.companion.model.PersonaPresets
@@ -134,6 +139,10 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
     var artDialog by remember { mutableStateOf(false) }
     var studioAfterPick by remember { mutableStateOf(false) }
     var memoryDialog by remember { mutableStateOf(false) }
+    var voiceDialog by remember { mutableStateOf(false) }
+    var storyDialog by remember { mutableStateOf(false) }
+    val voiceSettings by vm.voiceSettings.collectAsStateWithLifecycle()
+    val availableVoices by container.speaker.voices.collectAsStateWithLifecycle()
     var confirmDelete by remember { mutableStateOf(false) }
     var confirmClear by remember { mutableStateOf(false) }
     var remindersDialog by remember { mutableStateOf(false) }
@@ -195,6 +204,8 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                             onClick = { menu = false; remindersDialog = true },
                         )
                         DropdownMenuItem(text = { Text("Записи и память") }, onClick = { menu = false; memoryDialog = true })
+                        DropdownMenuItem(text = { Text("Голос персонажа") }, onClick = { menu = false; container.speaker.refresh(); voiceDialog = true })
+                        DropdownMenuItem(text = { Text("Начать приключение") }, enabled = !vm.busy, onClick = { menu = false; storyDialog = true })
                         DropdownMenuItem(text = { Text("Начать заново") }, onClick = { menu = false; confirmClear = true })
                         DropdownMenuItem(text = { Text("Настройки мира") }, onClick = { menu = false; onSettings() })
                         DropdownMenuItem(text = { Text("Удалить персонажа", color = MaterialTheme.colorScheme.error) }, onClick = { menu = false; confirmDelete = true })
@@ -213,7 +224,7 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                 ) {
                     Column {
                         Row(
-                            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+                            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Column(Modifier.weight(1f)) {
@@ -331,6 +342,12 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
         onDismiss = { remindersDialog = false },
     )
     if (memoryDialog) MemoryDialog(c.memory, onDismiss = { memoryDialog = false }) { vm.saveMemory(it); memoryDialog = false }
+    if (storyDialog) StorySceneDialog(c.extraNote, onDismiss = { storyDialog = false }, onChoose = { scene, choice ->
+        storyDialog = false; vm.startStory(scene, choice)
+    })
+    if (voiceDialog) CharacterVoiceDialog(voiceSettings, availableVoices.map { it.id },
+        onPreview = vm::previewVoice, onDismiss = { vm.stopSpeech(); voiceDialog = false },
+        onSave = { vm.saveVoice(it); vm.stopSpeech(); voiceDialog = false })
     if (confirmClear) ConfirmDialog(
         "Начать заново?",
         "История и память ${c.name} будут стёрты. Персонаж поприветствует тебя снова.",
@@ -433,15 +450,15 @@ internal fun MessageBubble(
                     .clip(shape)
                     .background(
                         if (m.isUser) Palette.accent
-                        else Brush.linearGradient(listOf(Color(0x30243A33), Color(0x203ED0B4))),
+                        else Brush.linearGradient(listOf(Color(0xF22A4437), Color(0xF2193028))),
                     )
                     .border(
                         1.dp,
-                        if (m.isUser) Palette.Amber.copy(alpha = 0.45f) else Palette.Teal.copy(alpha = 0.32f),
+                        if (m.isUser) Palette.Amber.copy(alpha = 0.45f) else Palette.Teal.copy(alpha = 0.23f),
                         shape,
                     )
                     .combinedClickable(onClick = {}, onLongClick = { menu = true })
-                    .padding(horizontal = 14.dp, vertical = 10.dp)
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
                     .animateContentSize(),
                 color = if (m.isUser) Palette.Ink else Palette.Text,
                 style = MaterialTheme.typography.bodyLarge,
@@ -528,13 +545,78 @@ internal fun HelpCard(concern: SafetyPolicy.Concern, onDismiss: () -> Unit) {
 }
 
 @Composable
+private fun StorySceneDialog(note: String, onDismiss: () -> Unit, onChoose: (com.animate.companion.model.StoryScene, String) -> Unit) {
+    var selected by remember { mutableStateOf<com.animate.companion.model.StoryScene?>(null) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(selected?.title ?: "Выбери приключение") },
+        text = {
+            Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
+                val scene = selected
+                if (scene == null) {
+                    Text("Небольшая вымышленная история, которую можно продолжить вместе с героем.")
+                    com.animate.companion.model.StoryScenes.all.forEach { item ->
+                        TextButton(onClick = { selected = item }) { Text(item.title) }
+                    }
+                } else {
+                    Text(scene.setup)
+                    Spacer(Modifier.height(8.dp))
+                    Text("Что сделаем?", style = MaterialTheme.typography.titleSmall)
+                    com.animate.companion.model.StoryScenes.choices(scene, note).forEach { choice ->
+                        TextButton(onClick = { onChoose(scene, choice) }) { Text(choice) }
+                    }
+                    if (com.animate.companion.model.StoryScenes.perk(note) != null) {
+                        Text("Особенность героя открыла дополнительный вариант.", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Закрыть") } },
+        dismissButton = { if (selected != null) TextButton(onClick = { selected = null }) { Text("Назад") } },
+    )
+}
+
+@Composable
+private fun CharacterVoiceDialog(initial: CharacterVoiceSettings, voices: List<String>, onPreview: (CharacterVoiceSettings) -> Unit, onDismiss: () -> Unit, onSave: (CharacterVoiceSettings) -> Unit) {
+    var draft by remember { mutableStateOf(initial) }
+    var menu by remember { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Голос персонажа") },
+        text = {
+            Column {
+                Text("Выбери установленный голос и настрой звучание. Изменения относятся к этому герою.")
+                Box {
+                    TextButton(onClick = { menu = true }) {
+                        Text(if (draft.voiceId.isEmpty()) "Общий голос устройства" else if (draft.voiceId in voices) "Голос ${voices.indexOf(draft.voiceId) + 1}" else "Голос недоступен")
+                    }
+                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                        DropdownMenuItem(text = { Text("Общий голос устройства") }, onClick = { draft = draft.copy(voiceId = ""); menu = false })
+                        voices.forEachIndexed { index, id ->
+                            DropdownMenuItem(text = { Text("Голос ${index + 1} · $id", maxLines = 1) }, onClick = { draft = draft.copy(voiceId = id); menu = false })
+                        }
+                    }
+                }
+                Text("Высота: ${"%.1f".format(draft.pitch)}×")
+                Slider(value = draft.pitch, onValueChange = { draft = draft.copy(pitch = it) }, valueRange = 0.7f..1.3f)
+                Text("Скорость: ${"%.1f".format(draft.rate)}×")
+                Slider(value = draft.rate, onValueChange = { draft = draft.copy(rate = it) }, valueRange = 0.7f..1.3f)
+                TextButton(onClick = { onPreview(draft) }) { Text("▶ Прослушать") }
+            }
+        },
+        confirmButton = { TextButton(onClick = { onSave(draft) }) { Text("Сохранить") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Отмена") } },
+    )
+}
+
+@Composable
 private fun MemoryDialog(memory: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
     var text by remember { mutableStateOf(memory) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Записи и память") },
         text = {
-            Column {
+            Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
                 Text(
                     "Здесь хранится сжатая история важных разговоров. Можно поправить записи вручную — персонаж будет опираться на них дальше.",
                     style = MaterialTheme.typography.bodySmall,
@@ -548,6 +630,11 @@ private fun MemoryDialog(memory: String, onDismiss: () -> Unit, onSave: (String)
                     placeholder = { Text("Пока пусто — память появится после долгого разговора.") },
                     colors = fieldColors(),
                 )
+                TextButton(onClick = { text = "" }, enabled = text.isNotEmpty()) {
+                    Text("Очистить записи")
+                }
+                Text("Чтобы применить изменения, нажми «Сохранить». Последние сообщения останутся в истории чата.",
+                    style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
             }
         },
         confirmButton = { TextButton(onClick = { onSave(text) }) { Text("Сохранить") } },

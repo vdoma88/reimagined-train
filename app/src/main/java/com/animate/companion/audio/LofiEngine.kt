@@ -47,6 +47,11 @@ object LofiTracks {
             intArrayOf(40,36,33,35), intArrayOf(76,78,79,81,83), rain = false, seed = 307,
             melody = intArrayOf(76,79,-1,83,81,79,76,-1, 76,79,84,-1,83,79,76,-1,
                 81,-1,84,83,81,79,76,-1, 78,83,87,-1,83,78,75,-1)),
+        LofiTrack("Огни у озера", 76f,
+            listOf(intArrayOf(48,55,60,64), intArrayOf(45,52,57,60), intArrayOf(41,48,53,57), intArrayOf(43,50,55,59)),
+            intArrayOf(36,33,29,31), intArrayOf(72,74,76,79,81), rain = true, seed = 419,
+            melody = intArrayOf(72,-1,76,-1,79,76,-1,74, 69,-1,72,76,-1,74,72,-1,
+                69,72,-1,77,76,-1,72,-1, 71,-1,74,79,76,-1,74,-1)),
     )
 }
 
@@ -305,4 +310,3 @@ class LofiPlayer(private val scope: CoroutineScope) {
             .build()
     }
 }
-

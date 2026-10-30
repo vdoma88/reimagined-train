@@ -3,6 +3,7 @@ package com.animate.companion.ui.avatar
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -14,6 +15,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import com.animate.companion.model.Appearance
 import com.animate.companion.model.Emotion
 import com.animate.companion.model.Gender
@@ -78,7 +80,32 @@ fun AvatarView(
     }
 
     val moving = animated && appearance.illustrationStyle.motion
-    CartoonAvatar(appearance.resolvedCartoonLook(gender), appearance.illustrationStyle, modifier,
-        headOnly, fullBody, if (moving) blink else 0f, sin(breathPhase) * 1.5f,
-        moving && talking, moving && mouthOpen, gender)
+    val smoothBlink by animateFloatAsState(if (moving) blink else 0f,
+        animationSpec = tween(if (blink > 0f) 55 else 115), label = "blink")
+    val smoothMouth by animateFloatAsState(if (moving && talking && mouthOpen) 1f else 0f,
+        animationSpec = tween(75), label = "mouth")
+    val pose by animateFloatAsState(if (moving) when (emotion) {
+        Emotion.HAPPY, Emotion.LAUGH -> 1.5f
+        Emotion.THINKING, Emotion.SMUG -> -1.2f
+        Emotion.SHY, Emotion.SAD -> 0.9f
+        Emotion.SURPRISED -> -0.6f
+        else -> 0f
+    } else 0f, animationSpec = tween(420), label = "emotionPose")
+    val originalLook = appearance.resolvedCartoonLook(gender)
+    val expressiveLook = originalLook.copy(
+        mouth = if (!talking && emotion in listOf(Emotion.HAPPY, Emotion.LAUGH, Emotion.LOVE)) 1 else originalLook.mouth,
+        eyes = when (emotion) {
+            Emotion.SURPRISED -> 0
+            Emotion.THINKING, Emotion.SMUG -> 1
+            else -> originalLook.eyes
+        },
+    )
+    val animatedModifier = if (moving && !headOnly) modifier.graphicsLayer {
+        // Small whole-character sway shares the breath clock, so garments never drift apart.
+        rotationZ = pose + sin(breathPhase) * 0.45f
+    } else modifier
+    CartoonAvatar(expressiveLook, appearance.illustrationStyle, animatedModifier,
+        headOnly, fullBody, if (moving) smoothBlink else 0f, sin(breathPhase) * 1.5f,
+        moving && talking, moving && mouthOpen, gender,
+        mouthProgress = if (moving && talking) smoothMouth else 0f)
 }

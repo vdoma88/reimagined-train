@@ -12,7 +12,14 @@ import java.util.Locale
 import kotlin.random.Random
 
 /** How a character sounds when reading replies aloud. */
-data class SpeechVoice(val pitch: Float, val rate: Float)
+data class SpeechVoice(val pitch: Float, val rate: Float, val deviceVoiceId: String = "")
+
+/** Id is stable within the currently selected Android TTS engine. */
+data class DeviceVoice(val id: String, val quality: Int)
+
+/** Available voices are quality-sorted; an obsolete device preference falls back to the first. */
+internal fun selectVoiceId(preferred: String, available: List<String>): String? =
+    available.firstOrNull { preferred.isNotEmpty() && it == preferred } ?: available.firstOrNull()
 
 enum class SpeakerStatus { INITIALIZING, READY, NO_RUSSIAN_VOICE, UNAVAILABLE }
 
@@ -24,6 +31,8 @@ class Speaker(context: Context) {
     private val appContext = context.applicationContext
     private val _status = MutableStateFlow(SpeakerStatus.INITIALIZING)
     val status: StateFlow<SpeakerStatus> = _status
+    private val _voices = MutableStateFlow<List<DeviceVoice>>(emptyList())
+    val voices: StateFlow<List<DeviceVoice>> = _voices
 
     /** Id of the utterance being spoken, or null when silent. */
     private val _speakingId = MutableStateFlow<String?>(null)
@@ -63,18 +72,37 @@ class Speaker(context: Context) {
         return if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
             SpeakerStatus.NO_RUSSIAN_VOICE
         } else {
+            // Keep only installed offline voices. No voice is guessed as male or female.
+            val available = offlineVoices()
+            _voices.value = available.map { DeviceVoice(it.name, it.quality) }
+            available.firstOrNull()?.let { runCatching { tts.setVoice(it) } }
             SpeakerStatus.READY
         }
     }
 
+    private fun offlineVoices(): List<android.speech.tts.Voice> = runCatching {
+        tts.voices.orEmpty()
+            .filter { it.locale.language == "ru" && !it.isNetworkConnectionRequired &&
+                it.features?.contains(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED) != true }
+            .sortedWith(compareByDescending<android.speech.tts.Voice> { it.quality }.thenBy { it.latency }.thenBy { it.name })
+    }.getOrDefault(emptyList())
+
     /** Re-checks the language after the user installed voice data. */
     fun refresh() {
-        if (_status.value != SpeakerStatus.UNAVAILABLE) _status.value = configureLanguage()
+        if (_status.value == SpeakerStatus.READY || _status.value == SpeakerStatus.NO_RUSSIAN_VOICE) _status.value = configureLanguage()
     }
 
     /** Speaks [text] (already cleaned) and returns false when TTS cannot be used right now. */
     fun speak(text: String, voice: SpeechVoice, id: String): Boolean {
         if (_status.value != SpeakerStatus.READY || text.isBlank()) return false
+        // A missing voice can happen after changing TTS engine or removing voice data.
+        // Fall back to an available offline voice instead of silencing the reply.
+        val available = offlineVoices()
+        val selected = selectVoiceId(voice.deviceVoiceId, available.map { it.name })
+        val candidate = available.firstOrNull { it.name == selected }
+        if (candidate != null && tts.setVoice(candidate) != TextToSpeech.SUCCESS) {
+            available.firstOrNull { it.name != candidate.name }?.let { tts.setVoice(it) }
+        }
         tts.setPitch(voice.pitch)
         tts.setSpeechRate(voice.rate)
         val params = Bundle().apply { putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, 1f) }
@@ -124,9 +152,9 @@ object SpeechText {
     fun voiceFor(gender: Gender, archetypeId: String, archetypePitch: Float, seed: Int, userRate: Float): SpeechVoice {
         val jitter = Random(seed xor 0x5EED).nextFloat() * 0.16f - 0.08f
         val basePitch = when (gender) {
-            Gender.FEMALE -> 1.35f
-            Gender.MALE -> 0.88f
-            Gender.NEUTRAL -> 1.1f
+            Gender.FEMALE -> 1.12f
+            Gender.MALE -> 0.92f
+            Gender.NEUTRAL -> 1.02f
         }
         val pace = when (archetypeId) {
             "genki" -> 1.12f
@@ -136,7 +164,7 @@ object SpeechText {
             else -> 1f
         }
         return SpeechVoice(
-            pitch = (basePitch * archetypePitch + jitter).coerceIn(0.6f, 1.8f),
+            pitch = (basePitch * archetypePitch + jitter).coerceIn(0.8f, 1.35f),
             rate = (pace * userRate).coerceIn(0.6f, 1.6f),
         )
     }

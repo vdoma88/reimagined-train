@@ -17,6 +17,8 @@ class SoundDirector(private val scope: CoroutineScope) {
     private val music = LofiPlayer(scope)
     @Volatile private var settings = AppSettings()
     @Volatile private var foreground = true
+    @Volatile private var ducked = false
+    private fun musicLevel() = settings.musicVolume * if (ducked) 0.3f else 1f
 
     fun apply(s: AppSettings) {
         val old = settings
@@ -29,10 +31,10 @@ class SoundDirector(private val scope: CoroutineScope) {
                 musicStarted = false
             }
             !musicStarted || old.musicTrack != s.musicTrack -> {
-                music.play(s.musicTrack, s.musicVolume)
+                music.play(s.musicTrack, musicLevel())
                 musicStarted = true
             }
-            old.musicVolume != s.musicVolume -> music.setVolume(s.musicVolume)
+            old.musicVolume != s.musicVolume -> music.setVolume(musicLevel())
         }
     }
 
@@ -42,14 +44,15 @@ class SoundDirector(private val scope: CoroutineScope) {
     fun onForeground() {
         foreground = true
         if (loaded && settings.musicEnabled) {
-            music.play(settings.musicTrack, settings.musicVolume)
+            music.play(settings.musicTrack, musicLevel())
             musicStarted = true
         }
     }
 
     /** Lowers the music while a character reads a reply aloud. */
     fun duck(on: Boolean) {
-        if (musicStarted) music.setVolume(if (on) settings.musicVolume * 0.3f else settings.musicVolume)
+        ducked = on
+        if (musicStarted && foreground) music.setVolume(musicLevel())
     }
 
     fun onBackground() {
@@ -75,8 +78,8 @@ class SoundDirector(private val scope: CoroutineScope) {
      * Plays a vocal interjection fitting [emotion] and returns its text (to show as a bubble),
      * or null when nothing was played.
      */
-    suspend fun voice(c: CharacterEntity, emotion: Emotion, force: Boolean = false): String? {
-        if (!settings.voiceEnabled) return null
+    suspend fun voice(c: CharacterEntity, emotion: Emotion, force: Boolean = false, suppressForSpeech: Boolean = false): String? {
+        if (!settings.voiceEnabled || suppressForSpeech) return null
         val a = c.appearance
         val arch = PersonaPresets.archetype(c.archetypeId)
         val ij = VoiceSynth.choose(emotion, c.genderEnum, catEars = a.ears == 1, sleepy = c.archetypeId == "lazy")

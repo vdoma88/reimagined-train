@@ -16,16 +16,20 @@ data class CartoonLook(
     val accessory: Int = 0,
     val shoeStyle: Int = 0,
     val build: Int = 0,
+    /** A small enamel pin on the outfit; older saved looks default to no pin. */
+    val pin: Int = 0,
 ) {
     fun normalized() = copy(hair = hair.coerceIn(0, hairNames.lastIndex), face = face.coerceIn(0, 2),
         eyes = eyes.coerceIn(0, 1), mouth = mouth.coerceIn(0, 1), top = top.coerceIn(0, topNames.lastIndex),
-        bottom = bottom.coerceIn(0, bottomNames.lastIndex), accessory = accessory.coerceIn(0, 5), shoeStyle = shoeStyle.coerceIn(0, 1), build = build.coerceIn(0, 2))
+        bottom = bottom.coerceIn(0, bottomNames.lastIndex), accessory = accessory.coerceIn(0, 5), shoeStyle = shoeStyle.coerceIn(0, 1), build = build.coerceIn(0, 2), pin = pin.coerceIn(0, pinNames.lastIndex))
 
     fun layers(speaking: Boolean = false, mouthOpen: Boolean = false, gender: Gender? = null): List<String> {
         val n = normalized()
         return buildList {
-            add("body"); add("bottom.${n.bottom}")
+            add("body")
             if (n.boots) add(if (n.shoeStyle == 1) "sneakers" else "boots")
+            // Trouser cuffs and skirt hems belong in front of the shoe shafts.
+            add("bottom.${n.bottom}")
             add("top.${n.top}")
             val family = if (gender == Gender.MALE) "male" else "female"
             add(if (gender == null) "face" else "face.$family.${n.face}")
@@ -56,22 +60,24 @@ data class CartoonLook(
         }
         return "$identity; ${buildNames[n.build]}; ${hairNames[n.hair]}; ${topNames[n.top]}; ${bottomNames[n.bottom]}" +
             (if (!n.boots) "; босиком" else if (n.shoeStyle == 1) "; красные кеды" else "; походные ботинки") +
-            when (n.accessory) { 1 -> "; круглые очки"; 2 -> "; кепка"; 3 -> "; круглые очки и кепка"; 4 -> "; красная шапка"; 5 -> "; очки и красная шапка"; else -> "" }
+            (when (n.accessory) { 1 -> "; круглые очки"; 2 -> "; кепка"; 3 -> "; круглые очки и кепка"; 4 -> "; красная шапка"; 5 -> "; очки и красная шапка"; else -> "" }) +
+            (if (n.pin > 0) "; значок «${pinNames[n.pin]}»" else "")
     }
 
     companion object {
         const val STYLE_ID = "woodland"
         fun random(random: Random = Random.Default, gender: Gender = Gender.FEMALE) = CartoonLook(
-            hair = (if (gender == Gender.MALE) listOf(0, 2, 4, 7) else listOf(1, 3, 5, 6)).random(random), face = random.nextInt(3), eyes = random.nextInt(2),
+            hair = (if (gender == Gender.MALE) listOf(0, 2, 4, 7, 8) else listOf(1, 3, 5, 6, 9)).random(random), face = random.nextInt(3), eyes = random.nextInt(2),
             mouth = random.nextInt(2), top = random.nextInt(topNames.size), bottom = (if (gender == Gender.MALE) listOf(0, 1, 3) else bottomNames.indices.toList()).random(random),
             boots = true, accessory = random.nextInt(6), shoeStyle = random.nextInt(2), build = random.nextInt(3),
         )
         val femaleFaceNames = listOf("Сердечком", "Круглое", "Удлинённое")
         val maleFaceNames = listOf("Квадратная челюсть", "Угловатое", "Широкое")
         val buildNames = listOf("Стройное", "Коренастое", "Высокое")
-        val hairNames = listOf("Короткие каштановые", "Рыжие волны", "Тёмные кудри", "Светлый хвост", "Чёрные с бирюзовой прядью", "Рыжее каре", "Две косы", "Серебристые лохмы")
-        val topNames = listOf("Бирюзовая куртка", "Красный свитер", "Жилет исследователя", "Клетчатая рубашка", "Жёлтое худи", "Джинсовая куртка", "Свитшот с призраком", "Пальто исследователя")
+        val hairNames = listOf("Короткие каштановые", "Рыжие волны", "Тёмные кудри", "Светлый хвост", "Чёрные с бирюзовой прядью", "Рыжее каре", "Две косы", "Серебристые лохмы", "Индиго и мята", "Медовые волны")
+        val topNames = listOf("Бирюзовая куртка", "Красный свитер", "Жилет исследователя", "Клетчатая рубашка", "Жёлтое худи", "Джинсовая куртка", "Свитшот с призраком", "Пальто исследователя", "Звёздный бомбер", "Шалфейный кардиган")
         val bottomNames = listOf("Джинсы", "Шорты карго", "Бордовая юбка", "Походные брюки", "Синяя юбка")
+        val pinNames = listOf("Нет", "Звезда", "Лист", "Компас")
     }
 }
 

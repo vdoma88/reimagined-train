@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore by preferencesDataStore(name = "settings")
 
+data class CharacterVoiceSettings(val voiceId: String = "", val pitch: Float = 1f, val rate: Float = 1f)
+
 data class AppSettings(
     val userName: String = "",
     val provider: Provider = Provider.GEMINI,
@@ -32,6 +34,7 @@ data class AppSettings(
     val autoUpdate: Boolean = true,
     val speechEnabled: Boolean = true,
     val speechRate: Float = 1f,
+    val speechVoiceId: String = "",
 ) {
     fun config(p: Provider) = ProviderConfig(p, keys[p].orEmpty(), models[p].orEmpty().ifBlank { p.defaultModel })
 
@@ -50,6 +53,23 @@ data class AppSettings(
 }
 
 class SettingsRepository(private val context: Context) {
+    private fun characterVoiceKey(id: Long) = stringPreferencesKey("character_voice_$id")
+    private fun characterPitchKey(id: Long) = floatPreferencesKey("character_pitch_$id")
+    private fun characterRateKey(id: Long) = floatPreferencesKey("character_rate_$id")
+
+    fun characterVoice(id: Long): Flow<CharacterVoiceSettings> = context.dataStore.data.map {
+        CharacterVoiceSettings(it[characterVoiceKey(id)].orEmpty(), it[characterPitchKey(id)] ?: 1f, it[characterRateKey(id)] ?: 1f)
+    }
+
+    suspend fun setCharacterVoice(id: Long, voice: CharacterVoiceSettings) = context.dataStore.edit {
+        it[characterVoiceKey(id)] = voice.voiceId
+        it[characterPitchKey(id)] = voice.pitch.coerceIn(0.7f, 1.3f)
+        it[characterRateKey(id)] = voice.rate.coerceIn(0.7f, 1.3f)
+    }
+
+    suspend fun clearCharacterVoice(id: Long) = context.dataStore.edit {
+        it.remove(characterVoiceKey(id)); it.remove(characterPitchKey(id)); it.remove(characterRateKey(id))
+    }
     private object K {
         val userName = stringPreferencesKey("user_name")
         val provider = stringPreferencesKey("provider")
@@ -64,6 +84,7 @@ class SettingsRepository(private val context: Context) {
         val autoUpdate = booleanPreferencesKey("auto_update")
         val speechEnabled = booleanPreferencesKey("speech_enabled")
         val speechRate = floatPreferencesKey("speech_rate")
+        val speechVoiceId = stringPreferencesKey("speech_voice_id")
         fun key(p: Provider) = stringPreferencesKey("key_${p.name}")
         fun model(p: Provider) = stringPreferencesKey("model_${p.name}")
     }
@@ -88,6 +109,7 @@ class SettingsRepository(private val context: Context) {
         autoUpdate = this[K.autoUpdate] ?: true,
         speechEnabled = this[K.speechEnabled] ?: true,
         speechRate = this[K.speechRate] ?: 1f,
+        speechVoiceId = this[K.speechVoiceId].orEmpty(),
     )
 
     suspend fun setUserName(v: String) = context.dataStore.edit { it[K.userName] = v }
@@ -104,5 +126,6 @@ class SettingsRepository(private val context: Context) {
     suspend fun setSfxEnabled(v: Boolean) = context.dataStore.edit { it[K.sfxEnabled] = v }
     suspend fun setAutoUpdate(v: Boolean) = context.dataStore.edit { it[K.autoUpdate] = v }
     suspend fun setSpeechEnabled(v: Boolean) = context.dataStore.edit { it[K.speechEnabled] = v }
+    suspend fun setSpeechVoiceId(v: String) = context.dataStore.edit { it[K.speechVoiceId] = v }
     suspend fun setSpeechRate(v: Float) = context.dataStore.edit { it[K.speechRate] = v }
 }
