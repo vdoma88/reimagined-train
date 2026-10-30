@@ -138,6 +138,7 @@ class ChatViewModel(
         if (afterInterjection) delay(450)
         val arch = PersonaPresets.archetype(c.archetypeId)
         val voice = SpeechText.voiceFor(c.genderEnum, c.archetypeId, arch.voicePitch, c.voiceSeed, s.speechRate)
+            .copy(deviceVoiceId = s.speechVoiceId)
         return container.speaker.speak(SpeechText.clean(text), voice, "msg-${messageId ?: 0}")
     }
 
@@ -153,6 +154,7 @@ class ChatViewModel(
             val s = container.settings.current()
             val arch = PersonaPresets.archetype(c.archetypeId)
             val voice = SpeechText.voiceFor(c.genderEnum, c.archetypeId, arch.voicePitch, c.voiceSeed, s.speechRate)
+            .copy(deviceVoiceId = s.speechVoiceId)
             val text = SpeechText.clean(m.text)
             if (text.isBlank()) return@launch // only *actions*: nothing to read, not an error
             if (!container.speaker.speak(text, voice, "msg-${m.id}")) {

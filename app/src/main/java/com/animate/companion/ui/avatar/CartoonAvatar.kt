@@ -50,6 +50,7 @@ internal fun CartoonAvatar(
     look: CartoonLook, style: IllustrationStyle, modifier: Modifier,
     headOnly: Boolean, fullBody: Boolean, blink: Float, breath: Float,
     speaking: Boolean, mouthOpen: Boolean, gender: Gender = Gender.FEMALE,
+    mouthProgress: Float = if (mouthOpen) 1f else 0f,
 ) {
     val context = LocalContext.current
     val sprites = remember { CartoonArtwork.load(context) }
@@ -83,7 +84,7 @@ internal fun CartoonAvatar(
             c.rotate(s.rotation)
             c.scale(if (s.mirrored) -scale else scale, scale)
             c.translate(-CartoonRig.NECK_X, -viewHeight / 2f - CartoonRig.FRAME_TOP + breath)
-            for (key in n.layers(speaking, mouthOpen, gender)) {
+            for (key in n.layers(speaking, if (speaking) false else mouthOpen, gender)) {
                 val sprite = sprites.getValue(key)
                 val spec = sprite.spec
                 val saved = c.save()
@@ -98,15 +99,30 @@ internal fun CartoonAvatar(
                 // Mask only the base shorts, not the wrists or the first exposed thigh pixels.
                 // The selected waistband overlaps the top hem in this same body coordinate space.
                 if (key == "body") c.clipOutRect(136f, 403f, 268f, 462f)
-                if (key.startsWith("eyes.") && blink > 0.5f) {
-                    c.clipRect(spec.x, spec.y, spec.x + spec.width, spec.y + 27f)
+                if (key.startsWith("eyes.") && blink > 0f) {
+                    val visibleHeight = 27f + (spec.height - 27f) * (1f - blink.coerceIn(0f, 1f))
+                    c.clipRect(spec.x, spec.y, spec.x + spec.width, spec.y + visibleHeight)
                 }
-                c.drawBitmap(sprite.bitmap, Rect(0, spec.sourceY, sprite.bitmap.width, sprite.bitmap.height),
-                    RectF(spec.x, spec.y, spec.x + spec.width, spec.y + spec.height), imagePaint)
+                fun drawSprite(part: CartoonArtwork.Sprite, alpha: Int) {
+                    val item = part.spec
+                    imagePaint.alpha = alpha.coerceIn(0, 255)
+                    c.drawBitmap(part.bitmap, Rect(0, item.sourceY, part.bitmap.width, part.bitmap.height),
+                        RectF(item.x, item.y, item.x + item.width, item.y + item.height), imagePaint)
+                }
+                if (key.startsWith("mouth.") && speaking) {
+                    val amount = mouthProgress.coerceIn(0f, 1f)
+                    drawSprite(sprites.getValue("mouth.0"), ((1f - amount) * 255).toInt())
+                    drawSprite(sprites.getValue("mouth.1"), (amount * 255).toInt())
+                } else {
+                    drawSprite(sprite, 255)
+                }
+                imagePaint.alpha = 255
                 c.restoreToCount(bitmapClip)
-                if (key.startsWith("eyes.") && blink > 0.5f) {
+                if (key.startsWith("eyes.") && blink > 0f) {
+                    ink.alpha = (blink.coerceIn(0f, 1f) * 255).toInt()
                     c.drawArc(RectF(126f, 175f, 184f, 205f), 0f, 180f, false, ink)
                     c.drawArc(RectF(215f, 175f, 274f, 205f), 0f, 180f, false, ink)
+                    ink.alpha = 255
                 }
                 c.restoreToCount(saved)
             }

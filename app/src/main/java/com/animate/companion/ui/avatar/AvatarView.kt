@@ -3,6 +3,7 @@ package com.animate.companion.ui.avatar
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -79,6 +80,10 @@ fun AvatarView(
     }
 
     val moving = animated && appearance.illustrationStyle.motion
+    val smoothBlink by animateFloatAsState(if (moving) blink else 0f,
+        animationSpec = tween(if (blink > 0f) 55 else 115), label = "blink")
+    val smoothMouth by animateFloatAsState(if (moving && talking && mouthOpen) 1f else 0f,
+        animationSpec = tween(75), label = "mouth")
     val originalLook = appearance.resolvedCartoonLook(gender)
     val expressiveLook = if (!talking && emotion in listOf(Emotion.HAPPY, Emotion.LAUGH, Emotion.LOVE))
         originalLook.copy(mouth = 1) else originalLook
@@ -87,6 +92,7 @@ fun AvatarView(
         rotationZ = sin(breathPhase) * 0.45f
     } else modifier
     CartoonAvatar(expressiveLook, appearance.illustrationStyle, animatedModifier,
-        headOnly, fullBody, if (moving) blink else 0f, sin(breathPhase) * 1.5f,
-        moving && talking, moving && mouthOpen, gender)
+        headOnly, fullBody, if (moving) smoothBlink else 0f, sin(breathPhase) * 1.5f,
+        moving && talking, moving && mouthOpen, gender,
+        mouthProgress = if (moving && talking) smoothMouth else 0f)
 }
