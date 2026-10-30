@@ -79,6 +79,9 @@ internal fun CartoonAvatar(
         color = android.graphics.Color.rgb(47, 29, 23)
         strokeWidth = 3.5f; strokeCap = Paint.Cap.ROUND; this.style = Paint.Style.STROKE
     } }
+    val honeyHairBack = remember { Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.rgb(122, 62, 27)
+    } }
     Canvas(modifier.clipToBounds()) {
         val viewHeight = CartoonRig.frameHeight(headOnly, fullBody)
         val scale = min(size.width / CartoonRig.FRAME_WIDTH, size.height / viewHeight) * s.zoom
@@ -89,6 +92,16 @@ internal fun CartoonAvatar(
             c.rotate(s.rotation)
             c.scale(if (s.mirrored) -scale else scale, scale)
             c.translate(-CartoonRig.NECK_X, -viewHeight / 2f - CartoonRig.FRAME_TOP + breath)
+            // The long wavy cut leaves space below the tapered jaw. A back-hair layer
+            // fills that gap behind the face and body, sharing the head's rig transform.
+            if (n.hair == 9) {
+                val hairFrame = c.save()
+                c.translate(CartoonRig.NECK_X, CartoonRig.NECK_Y)
+                c.scale(n.headScaleX(gender), n.headScaleY(gender))
+                c.translate(-CartoonRig.NECK_X, -CartoonRig.NECK_Y)
+                c.drawOval(RectF(105f, 140f, 295f, 305f), honeyHairBack)
+                c.restoreToCount(hairFrame)
+            }
             for (key in n.layers(speaking, if (speaking) false else mouthOpen, gender)) {
                 val sprite = sprites.getValue(key)
                 val spec = sprite.spec
