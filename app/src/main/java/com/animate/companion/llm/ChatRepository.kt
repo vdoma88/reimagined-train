@@ -44,14 +44,14 @@ class ChatRepository(
     suspend fun deleteCharacter(id: Long) = db.characters().delete(id)
     suspend fun deleteMessage(id: Long) = db.messages().delete(id)
 
-    suspend fun clearHistory(id: Long) {
+    suspend fun clearHistory(id: Long) = summarizeLock.withLock {
         db.messages().clear(id)
         character(id)?.let {
             db.characters().update(it.copy(memory = "", summarizedUntilId = 0, lastMessagePreview = "", lastEmotion = "neutral"))
         }
     }
 
-    suspend fun updateMemory(id: Long, memory: String) {
+    suspend fun updateMemory(id: Long, memory: String) = summarizeLock.withLock {
         character(id)?.let { db.characters().update(it.copy(memory = memory)) }
     }
 

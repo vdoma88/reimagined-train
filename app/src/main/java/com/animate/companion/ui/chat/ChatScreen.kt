@@ -630,6 +630,11 @@ private fun MemoryDialog(memory: String, onDismiss: () -> Unit, onSave: (String)
                     placeholder = { Text("Пока пусто — память появится после долгого разговора.") },
                     colors = fieldColors(),
                 )
+                TextButton(onClick = { text = "" }, enabled = text.isNotEmpty()) {
+                    Text("Очистить записи")
+                }
+                Text("Чтобы применить изменения, нажми «Сохранить». Последние сообщения останутся в истории чата.",
+                    style = MaterialTheme.typography.bodySmall, color = Palette.TextDim)
             }
         },
         confirmButton = { TextButton(onClick = { onSave(text) }) { Text("Сохранить") } },
