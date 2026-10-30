@@ -30,10 +30,10 @@ class ForestRefreshTest {
         }
     }
 
-    @Test fun soundtrackHasThreeDistinctOriginalStructuredMelodies() {
-        assertEquals(3, LofiTracks.all.size)
-        assertEquals(3, LofiTracks.all.map { it.title }.distinct().size)
-        assertEquals(3, LofiTracks.all.map { it.melody.toList() }.distinct().size)
+    @Test fun soundtrackHasFourDistinctOriginalStructuredMelodies() {
+        assertEquals(4, LofiTracks.all.size)
+        assertEquals(4, LofiTracks.all.map { it.title }.distinct().size)
+        assertEquals(4, LofiTracks.all.map { it.melody.toList() }.distinct().size)
         LofiTracks.all.forEach { track ->
             assertEquals(32, track.melody.size)
             assertTrue(track.melody.any { it == -1 })
