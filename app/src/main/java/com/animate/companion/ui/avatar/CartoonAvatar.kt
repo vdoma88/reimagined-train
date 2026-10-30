@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.Rect
 import android.graphics.RectF
 import androidx.compose.foundation.Canvas
@@ -82,6 +83,31 @@ internal fun CartoonAvatar(
     val honeyHairBack = remember { Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = android.graphics.Color.rgb(122, 62, 27)
     } }
+    val pinFill = remember(n.pin) { Paint(Paint.ANTI_ALIAS_FLAG).apply { color = when (n.pin) {
+        1 -> android.graphics.Color.rgb(242, 188, 80)
+        2 -> android.graphics.Color.rgb(125, 173, 129)
+        else -> android.graphics.Color.rgb(102, 164, 176)
+    } } }
+    val pinOutline = remember { Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = android.graphics.Color.rgb(63, 43, 35); style = Paint.Style.STROKE; strokeWidth = 2f
+    } }
+    val pinShape = remember(n.pin) { Path().apply {
+        val x = 244f; val y = 305f
+        when (n.pin) {
+            1 -> {
+                for (i in 0 until 10) {
+                    val angle = -Math.PI / 2 + i * Math.PI / 5
+                    val radius = if (i % 2 == 0) 11.0 else 5.0
+                    val px = x + (kotlin.math.cos(angle) * radius).toFloat()
+                    val py = y + (kotlin.math.sin(angle) * radius).toFloat()
+                    if (i == 0) moveTo(px, py) else lineTo(px, py)
+                }
+                close()
+            }
+            2 -> { moveTo(x - 8, y + 6); cubicTo(x - 12, y - 5, x + 2, y - 12, x + 9, y - 10); cubicTo(x + 12, y + 1, x + 2, y + 10, x - 8, y + 6); close() }
+            else -> addCircle(x, y, 9f, Path.Direction.CW)
+        }
+    } }
     Canvas(modifier.clipToBounds()) {
         val viewHeight = CartoonRig.frameHeight(headOnly, fullBody)
         val scale = min(size.width / CartoonRig.FRAME_WIDTH, size.height / viewHeight) * s.zoom
@@ -140,6 +166,12 @@ internal fun CartoonAvatar(
                     }
                 } else {
                     drawSprite(sprite, 255)
+                }
+                if (key.startsWith("top.") && n.pin > 0) {
+                    // Draw in the garment coordinate system, so every body build keeps the pin attached.
+                    c.drawPath(pinShape, pinFill); c.drawPath(pinShape, pinOutline)
+                    if (n.pin == 2) c.drawLine(239f, 310f, 250f, 299f, pinOutline)
+                    if (n.pin == 3) { c.drawLine(244f, 299f, 244f, 311f, pinOutline); c.drawLine(238f, 305f, 250f, 305f, pinOutline) }
                 }
                 imagePaint.alpha = 255
                 c.restoreToCount(bitmapClip)

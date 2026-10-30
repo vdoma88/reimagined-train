@@ -8,6 +8,17 @@ import org.junit.Test
 import kotlin.random.Random
 
 class ExpandedCastTest {
+    @Test fun outfitPinsPersistAndOldLooksRemainValid() {
+        val old = CartoonLook()
+        assertEquals(0, old.pin)
+        for (pin in CartoonLook.pinNames.indices) {
+            val look = old.copy(pin = pin)
+            val appearance = Appearance(illustrationId = CartoonLook.STYLE_ID, cartoonLook = look)
+            assertEquals(pin, Appearance.fromJson(appearance.toJson()).resolvedCartoonLook().pin)
+            assertEquals(look.layers(), look.copy(pin = 0).layers())
+        }
+        assertEquals(CartoonLook.pinNames.lastIndex, old.copy(pin = 99).normalized().pin)
+    }
     @Test fun perkCanChangeWithoutReplacingTheUsersDescription() {
         val original = "Любит карты. Особенность: быстро замечает повторяющиеся детали. Собирает значки."
         val next = CharacterNoteGenerator.randomizePerk(original, Random(3))

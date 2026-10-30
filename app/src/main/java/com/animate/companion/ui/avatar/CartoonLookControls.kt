@@ -57,6 +57,7 @@ internal fun CartoonLookControls(appearance: Appearance, enabled: Boolean, gende
         update(look.copy(boots = it > 0, shoeStyle = (it - 1).coerceAtLeast(0)))
     }
     CartoonOptions("Аксессуары", listOf("Нет", "Очки", "Кепка", "Очки и кепка", "Шапка", "Очки и шапка"), look.accessory, enabled) { update(look.copy(accessory = it)) }
+    CartoonOptions("Значок на одежде", CartoonLook.pinNames, look.pin, enabled) { update(look.copy(pin = it)) }
     TextButton(enabled = enabled, onClick = { update(CartoonLook(hair = if (gender == Gender.MALE) 0 else 1)) }) { Text("Сбросить внешность") }
 }
 

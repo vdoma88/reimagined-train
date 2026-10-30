@@ -199,6 +199,14 @@ class ChatViewModel(
         viewModelScope.launch { perform { repo.send(characterId, text) } }
     }
 
+    fun startStory(scene: com.animate.companion.model.StoryScene, choice: String) {
+        if (busy) return
+        val text = com.animate.companion.model.StoryScenes.message(scene, choice)
+        container.speaker.stop()
+        container.sound.sfx(SfxType.SEND)
+        viewModelScope.launch { perform { repo.send(characterId, text) } }
+    }
+
     fun retry() {
         if (busy) return
         viewModelScope.launch {

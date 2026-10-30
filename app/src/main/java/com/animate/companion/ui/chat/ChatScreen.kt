@@ -26,6 +26,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,6 +40,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
@@ -137,6 +140,7 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
     var studioAfterPick by remember { mutableStateOf(false) }
     var memoryDialog by remember { mutableStateOf(false) }
     var voiceDialog by remember { mutableStateOf(false) }
+    var storyDialog by remember { mutableStateOf(false) }
     val voiceSettings by vm.voiceSettings.collectAsStateWithLifecycle()
     val availableVoices by container.speaker.voices.collectAsStateWithLifecycle()
     var confirmDelete by remember { mutableStateOf(false) }
@@ -201,6 +205,7 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                         )
                         DropdownMenuItem(text = { Text("Записи и память") }, onClick = { menu = false; memoryDialog = true })
                         DropdownMenuItem(text = { Text("Голос персонажа") }, onClick = { menu = false; container.speaker.refresh(); voiceDialog = true })
+                        DropdownMenuItem(text = { Text("Начать приключение") }, enabled = !vm.busy, onClick = { menu = false; storyDialog = true })
                         DropdownMenuItem(text = { Text("Начать заново") }, onClick = { menu = false; confirmClear = true })
                         DropdownMenuItem(text = { Text("Настройки мира") }, onClick = { menu = false; onSettings() })
                         DropdownMenuItem(text = { Text("Удалить персонажа", color = MaterialTheme.colorScheme.error) }, onClick = { menu = false; confirmDelete = true })
@@ -337,6 +342,9 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
         onDismiss = { remindersDialog = false },
     )
     if (memoryDialog) MemoryDialog(c.memory, onDismiss = { memoryDialog = false }) { vm.saveMemory(it); memoryDialog = false }
+    if (storyDialog) StorySceneDialog(c.extraNote, onDismiss = { storyDialog = false }, onChoose = { scene, choice ->
+        storyDialog = false; vm.startStory(scene, choice)
+    })
     if (voiceDialog) CharacterVoiceDialog(voiceSettings, availableVoices.map { it.id },
         onPreview = vm::previewVoice, onDismiss = { vm.stopSpeech(); voiceDialog = false },
         onSave = { vm.saveVoice(it); vm.stopSpeech(); voiceDialog = false })
@@ -534,6 +542,38 @@ internal fun HelpCard(concern: SafetyPolicy.Concern, onDismiss: () -> Unit) {
             }
         }
     }
+}
+
+@Composable
+private fun StorySceneDialog(note: String, onDismiss: () -> Unit, onChoose: (com.animate.companion.model.StoryScene, String) -> Unit) {
+    var selected by remember { mutableStateOf<com.animate.companion.model.StoryScene?>(null) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(selected?.title ?: "Выбери приключение") },
+        text = {
+            Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
+                val scene = selected
+                if (scene == null) {
+                    Text("Небольшая вымышленная история, которую можно продолжить вместе с героем.")
+                    com.animate.companion.model.StoryScenes.all.forEach { item ->
+                        TextButton(onClick = { selected = item }) { Text(item.title) }
+                    }
+                } else {
+                    Text(scene.setup)
+                    Spacer(Modifier.height(8.dp))
+                    Text("Что сделаем?", style = MaterialTheme.typography.titleSmall)
+                    com.animate.companion.model.StoryScenes.choices(scene, note).forEach { choice ->
+                        TextButton(onClick = { onChoose(scene, choice) }) { Text(choice) }
+                    }
+                    if (com.animate.companion.model.StoryScenes.perk(note) != null) {
+                        Text("Особенность героя открыла дополнительный вариант.", style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Закрыть") } },
+        dismissButton = { if (selected != null) TextButton(onClick = { selected = null }) { Text("Назад") } },
+    )
 }
 
 @Composable
