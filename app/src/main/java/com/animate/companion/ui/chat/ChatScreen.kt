@@ -616,7 +616,7 @@ private fun MemoryDialog(memory: String, onDismiss: () -> Unit, onSave: (String)
         onDismissRequest = onDismiss,
         title = { Text("Записи и память") },
         text = {
-            Column {
+            Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState())) {
                 Text(
                     "Здесь хранится сжатая история важных разговоров. Можно поправить записи вручную — персонаж будет опираться на них дальше.",
                     style = MaterialTheme.typography.bodySmall,
