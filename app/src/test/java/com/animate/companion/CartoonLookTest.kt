@@ -30,8 +30,8 @@ class CartoonLookTest {
         assertEquals(0, look.top)
         assertEquals(4, look.bottom)
         assertEquals(5, look.accessory)
-        assertTrue(look.layers().indexOf("hair.7") > look.layers().indexOf("eyes.0"))
-        assertTrue(look.layers().indexOf("beanie") > look.layers().indexOf("hair.7"))
+        assertTrue(look.layers().indexOf("hair.${look.hair}") > look.layers().indexOf("eyes.0"))
+        assertTrue(look.layers().indexOf("beanie") > look.layers().indexOf("hair.${look.hair}"))
         assertTrue(look.layers(speaking = true, mouthOpen = true).contains("mouth.1"))
         assertTrue(look.copy(mouth = 1).layers(speaking = true, mouthOpen = false).contains("mouth.0"))
     }
