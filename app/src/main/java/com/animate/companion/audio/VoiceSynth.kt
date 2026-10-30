@@ -206,19 +206,19 @@ object Sfx {
     private fun midi(n: Int) = 440f * 2f.pow((n - 69) / 12f)
 
     val send: ShortArray by lazy {
-        val n = (0.12f * SAMPLE_RATE).toInt()
+        val n = (0.16f * SAMPLE_RATE).toInt()
         var ph = 0f
         FloatArray(n) { i ->
             val t = i.toFloat() / SAMPLE_RATE
-            ph += TWO_PI * (520f + 900f * (t / 0.12f)) / SAMPLE_RATE
-            sin(ph) * exp(-t / 0.04f) * (t / 0.004f).coerceAtMost(1f)
+            ph += TWO_PI * (390f + 450f * (t / 0.16f)) / SAMPLE_RATE
+            sin(ph) * exp(-t / 0.055f) * (t / 0.004f).coerceAtMost(1f)
         }.toPcm(0.5f)
     }
 
     val receive: ShortArray by lazy {
         val out = FloatArray((0.7f * SAMPLE_RATE).toInt())
-        bell(out, 0, midi(88), 0.6f, 0.25f)
-        bell(out, (0.07f * SAMPLE_RATE).toInt(), midi(95), 0.5f, 0.35f)
+        bell(out, 0, midi(79), 0.6f, 0.25f)
+        bell(out, (0.09f * SAMPLE_RATE).toInt(), midi(86), 0.4f, 0.30f)
         out.toPcm(0.45f)
     }
 
@@ -226,7 +226,7 @@ object Sfx {
         val n = (0.05f * SAMPLE_RATE).toInt()
         FloatArray(n) { i ->
             val t = i.toFloat() / SAMPLE_RATE
-            sin(TWO_PI * 1400f * t) * exp(-t / 0.012f)
+            sin(TWO_PI * 850f * t) * exp(-t / 0.018f)
         }.toPcm(0.3f)
     }
 

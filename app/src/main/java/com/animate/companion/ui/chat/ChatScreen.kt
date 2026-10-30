@@ -213,7 +213,7 @@ fun ChatScreen(container: AppContainer, characterId: Long, greet: Boolean, onBac
                 ) {
                     Column {
                         Row(
-                            Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 10.dp),
+                            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Column(Modifier.weight(1f)) {
@@ -433,15 +433,15 @@ internal fun MessageBubble(
                     .clip(shape)
                     .background(
                         if (m.isUser) Palette.accent
-                        else Brush.linearGradient(listOf(Color(0x30243A33), Color(0x203ED0B4))),
+                        else Brush.linearGradient(listOf(Color(0xF22A4437), Color(0xF2193028))),
                     )
                     .border(
                         1.dp,
-                        if (m.isUser) Palette.Amber.copy(alpha = 0.45f) else Palette.Teal.copy(alpha = 0.32f),
+                        if (m.isUser) Palette.Amber.copy(alpha = 0.45f) else Palette.Teal.copy(alpha = 0.23f),
                         shape,
                     )
                     .combinedClickable(onClick = {}, onLongClick = { menu = true })
-                    .padding(horizontal = 14.dp, vertical = 10.dp)
+                    .padding(horizontal = 16.dp, vertical = 12.dp)
                     .animateContentSize(),
                 color = if (m.isUser) Palette.Ink else Palette.Text,
                 style = MaterialTheme.typography.bodyLarge,

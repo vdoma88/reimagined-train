@@ -63,6 +63,14 @@ class Speaker(context: Context) {
         return if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
             SpeakerStatus.NO_RUSSIAN_VOICE
         } else {
+            // Prefer the highest quality installed offline Russian voice; never force a network voice.
+            runCatching {
+                tts.voices.orEmpty()
+                    .filter { it.locale.language == "ru" && !it.isNetworkConnectionRequired &&
+                        it.features?.contains(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED) != true }
+                    .sortedWith(compareByDescending<android.speech.tts.Voice> { it.quality }.thenBy { it.latency }.thenBy { it.name })
+                    .firstOrNull()?.let { tts.setVoice(it) }
+            }
             SpeakerStatus.READY
         }
     }
@@ -124,9 +132,9 @@ object SpeechText {
     fun voiceFor(gender: Gender, archetypeId: String, archetypePitch: Float, seed: Int, userRate: Float): SpeechVoice {
         val jitter = Random(seed xor 0x5EED).nextFloat() * 0.16f - 0.08f
         val basePitch = when (gender) {
-            Gender.FEMALE -> 1.35f
-            Gender.MALE -> 0.88f
-            Gender.NEUTRAL -> 1.1f
+            Gender.FEMALE -> 1.12f
+            Gender.MALE -> 0.92f
+            Gender.NEUTRAL -> 1.02f
         }
         val pace = when (archetypeId) {
             "genki" -> 1.12f
@@ -136,7 +144,7 @@ object SpeechText {
             else -> 1f
         }
         return SpeechVoice(
-            pitch = (basePitch * archetypePitch + jitter).coerceIn(0.6f, 1.8f),
+            pitch = (basePitch * archetypePitch + jitter).coerceIn(0.8f, 1.35f),
             rate = (pace * userRate).coerceIn(0.6f, 1.6f),
         )
     }

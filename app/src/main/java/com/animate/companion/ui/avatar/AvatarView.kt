@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import com.animate.companion.model.Appearance
 import com.animate.companion.model.Emotion
 import com.animate.companion.model.Gender
@@ -78,7 +79,14 @@ fun AvatarView(
     }
 
     val moving = animated && appearance.illustrationStyle.motion
-    CartoonAvatar(appearance.resolvedCartoonLook(gender), appearance.illustrationStyle, modifier,
+    val originalLook = appearance.resolvedCartoonLook(gender)
+    val expressiveLook = if (!talking && emotion in listOf(Emotion.HAPPY, Emotion.LAUGH, Emotion.LOVE))
+        originalLook.copy(mouth = 1) else originalLook
+    val animatedModifier = if (moving && !headOnly) modifier.graphicsLayer {
+        // Small whole-character sway shares the breath clock, so garments never drift apart.
+        rotationZ = sin(breathPhase) * 0.45f
+    } else modifier
+    CartoonAvatar(expressiveLook, appearance.illustrationStyle, animatedModifier,
         headOnly, fullBody, if (moving) blink else 0f, sin(breathPhase) * 1.5f,
         moving && talking, moving && mouthOpen, gender)
 }
