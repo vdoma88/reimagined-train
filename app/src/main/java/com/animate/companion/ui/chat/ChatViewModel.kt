@@ -114,7 +114,8 @@ class ChatViewModel(
             val c = character.value ?: return@launch
             delay(250)
             bubble = container.sound.voice(c, reply.emotion, suppressForSpeech =
-                container.settings.current().speechEnabled && container.speaker.status.value == SpeakerStatus.READY)
+                container.settings.current().speechEnabled && container.speaker.status.value == SpeakerStatus.READY &&
+                    SpeechText.clean(reply.text).isNotBlank())
             val spoken = readAloud(c, reply.text, latestReplyId(reply.text), afterInterjection = bubble != null)
             if (!spoken) {
                 reactionTalking = true
